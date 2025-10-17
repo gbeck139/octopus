@@ -1,1 +1,5 @@
 venv/
+output_models/
+input_models/
+output_gcode/
+input_gcode/
