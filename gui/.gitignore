@@ -1,0 +1,83 @@
+# ===========================
+# Qt build directories
+# ===========================
+build*/
+*/build*/
+debug/
+release/
+
+# ===========================
+# Qt Creator user/project settings
+# ===========================
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+*.creator.user
+*.autosave
+
+# ===========================
+# CMake build artifacts
+# ===========================
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+install_manifest.txt
+CTestTestfile.cmake
+_compile_commands.json
+
+# ===========================
+# Generated Qt files (MOC, UIC, RCC)
+# ===========================
+moc_*.cpp
+ui_*.h
+qrc_*.cpp
+
+# ===========================
+# Compiled binary and object files
+# ===========================
+*.o
+*.obj
+*.so
+*.dll
+*.exe
+*.app
+*.a
+*.lib
+*.ncb
+*.sdf
+*.pdb
+*.ilk
+
+# ===========================
+# IDE / editor temporary files
+# ===========================
+*.user
+*.user.*
+*.workspace
+*.project
+*.layout
+*.tags
+*.taghl
+*.mode1v3
+*.mode2v3
+*.cxxobj
+
+# ===========================
+# Logs / cache / temporary
+# ===========================
+*.log
+*.cache
+*.tmp
+
+# ===========================
+# Backup and OS junk
+# ===========================
+*~
+*.bak
+*.swp
+*.swo
+*.DS_Store
+Thumbs.db
+desktop.ini
