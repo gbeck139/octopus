@@ -1,8 +1,8 @@
 # ===========================
-# Qt build directories
+# Ignore all build outputs
 # ===========================
+/build/
 build*/
-*/build*/
 debug/
 release/
 
@@ -51,20 +51,6 @@ qrc_*.cpp
 *.ilk
 
 # ===========================
-# IDE / editor temporary files
-# ===========================
-*.user
-*.user.*
-*.workspace
-*.project
-*.layout
-*.tags
-*.taghl
-*.mode1v3
-*.mode2v3
-*.cxxobj
-
-# ===========================
 # Logs / cache / temporary
 # ===========================
 *.log
@@ -81,3 +67,6 @@ qrc_*.cpp
 *.DS_Store
 Thumbs.db
 desktop.ini
+
+*.user
+*.user.*
