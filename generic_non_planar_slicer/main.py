@@ -1,29 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[ ]:
-
-
-# only necessary for google colab! to load models into session
-get_ipython().system('git clone https://github.com/jyjblrd/S4_Slicer')
-get_ipython().system('mv S4_Slicer/* ./')
-
-
-# In[ ]:
-
-
-get_ipython().system('pip install tetgen')
-get_ipython().system('pip install pyvista')
-get_ipython().system('pip install scipy')
-get_ipython().system('pip install open3d')
-get_ipython().system('pip install pygcode')
-get_ipython().system('apt-get install -qq xvfb libgl1-mesa-glx')
-get_ipython().system('pip install pyvista -qq')
-
-
-# In[5]:
-
-
 import networkx as nx
 import numpy as np
 import pyvista as pv
@@ -34,7 +8,7 @@ import open3d as o3d
 import time
 import pickle
 import base64
-pv.set_jupyter_backend('static') # Google colab only allows static rendering. Download and run notepad locally to view in 3D!
+
 pv.global_theme.notebook = True
 pv.start_xvfb()
 
