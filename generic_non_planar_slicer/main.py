@@ -10,7 +10,7 @@ import pickle
 import base64
 
 pv.global_theme.notebook = True
-pv.start_xvfb()
+# Using off_screen=True in Plotter() calls instead of pv.start_xvfb()
 
 def encode_object(obj):
     return base64.b64encode(pickle.dumps(obj)).decode('utf-8')
