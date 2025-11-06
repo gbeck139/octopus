@@ -1,0 +1,9 @@
+numpy
+pyvista
+tetgen
+scipy
+open3d
+networkx
+pymeshfix
+matplotlib
+pygcode
