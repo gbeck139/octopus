@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 def load_mesh(MODEL_NAME):
     # Load the mesh
-    mesh = pv.read(f'radial_non_planar_slicer/input_models/{MODEL_NAME}.stl')
+    mesh = pv.read(f'input_models/{MODEL_NAME}.stl')
     return mesh
 
 
@@ -50,7 +50,7 @@ def deform_mesh(mesh):
 
 def save_deformed_mesh(deformed_mesh, MODEL_NAME):
     # save the mesh
-    deformed_mesh.save(f'radial_non_planar_slicer/output_models/{MODEL_NAME}_deformed.stl')
+    deformed_mesh.save(f'output_models/{MODEL_NAME}_deformed.stl')
 
 
 def plot_deformed_mesh(deformed_mesh):

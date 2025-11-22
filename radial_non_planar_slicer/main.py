@@ -7,7 +7,7 @@ from scipy.spatial.transform import Rotation as R
 import deform
 
 
-MODEL_NAME = 'motos_para_a_eternidade'
+MODEL_NAME = 'hand'
 
 mesh = deform.load_mesh(MODEL_NAME)
 deformed_mesh, ROTATION, offsets_applied = deform.deform_mesh(mesh)
