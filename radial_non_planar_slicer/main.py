@@ -5,6 +5,7 @@ from pygcode import Line
 import time
 from scipy.spatial.transform import Rotation as R
 import deform
+import reform
 
 
 MODEL_NAME = 'hand'
@@ -12,4 +13,6 @@ MODEL_NAME = 'hand'
 mesh = deform.load_mesh(MODEL_NAME)
 deformed_mesh, ROTATION, offsets_applied = deform.deform_mesh(mesh)
 deform.save_deformed_mesh(deformed_mesh, MODEL_NAME)
-deform.plot_deformed_mesh(deformed_mesh)
+# deform.plot_deformed_mesh(deformed_mesh)
+# input("Press Enter after slicing is complete...")
+reform.load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied)
