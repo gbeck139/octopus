@@ -106,11 +106,17 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
     print(f"DEBUG: Input G-code Y range: {positions[:,1].min():.2f} to {positions[:,1].max():.2f}")
     
     # Center the G-code positions
-    center_x = (positions[:,0].max() + positions[:,0].min()) / 2
-    center_y = (positions[:,1].max() + positions[:,1].min()) / 2
+    # center_x = (positions[:,0].max() + positions[:,0].min()) / 2
+    # center_y = (positions[:,1].max() + positions[:,1].min()) / 2
+    
+    # Hardcoded center for Creality K1 Max (300x300mm bed)
+    # We use this instead of bounding box to avoid issues with purge lines/skirts
+    center_x = 150.0
+    center_y = 150.0
+    
     center_offset = np.array([center_x, center_y, 0])
     
-    print(f"DEBUG: Centering G-code by subtracting: {center_offset}")
+    print(f"DEBUG: Centering G-code by subtracting fixed bed center: {center_offset}")
     positions -= center_offset
     
     distances_to_center = np.linalg.norm(positions[:, :2], axis=1)
@@ -268,5 +274,5 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
     plt.xlabel("X")
     plt.ylabel("Y")
     plt.title("Scatter Plot of G-code Points")
-    plt.show()
+    # plt.show()
 
