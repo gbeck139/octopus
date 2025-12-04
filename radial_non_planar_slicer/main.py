@@ -8,7 +8,7 @@ import deform
 import reform
 
 
-MODEL_NAME = 'hand'
+MODEL_NAME = 'propeller'
 
 mesh = deform.load_mesh(MODEL_NAME)
 deformed_mesh, ROTATION, offsets_applied = deform.deform_mesh(mesh)

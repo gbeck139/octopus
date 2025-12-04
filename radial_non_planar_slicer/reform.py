@@ -21,7 +21,7 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
     feed = 0
     gcode_points = []
     i = 0
-    with open(f'radial_non_planar_slicer/input_gcode/{MODEL_NAME}_deformed.gcode', 'r') as fh:
+    with open(f'input_gcode/{MODEL_NAME}_deformed.gcode', 'r') as fh:
         for line_text in fh.readlines():            
             # Skip comment lines and non-standard commands like EXCLUDE_OBJECT_DEFINE
             line_stripped = line_text.strip()
@@ -100,8 +100,27 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
 
     # untransform gcode
     positions = np.array([point["position"] for point in gcode_points])
+    
+    # DEBUG: Check input positions range
+    print(f"DEBUG: Input G-code X range: {positions[:,0].min():.2f} to {positions[:,0].max():.2f}")
+    print(f"DEBUG: Input G-code Y range: {positions[:,1].min():.2f} to {positions[:,1].max():.2f}")
+    
+    # Center the G-code positions
+    center_x = (positions[:,0].max() + positions[:,0].min()) / 2
+    center_y = (positions[:,1].max() + positions[:,1].min()) / 2
+    center_offset = np.array([center_x, center_y, 0])
+    
+    print(f"DEBUG: Centering G-code by subtracting: {center_offset}")
+    positions -= center_offset
+    
     distances_to_center = np.linalg.norm(positions[:, :2], axis=1)
-    translate_upwards = np.hstack([np.zeros((len(positions), 2)), np.tan(ROTATION(distances_to_center).reshape(-1, 1)) * distances_to_center.reshape(-1, 1)])
+    
+    # DEBUG: Check calculated radius and rotation
+    print(f"DEBUG: Max radius from center: {distances_to_center.max():.2f}")
+    rotations = ROTATION(distances_to_center)
+    print(f"DEBUG: Max rotation (deg): {np.rad2deg(rotations).max():.2f}")
+    
+    translate_upwards = np.hstack([np.zeros((len(positions), 2)), np.tan(rotations.reshape(-1, 1)) * distances_to_center.reshape(-1, 1)])
 
     new_positions = positions - translate_upwards
 
@@ -151,7 +170,7 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
     theta_accum = 0
 
     # save transformed gcode
-    with open(f'radial_non_planar_slicer/output_gcode/{MODEL_NAME}_undeformed.gcode', 'w') as fh:
+    with open(f'output_gcode/{MODEL_NAME}_undeformed.gcode', 'w') as fh:
         # write header
         fh.write("G94 ; mm/min feed  \n")
         fh.write("G28 ; home \n")
@@ -171,8 +190,8 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
             if np.all(np.isnan(position)):
                 continue
 
-            if position[2] < 0:
-                continue
+            # if position[2] < 0:
+            #     continue
 
             #################################################################################################
             ### If you want to print on another type of 4 axis printer, you will need to change this code ###
