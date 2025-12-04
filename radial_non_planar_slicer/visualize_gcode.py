@@ -4,7 +4,7 @@ import re
 import os
 
 # Configuration
-SHOW_TRAVEL_MOVES = False # Set to True to see G0 moves (travel), False for only G1 (extrusion)
+SHOW_TRAVEL_MOVES = True # Set to True to see G0 moves (travel), False for only G1 (extrusion)
 
 def visualize_gcode(model_name, nozzle_offset=43):
     filepath = f'output_gcode/{model_name}_undeformed.gcode'
@@ -79,6 +79,19 @@ def visualize_gcode(model_name, nozzle_offset=43):
     print(f"X Range: {points[:,0].min():.2f} to {points[:,0].max():.2f}")
     print(f"Y Range: {points[:,1].min():.2f} to {points[:,1].max():.2f}")
     print(f"Z Range: {points[:,2].min():.2f} to {points[:,2].max():.2f}")
+    
+    # DEBUG: Analyze B-values (Tilt)
+    b_values = []
+    with open(filepath, 'r') as f:
+        for line in f:
+            b_match = re.search(r'B([-\d\.]+)', line)
+            if b_match:
+                b_values.append(float(b_match.group(1)))
+    
+    if b_values:
+        b_arr = np.array(b_values)
+        print(f"DEBUG: B-axis (Tilt) Range: {b_arr.min():.2f} to {b_arr.max():.2f}")
+        print(f"DEBUG: Average B: {b_arr.mean():.2f}")
 
     # Filter out crazy outliers for visualization
     # Assuming the part is within a reasonable volume (e.g. +/- 500mm)
@@ -119,6 +132,9 @@ def visualize_gcode(model_name, nozzle_offset=43):
     ax.set_xlim(mid_x - max_range, mid_x + max_range)
     ax.set_ylim(mid_y - max_range, mid_y + max_range)
     ax.set_zlim(mid_z - max_range, mid_z + max_range)
+    
+    # Force aspect ratio to be equal
+    ax.set_box_aspect([1,1,1])
 
     plt.colorbar(sc, label='Z Height')
     plt.show()
