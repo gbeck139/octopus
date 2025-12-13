@@ -141,5 +141,5 @@ def visualize_gcode(model_name, nozzle_offset=43):
 
 if __name__ == "__main__":
     # Default model name from main.py context
-    MODEL_NAME = 'propeller' 
+    MODEL_NAME = 'propeller'  # Change as needed
     visualize_gcode(MODEL_NAME)

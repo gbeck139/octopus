@@ -9,12 +9,12 @@ def load_mesh(MODEL_NAME):
     return mesh
 
 
-def deform_mesh(mesh):
+def deform_mesh(mesh, scale=1.0):
     # extract faces    
     mesh.field_data["faces"] = mesh.faces.reshape(-1, 4)[:, 1:] # assume all triangles
 
     # scale mesh
-    mesh.points *= 1
+    mesh.points *= scale
 
     # center around the middle of the bounding box
     xmin, xmax, ymin, ymax, zmin, zmax = mesh.bounds

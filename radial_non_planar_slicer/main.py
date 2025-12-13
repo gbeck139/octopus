@@ -8,10 +8,10 @@ import deform
 import reform
 
 
-MODEL_NAME = 'propeller'
+MODEL_NAME = 'hand'
 
 mesh = deform.load_mesh(MODEL_NAME)
-deformed_mesh, ROTATION, offsets_applied = deform.deform_mesh(mesh)
+deformed_mesh, ROTATION, offsets_applied = deform.deform_mesh(mesh, scale=.7)
 deform.save_deformed_mesh(deformed_mesh, MODEL_NAME)
 # deform.plot_deformed_mesh(deformed_mesh)
 # input("Press Enter after slicing is complete...")
