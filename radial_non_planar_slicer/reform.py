@@ -125,16 +125,10 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
     print(f"DEBUG: Max radius from center: {distances_to_center.max():.2f}")
     rotations = ROTATION(distances_to_center)
     print(f"DEBUG: Max rotation (deg): {np.rad2deg(rotations).max():.2f}")
-
-    # Filter out points with extreme rotation (e.g. purge lines)
-    # If rotation is close to 90 degrees, tan() explodes.
-    extreme_rotation_mask = np.abs(np.rad2deg(rotations)) > 85
-    rotations[extreme_rotation_mask] = 0 # Clamp to 0 for calculation, will be filtered out
-
+    
     translate_upwards = np.hstack([np.zeros((len(positions), 2)), np.tan(rotations.reshape(-1, 1)) * distances_to_center.reshape(-1, 1)])
 
     new_positions = positions - translate_upwards
-    new_positions[extreme_rotation_mask] = None
 
     # cap travel move height to be just above the part and to not travel over the origin
     max_z = 0
