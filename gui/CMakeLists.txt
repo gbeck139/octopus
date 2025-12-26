@@ -14,9 +14,9 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
 set(PROJECT_SOURCES
         main.cpp
-        mainwindow.cpp
-        mainwindow.h
-        mainwindow.ui
+        mainwindow/mainwindow.cpp
+        mainwindow/mainwindow.h
+        mainwindow/mainwindow.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -24,6 +24,12 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
         version.h
+        tabs/prepare/preparetab.h tabs/prepare/preparetab.cpp tabs/prepare/preparetab.ui
+        tabs/preview/previewtab.h tabs/preview/previewtab.cpp tabs/preview/previewtab.ui
+        tabs/monitor/monitortab.h tabs/monitor/monitortab.cpp tabs/monitor/monitortab.ui
+    )
+    target_include_directories(gui PRIVATE
+        mainwindow
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET gui APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
