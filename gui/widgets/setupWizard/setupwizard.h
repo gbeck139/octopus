@@ -8,13 +8,19 @@ class SetupWizard : public QWizard
 {
     Q_OBJECT
 public:
-    explicit SetupWizard(bool firstRun, QWidget *parent = nullptr);
-    ProfilePage *profilePage;
+    explicit SetupWizard(QWidget *parent = nullptr);
+    void setFirstRunMode(bool enabled);
+
 protected:
     void closeEvent(QCloseEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
+    void accept() override;
+signals:
+    void printerTypeSelected(QString printerId);
+    void setupCompleted();
 private:
-    bool isFirstRun;
+    ProfilePage *profilePage;
+    bool isFirstRun = false;
 };
 
 #endif // SETUPWIZARD_H

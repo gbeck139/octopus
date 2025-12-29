@@ -25,10 +25,14 @@ ProfilePage::ProfilePage(QWidget *parent)
     ui->cylinderTwoImage->setPixmap(cylTwoPix.scaled(widthTwo,heightTwo,Qt::KeepAspectRatio));
 
     printerGroup = new QButtonGroup(this);
+    printerGroup->addButton(ui->cylinderOne);
+    printerGroup->addButton(ui->cylinderTwo);
+    printerGroup->addButton(ui->radioButton);
 
-    printerGroup->addButton(ui->cylinderOne, 1);
-    printerGroup->addButton(ui->cylinderTwo, 2);
-    printerGroup->addButton(ui->radioButton, 3);
+    // Set printer IDs
+    ui->cylinderOne->setProperty("printerId", "cylinderOne");
+    ui->cylinderTwo->setProperty("printerId", "cylinderTwo");
+    ui->radioButton->setProperty("printerId", "otherPrint");
 
     // Wizard re-checks completeness when selection changes
     connect(printerGroup, &QButtonGroup::buttonClicked,
@@ -48,10 +52,15 @@ bool ProfilePage::isComplete() const
 
 bool ProfilePage::validatePage()
 {
-    int printerType = printerGroup->checkedId();
+    auto *button = printerGroup->checkedButton();
+    if (!button) {
+        return false;
+    }
+
+    QString printerId = button->property("printerId").toString();
 
     // Save to AppConfig here
-    emit printerTypeSelected(printerType);
+    emit printerTypeSelected(printerId);
 
     return true;
 }

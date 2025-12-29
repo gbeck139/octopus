@@ -20,7 +20,7 @@ public:
     bool validatePage() override;
 
 signals:
-    void printerTypeSelected(int printerType);
+    void printerTypeSelected(QString printerId); // change int to PrinterType later? (enum)
 
 private:
     Ui::ProfilePage *ui;

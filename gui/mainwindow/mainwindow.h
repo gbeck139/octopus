@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include "appconfig.h"
 #include "model3d.h"
+#include "setupwizard.h"
+#include "profilemanager.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -23,6 +25,7 @@ private:
     Ui::MainWindow *ui;
     AppConfig *appConfig;
     Model3D *model3D;
+    ProfileManager *profileManager;
 
 private slots:
     void onImportClicked();
@@ -37,6 +40,8 @@ private slots:
     void onPreferencesClicked();
     void onSetupWizardClicked();
     void onAboutClicked();
+    void onSetupCompleted();
+    void connectWizard(SetupWizard* wizard);
 
 };
 #endif // MAINWINDOW_H

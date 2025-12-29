@@ -1,7 +1,6 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
-#include "setupwizard.h"
-#include "profilepage.h"
+#include "preparetab.h"
 
 #include <QFileDialog>
 #include <QMessageBox>
@@ -16,12 +15,28 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Model references
     appConfig = new AppConfig(this);
-        // set python slicer path
-        //appConfig->setPythonSlicerPath("");
-        // read it later
-        //QString path = appConfig->getPythonSlicerPath();
-
     model3D = new Model3D(this);
+    profileManager = new ProfileManager(this);
+
+    // Set Printer Profiles
+    if (!appConfig->isFirstRun()) {
+        profileManager->setActivePrinter(appConfig->getActivePrinter());
+    }
+
+
+    //testing purposes~~~~~~~~~~~~~~~~~~~~~
+    //appConfig->setFirstRunCompleted(false);
+
+    // Show First Run Wizard
+    if (appConfig->isFirstRun()) {
+        SetupWizard* firstWizard = new SetupWizard(this);
+        firstWizard->setFirstRunMode(true);
+
+        connectWizard(firstWizard);
+
+        firstWizard->exec();
+        firstWizard->deleteLater();
+    }
 
     // UI Connects
     connect(ui->actionImport, &QAction::triggered, this, &MainWindow::onImportClicked);
@@ -38,17 +53,17 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::onAboutClicked);
 
     // Model Connects
-
+    connect(profileManager, &ProfileManager::activePrinterChanged, ui->prepareTabWidget, &PrepareTab::onPrinterChanged);
 
     // Setup Wizard
-    if (appConfig->isFirstRun()) {
-        SetupWizard wizard(appConfig->isFirstRun(), this);
-        if (wizard.exec() == QDialog::Accepted) {
-            //connect(wizard, &QWizard::finished, appConfig, &AppConfig::setFirstRunCompleted);
-            appConfig->setFirstRunCompleted();
-            connect(wizard.profilePage, &ProfilePage::printerTypeSelected, appConfig, &AppConfig::setDefaultPrinter);
-        }
-    }
+    // if (appConfig->isFirstRun()) {
+    //     SetupWizard wizard(appConfig->isFirstRun(), this);
+    //     if (wizard.exec() == QDialog::Accepted) {
+    //         //connect(wizard, &QWizard::finished, appConfig, &AppConfig::setFirstRunCompleted);
+    //         appConfig->setFirstRunCompleted();
+    //         connect(wizard.profilePage, &ProfilePage::printerTypeSelected, appConfig, &AppConfig::setDefaultPrinter);
+    //     }
+    // }
 }
 
 MainWindow::~MainWindow()
@@ -131,15 +146,32 @@ void MainWindow::onPreferencesClicked()
 
 void MainWindow::onSetupWizardClicked()
 {
-        SetupWizard wizard(appConfig->isFirstRun(), this);
-        if (wizard.exec() == QDialog::Accepted) {
-            connect(wizard.profilePage, &ProfilePage::printerTypeSelected, appConfig, &AppConfig::setDefaultPrinter);
-            qDebug() << "UPDATE: Changed printer profile";
-        }
+    SetupWizard* setupWizard = new SetupWizard(this);
+    setupWizard->setFirstRunMode(false);
+
+    connectWizard(setupWizard);
+
+    setupWizard->exec();
+    setupWizard->deleteLater();
 }
 
 void MainWindow::onAboutClicked()
 {
     QMessageBox::about(this, "About", "Slicer App");
+}
+
+void MainWindow::onSetupCompleted()
+{
+    if (appConfig->isFirstRun()) {
+        appConfig->setFirstRunCompleted(true);
+    }
+}
+
+void MainWindow::connectWizard(SetupWizard *wizard)
+{
+    connect(wizard, &SetupWizard::printerTypeSelected, appConfig, &AppConfig::setActivePrinter);
+    connect(wizard, &SetupWizard::setupCompleted, this, &MainWindow::onSetupCompleted);
+
+    connect(wizard, &SetupWizard::printerTypeSelected, profileManager, &ProfileManager::setActivePrinter);
 }
 

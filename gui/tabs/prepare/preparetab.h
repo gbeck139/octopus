@@ -15,6 +15,9 @@ public:
     explicit PrepareTab(QWidget *parent = nullptr);
     ~PrepareTab();
 
+public slots:
+    void onPrinterChanged(const QString& printerId);
+
 private:
     Ui::PrepareTab *ui;
 };

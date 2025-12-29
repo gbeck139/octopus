@@ -39,16 +39,11 @@
        <attribute name="title">
         <string>Prepare</string>
        </attribute>
-       <widget class="QTextEdit" name="textEdit">
-        <property name="geometry">
-         <rect>
-          <x>220</x>
-          <y>130</y>
-          <width>104</width>
-          <height>71</height>
-         </rect>
-        </property>
-       </widget>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="PrepareTab" name="prepareTabWidget" native="true"/>
+        </item>
+       </layout>
       </widget>
       <widget class="QWidget" name="previewTab">
        <attribute name="title">
@@ -194,6 +189,14 @@
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PrepareTab</class>
+   <extends>QWidget</extends>
+   <header>preparetab.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

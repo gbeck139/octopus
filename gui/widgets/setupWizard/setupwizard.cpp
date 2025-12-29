@@ -3,15 +3,9 @@
 
 #include <QKeyEvent>
 
-SetupWizard::SetupWizard(bool firstRun, QWidget *parent)
-    : QWizard(parent),
-    isFirstRun(firstRun)
+SetupWizard::SetupWizard(QWidget *parent)
+    : QWizard(parent)
 {
-    if (isFirstRun) {
-        // Remove Cancel and close button
-        setOption(QWizard::NoCancelButton, true);
-        setWindowFlags(windowFlags() & ~Qt::WindowCloseButtonHint);
-    }
 
     setWindowTitle("Setup Wizard");
 
@@ -19,6 +13,27 @@ SetupWizard::SetupWizard(bool firstRun, QWidget *parent)
 
     addPage(new WelcomePage);
     addPage(profilePage);
+
+    connect(profilePage, &ProfilePage::printerTypeSelected, this, &SetupWizard::printerTypeSelected);
+}
+
+void SetupWizard::accept()
+{
+    emit setupCompleted();
+    QWizard::accept();
+}
+
+
+void SetupWizard::setFirstRunMode(bool enabled)
+{
+    isFirstRun = enabled;
+
+    setOption(QWizard::NoCancelButton, enabled);
+    //setOption(QWizard::DisabledBackButtonOnLastPage, enabled);
+
+    if (enabled) {
+        setWindowFlags(windowFlags() & ~Qt::WindowCloseButtonHint);
+    }
 }
 
 void SetupWizard::closeEvent(QCloseEvent *event)

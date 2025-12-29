@@ -6,14 +6,30 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>548</width>
+    <height>397</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
+  <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,2">
+   <item>
+    <widget class="SettingsMenuWidget" name="settingsMenuWidget" native="true"/>
+   </item>
+   <item>
+    <widget class="QWidget" name="visual3DWidget" native="true"/>
+   </item>
+  </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>SettingsMenuWidget</class>
+   <extends>QWidget</extends>
+   <header>settingsmenuwidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

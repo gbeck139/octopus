@@ -14,19 +14,25 @@ class AppConfig : public QObject
 public:
     explicit AppConfig(QObject *parent = nullptr);
 
+    // First-run flag
     bool isFirstRun() const;
 
-    void setDefaultPrinter(int printerType);
+    // Profile Settings
+    void setActivePrinter(QString printerId);
+    void setActiveMaterial(QString materialId);
+    void setActiveProcess(QString processId);
 
-    // User Preferences
-        //default printer profile
-        //default process profile
-        //user preset profiles
+    QString getActivePrinter() const;
+    QString getActiveMaterial() const;
+    QString getActiveProcess() const;
+
+    //User Preferences
 
 signals:
 
 public slots:
-    void setFirstRunCompleted();
+    void setFirstRunCompleted(bool completed);
+
 private:
     QSettings appSettings;
 };

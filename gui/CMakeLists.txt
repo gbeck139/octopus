@@ -22,6 +22,7 @@ set(PROJECT_SOURCES
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Core)
 
     qt_add_executable(gui
         MANUAL_FINALIZATION
@@ -36,16 +37,24 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         widgets/setupWizard/pages/welcomepage/welcomepage.h widgets/setupWizard/pages/welcomepage/welcomepage.cpp widgets/setupWizard/pages/welcomepage/welcomepage.ui
         widgets/setupWizard/pages/profilepage/profilepage.h widgets/setupWizard/pages/profilepage/profilepage.cpp widgets/setupWizard/pages/profilepage/profilepage.ui
         resource.qrc
+        tabs/prepare/settingsMenuWidget/settingsmenuwidget.h tabs/prepare/settingsMenuWidget/settingsmenuwidget.cpp tabs/prepare/settingsMenuWidget/settingsmenuwidget.ui
+        core/profiles/printerprofile.h core/profiles/printerprofile.cpp
+        core/profiles/materialprofile.h core/profiles/materialprofile.cpp
+        core/profiles/processprofile.h core/profiles/processprofile.cpp
+        core/profilemanager.h core/profilemanager.cpp
     )
     target_include_directories(gui PRIVATE
         mainwindow
         core
+        core/profiles
         tabs/prepare
+        tabs/prepare/settingsMenuWidget
         tabs/preview
         tabs/monitor
         widgets/setupWizard
         widgets/setupWizard/pages/welcomepage
         widgets/setupWizard/pages/profilepage
+
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET gui APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -66,6 +75,7 @@ else()
 endif()
 
 target_link_libraries(gui PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(gui PRIVATE Qt6::Core)
 target_link_libraries(gui PRIVATE Qt6::Core)
 target_link_libraries(gui PRIVATE Qt6::Core)
 
