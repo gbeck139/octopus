@@ -7,25 +7,35 @@
 ProfileManager::ProfileManager(QObject *parent)
     : QObject{parent}
 {
-    // System presets (hardcoded for now)
-    addPrinterProfile(PrinterProfile("cylinderOne"));
-    addPrinterProfile(PrinterProfile("cylinderTwo"));
+    loadPrinterProfiles();
 }
 
-void ProfileManager::addPrinterProfile(const PrinterProfile &profile)
+QList<const PrinterProfile*> ProfileManager::getSystemPrinters() const
 {
-    printerMap.insert(profile.getId(), profile);
+    QList<const PrinterProfile*> profiles;
+    for (PrinterProfile* profile : systemPrinters.values()) {
+        profiles.append(profile);
+    }
+    return profiles;
 }
 
-QStringList ProfileManager::getAvailablePrinters() const
+QList<const PrinterProfile*> ProfileManager::getUserPrinters() const
 {
-    return printerMap.keys();
+    QList<const PrinterProfile*> profiles;
+    for (PrinterProfile* profile : userPrinters.values()) {
+        profiles.append(profile);
+    }
+    return profiles;
 }
 
 void ProfileManager::setActivePrinter(const QString &printerId)
 {
-    if (!printerMap.contains(printerId)) {
-        qDebug() << "[ERROR] Unknown printer:" << printerId;
+    if (!userPrinters.contains(printerId) && !systemPrinters.contains(printerId)) {
+        qDebug() << "[PROFILE MANAGER] [ERROR] Unknown printer:" << printerId;
+        return;
+    }
+
+    if (printerId == activePrinterId) {
         return;
     }
 
@@ -35,28 +45,28 @@ void ProfileManager::setActivePrinter(const QString &printerId)
 
 QString ProfileManager::getActivePrinter()
 {
-    if (printerMap.contains(activePrinterId)) {
-        return activePrinterId;
-    } else {
-        return nullptr;
-    }
+    return activePrinterId;
 }
 
 void ProfileManager::loadPrinterProfiles()
 {
-    printerMap.clear();
+    qDeleteAll(systemPrinters);
+    qDeleteAll(userPrinters);
+
+    systemPrinters.clear();
+    userPrinters.clear();
 
     loadPrinterDirectory(getSystemPrinterDir(), true);
     loadPrinterDirectory(getUserPrinterDir(), false);
 
-    qDebug() << "[ProfileManager] Loaded printers:" << printerMap.keys() << ", from:" << getSystemPrinterDir() << "and" << getUserPrinterDir();
+    qDebug() << "[PROFILE MANAGER] Loaded printers:" << systemPrinters.keys() << userPrinters.keys() << ", from:" << getSystemPrinterDir() << "and" << getUserPrinterDir();
 }
 
 void ProfileManager::savePrinterProfile(const PrinterProfile &profile)
 {
     //QString path = getUserPrinterDir() + "/" + profile.getId() + ".json";
 
-    QString path = "temp";
+    QString path = getUserPrinterDir() + "/" + profile.getId() + ".json";
 
     QFile file(path);
     if (!file.open(QIODevice::WriteOnly))
@@ -69,21 +79,26 @@ void ProfileManager::savePrinterProfile(const PrinterProfile &profile)
 
 void ProfileManager::loadPrinterDirectory(const QString &path, bool system)
 {
-    QDir dir(path);
+    QStringList files;
 
-    if (!dir.exists()) {
-        if (!system) {
+    if (system) {
+        // For resources, QDir can list files inside the resource
+        QDir resDir(path);
+        files = resDir.entryList(QStringList() << "*.json", QDir::Files);
+    } else {
+        // For user folder on disk
+        QDir dir(path);
+        if (!dir.exists()) {
             dir.mkpath(".");
         }
-        return;
+        files = dir.entryList(QStringList() << "*.json", QDir::Files);
     }
 
-    QStringList files = dir.entryList({ "*.json" }, QDir::Files);
-
-    for (const QString& fileName : files) {
-        QFile file(dir.filePath(fileName));
+    for (const QString &fileName : files) {
+        QString fullPath = path + "/" + fileName;
+        QFile file(fullPath);
         if (!file.open(QIODevice::ReadOnly)) {
-            qDebug() << "[ERROR] Failed to open printer profile:" << fileName;
+            qDebug() << "[PROFILE MANAGER] [ERROR] Failed to open printer profile:" << fullPath;
             continue;
         }
 
@@ -93,20 +108,21 @@ void ProfileManager::loadPrinterDirectory(const QString &path, bool system)
         if (!doc.isObject())
             continue;
 
-        PrinterProfile profile =
-            PrinterProfile::fromJson(doc.object());
+        PrinterProfile* profile = PrinterProfile::fromJson(doc.object(), system);
+        (system ? systemPrinters : userPrinters).insert(profile->getId(), profile);
 
-        printerMap.insert(profile.getId(), profile);
+        qDebug() << "[PROFILE MANAGER] System printers loaded:" << systemPrinters.keys();
+        qDebug() << "[PROFILE MANAGER] User printers loaded:" << userPrinters.keys();
     }
 }
 
 QString ProfileManager::getSystemPrinterDir() const
 {
-    return QCoreApplication::applicationDirPath() + "/core/profiles/system";
+    return ":/json/json/";
 }
 
 QString ProfileManager::getUserPrinterDir() const
 {
-    return QCoreApplication::applicationDirPath() + "/core/profiles/user";
+    return QCoreApplication::applicationDirPath() + "/core/profiles/printers/user";
 }
 

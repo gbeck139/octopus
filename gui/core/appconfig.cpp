@@ -8,7 +8,6 @@ AppConfig::AppConfig(QObject *parent)
 
 bool AppConfig::isFirstRun() const
 {
-    //return !appSettings.contains("app/firstRunCompleted");
     return !appSettings.value("app/firstRunCompleted", false).toBool();
 }
 
@@ -19,24 +18,30 @@ void AppConfig::setFirstRunCompleted(bool completed)
 
 void AppConfig::setActivePrinter(QString printerId)
 {
+
+    if (printerId == appSettings.value("profile/activePrinter"))
+        return;
+
     appSettings.setValue("profile/activePrinter", printerId);
-    qDebug() << "[UPDATE] Saved current printer profile to: " << printerId;
+    qDebug() << "[APPCONFIG] Saved current printer profile to: " << appSettings.value("profile/activePrinter");
 }
 
 void AppConfig::setActiveMaterial(QString materialId)
 {
     appSettings.setValue("profile/activeMaterial", materialId);
-    qDebug() << "[UPDATE] Saved current material profile to: " << materialId;
+    qDebug() << "[APPCONFIG] Saved current material profile to: " << materialId;
 }
 
 void AppConfig::setActiveProcess(QString processId)
 {
     appSettings.setValue("profile/activeProcess", processId);
-    qDebug() << "[UPDATE] Saved current process profile to: " << processId;
+    qDebug() << "[APPCONFIG] Saved current process profile to: " << processId;
+    emit activePrinterChanged(processId);
 }
 
 QString AppConfig::getActivePrinter() const
 {
+    qDebug() << "[APPCONFIG] Current active printer:" << appSettings.value("profile/activePrinter").toString();
     return appSettings.value("profile/activePrinter").toString();
 }
 

@@ -13,6 +13,11 @@ PrepareTab::~PrepareTab()
     delete ui;
 }
 
+SettingsMenuWidget *PrepareTab::getSettingsMenu() const
+{
+    return ui->settingsMenuWidget;
+}
+
 void PrepareTab::onPrinterChanged(const QString &printerId)
 {
     qDebug() << "[UI UPDATE] Active printer changed to:" << printerId;
@@ -22,3 +27,4 @@ void PrepareTab::onPrinterChanged(const QString &printerId)
     // - update build volume display
     // - update currently selected printer
 }
+

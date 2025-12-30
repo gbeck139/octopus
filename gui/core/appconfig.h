@@ -29,7 +29,7 @@ public:
     //User Preferences
 
 signals:
-
+    void activePrinterChanged(const QString& printerId);
 public slots:
     void setFirstRunCompleted(bool completed);
 

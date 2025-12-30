@@ -33,10 +33,14 @@
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_9">
          <item>
-          <widget class="QComboBox" name="printerSelector"/>
+          <widget class="QComboBox" name="printerCombo">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+          </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="editButton">
+          <widget class="QPushButton" name="editPrinterButton">
            <property name="text">
             <string>Edit</string>
            </property>

@@ -1,0 +1,15 @@
+{
+  "id": "cylinderTwo",
+  "name": "Cylinder Two",
+
+  "limits": {
+    "nozzleMax": 260,
+    "bedMax": 110
+  },
+
+  "buildVolume": {
+    "x": 150,
+    "y": 150,
+    "z": 250
+  }
+}

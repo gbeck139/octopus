@@ -2,6 +2,7 @@
 #define PREPARETAB_H
 
 #include <QWidget>
+#include "settingsmenuwidget.h"
 
 namespace Ui {
 class PrepareTab;
@@ -14,6 +15,8 @@ class PrepareTab : public QWidget
 public:
     explicit PrepareTab(QWidget *parent = nullptr);
     ~PrepareTab();
+
+    SettingsMenuWidget* getSettingsMenu() const;
 
 public slots:
     void onPrinterChanged(const QString& printerId);

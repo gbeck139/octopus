@@ -42,6 +42,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         core/profiles/materialprofile.h core/profiles/materialprofile.cpp
         core/profiles/processprofile.h core/profiles/processprofile.cpp
         core/profilemanager.h core/profilemanager.cpp
+        tabs/prepare/settingsMenuWidget/printerProfileDialog/printerprofiledialog.h tabs/prepare/settingsMenuWidget/printerProfileDialog/printerprofiledialog.cpp tabs/prepare/settingsMenuWidget/printerProfileDialog/printerprofiledialog.ui
     )
     target_include_directories(gui PRIVATE
         mainwindow
@@ -49,6 +50,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         core/profiles
         tabs/prepare
         tabs/prepare/settingsMenuWidget
+        tabs/prepare/settingsMenuWidget/printerProfileDialogs
         tabs/preview
         tabs/monitor
         widgets/setupWizard
@@ -90,7 +92,7 @@ set_target_properties(gui PROPERTIES
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE
-    WIN32_EXECUTABLE TRUE
+    WIN32_EXECUTABLE FALSE
 )
 
 include(GNUInstallDirs)

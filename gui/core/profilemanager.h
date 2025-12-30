@@ -15,9 +15,11 @@ public:
     explicit ProfileManager(QObject *parent = nullptr);
 
     // Printer profiles
-    void addPrinterProfile(const PrinterProfile& profile);
-    QStringList getAvailablePrinters() const;
+    QList<const PrinterProfile*> getSystemPrinters() const;
+    QList<const PrinterProfile*> getUserPrinters() const;
+
     QString getActivePrinter();
+    PrinterProfile getActivePrinterProfile();
 
     // Save profiles
     void savePrinterProfile(const PrinterProfile& profile);
@@ -28,6 +30,9 @@ public:
 
 public slots:
     void setActivePrinter(const QString& printerId);
+
+    // void addUserPrinter(PrinterProfile* profile);
+    // void updateUserPrinter(PrinterProfile* profile);
 
 signals:
     void activePrinterChanged(const QString& printerId);
@@ -41,11 +46,15 @@ private:
     QString getUserPrinterDir() const;
 
 private:
-    QMap<QString, PrinterProfile> printerMap;
+    QMap<QString, PrinterProfile*> systemPrinters; //read only
+    QMap<QString, PrinterProfile*> userPrinters; //editable & savable
+
+    QString activePrinterId;
+
     //QMap<QString, MaterialProfile> materialMap;
     //QMap<QString, ProcessProfile> processMap;
 
-    QString activePrinterId;
+
 };
 
 #endif // PROFILEMANAGER_H

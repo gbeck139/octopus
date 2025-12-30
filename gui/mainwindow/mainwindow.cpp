@@ -23,6 +23,11 @@ MainWindow::MainWindow(QWidget *parent)
         profileManager->setActivePrinter(appConfig->getActivePrinter());
     }
 
+    // Settings, populate profiles
+    SettingsMenuWidget* settingsMenu = ui->prepareTabWidget->getSettingsMenu();
+    // Populate printer combo
+    settingsMenu->populatePrinterCombo(profileManager->getSystemPrinters(), profileManager->getUserPrinters(), profileManager->getActivePrinter());
+
 
     //testing purposes~~~~~~~~~~~~~~~~~~~~~
     //appConfig->setFirstRunCompleted(false);
@@ -37,6 +42,7 @@ MainWindow::MainWindow(QWidget *parent)
         firstWizard->exec();
         firstWizard->deleteLater();
     }
+
 
     // UI Connects
     connect(ui->actionImport, &QAction::triggered, this, &MainWindow::onImportClicked);
@@ -53,17 +59,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::onAboutClicked);
 
     // Model Connects
-    connect(profileManager, &ProfileManager::activePrinterChanged, ui->prepareTabWidget, &PrepareTab::onPrinterChanged);
-
-    // Setup Wizard
-    // if (appConfig->isFirstRun()) {
-    //     SetupWizard wizard(appConfig->isFirstRun(), this);
-    //     if (wizard.exec() == QDialog::Accepted) {
-    //         //connect(wizard, &QWizard::finished, appConfig, &AppConfig::setFirstRunCompleted);
-    //         appConfig->setFirstRunCompleted();
-    //         connect(wizard.profilePage, &ProfilePage::printerTypeSelected, appConfig, &AppConfig::setDefaultPrinter);
-    //     }
-    // }
+    connect(settingsMenu, &SettingsMenuWidget::printerSelected, appConfig, &AppConfig::setActivePrinter);
+    connect(appConfig, &AppConfig::activePrinterChanged, profileManager, &ProfileManager::setActivePrinter);
+    connect(profileManager, &ProfileManager::activePrinterChanged, settingsMenu, [=](const QString& id) {
+        settingsMenu->populatePrinterCombo(profileManager->getSystemPrinters(), profileManager->getUserPrinters(), id);});
 }
 
 MainWindow::~MainWindow()

@@ -7,20 +7,20 @@
 class PrinterProfile
 {
 public:
-    explicit PrinterProfile(const QString& profileId);
+    explicit PrinterProfile(const QString& profileId, bool system);
 
     //JSON
-    static PrinterProfile fromJson(const QJsonObject& obj);
+    static PrinterProfile* fromJson(const QJsonObject& obj, bool system);
     QJsonObject toJson() const;
 
-    // Get ID
+    // ID
     QString getId() const;
     QString getDisplayName() const;
+    bool isSystemProfile() const;
 
     // Get Limits
     int getMaxNozzleTemp() const;
     int getMaxBedTemp() const;
-
     double getBuildX() const;
     double getBuildY() const;
     double getBuildZ() const;
@@ -31,16 +31,20 @@ public:
     void setMaxBedTemp(int temp);
     void setBuildVolume(double x, double y, double z);
 
+    PrinterProfile* clone() const;
+
 private:
     QString id;
     QString displayName;
 
-    int maxNozzleTemp;
-    int maxBedTemp;
+    int maxNozzleTemp = 0;
+    int maxBedTemp = 0;
 
-    double buildX;
-    double buildY;
-    double buildZ;
+    double buildX = 0;
+    double buildY = 0;
+    double buildZ = 0;
+
+    bool isSystem;
 };
 
 #endif // PRINTERPROFILE_H

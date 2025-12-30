@@ -1,0 +1,15 @@
+{
+  "id": "cylinderOne",
+  "name": "Cylinder One",
+
+  "limits": {
+    "nozzleMax": 300,
+    "bedMax": 120
+  },
+
+  "buildVolume": {
+    "x": 200,
+    "y": 200,
+    "z": 300
+  }
+}
