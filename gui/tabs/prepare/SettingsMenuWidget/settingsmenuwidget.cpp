@@ -13,6 +13,7 @@ SettingsMenuWidget::SettingsMenuWidget(QWidget *parent)
     // UI <-> UI Connects
     connect(ui->printerSettings, &QGroupBox::toggled, ui->printerContent, &QFrame::setVisible);
     connect(ui->filamentSettings, &QGroupBox::toggled, ui->filamentContent, &QFrame::setVisible);
+    connect(ui->editPrinterButton, &QPushButton::clicked, this, &SettingsMenuWidget::onEditPrinterClicked);
 }
 
 SettingsMenuWidget::~SettingsMenuWidget()
@@ -40,7 +41,7 @@ void SettingsMenuWidget::populatePrinterCombo(const QList<const PrinterProfile*>
 
         ui->printerCombo->setItemData(row, profile->getId(), Qt::UserRole);
 
-        qDebug() << "Comparing:" << profile->getId() << "vs" << activePrinterId;
+        qDebug() << "[SETTINGSMENUWIDGET] Comparing:" << profile->getId() << "vs" << activePrinterId;
 
         if (profile->getId() == activePrinterId)
             selectedIndex = row;
@@ -78,4 +79,65 @@ void SettingsMenuWidget::onPrinterSelected(int index)
     if (!printerId.isEmpty())
         qDebug() << "[SETTINGSMENUWIDGET] onPrinterSelected emited";
         emit printerSelected(printerId);
+}
+
+void SettingsMenuWidget::onEditPrinterClicked()
+{
+    emit settingsMenuEditPrinterClicked();
+}
+
+void SettingsMenuWidget::rebuildPrinterCombo(const QList<const PrinterProfile *> &system, const QList<const PrinterProfile *> &user)
+{
+    // Temporarily block signals so we don’t trigger printerSelected
+    QSignalBlocker blocker(ui->printerCombo);
+
+    ui->printerCombo->clear();
+
+    // System Presets Header
+    ui->printerCombo->addItem("-- System Presets --");
+    QModelIndex idx = ui->printerCombo->model()->index(0,0);
+    ui->printerCombo->model()->setData(idx, 0, Qt::UserRole - 1);
+
+    // System Preset Printers
+    for (const PrinterProfile* profile : system) {
+        ui->printerCombo->addItem(profile->getDisplayName());
+        int row = ui->printerCombo->count() - 1;
+        ui->printerCombo->setItemData(row, profile->getId(), Qt::UserRole);
+    }
+
+    // User Presets Header
+    ui->printerCombo->addItem("-- User Presets --");
+    idx = ui->printerCombo->model()->index(ui->printerCombo->count() - 1, 0);
+    ui->printerCombo->model()->setData(idx, 0, Qt::UserRole - 1);
+
+    // User Preset Printers
+    for (const PrinterProfile* profile : user) {
+        ui->printerCombo->addItem(profile->getDisplayName());
+        int row = ui->printerCombo->count() - 1;
+        ui->printerCombo->setItemData(row, profile->getId(), Qt::UserRole);
+    }
+}
+
+void SettingsMenuWidget::refreshActivePrinterDisplay(const QString &activePrinterId)
+{
+    QSignalBlocker blocker(ui->printerCombo);
+
+    // Search for the index that matches the active printer ID
+    int selectedIndex = -1;
+    for (int i = 0; i < ui->printerCombo->count(); ++i) {
+        QVariant id = ui->printerCombo->itemData(i, Qt::UserRole);
+        if (id.isValid() && id.toString() == activePrinterId) {
+            selectedIndex = i;
+            break;
+        }
+    }
+
+    if (selectedIndex >= 0) {
+        ui->printerCombo->setCurrentIndex(selectedIndex);
+    }
+
+    // Optional: update other labels if you have them
+    // e.g., ui->nozzleDiameterLabel->setText(activeProfile->getNozzleDiameter());
+    // e.g., ui->limitsLabel->setText(activeProfile->getAxisLimitsString());
+
 }

@@ -23,6 +23,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Core)
 
     qt_add_executable(gui
         MANUAL_FINALIZATION
@@ -43,6 +44,8 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         core/profiles/processprofile.h core/profiles/processprofile.cpp
         core/profilemanager.h core/profilemanager.cpp
         tabs/prepare/settingsMenuWidget/printerProfileDialog/printerprofiledialog.h tabs/prepare/settingsMenuWidget/printerProfileDialog/printerprofiledialog.cpp tabs/prepare/settingsMenuWidget/printerProfileDialog/printerprofiledialog.ui
+        core/sliceparameters.h core/sliceparameters.cpp
+        core/slicerrunner.h core/slicerrunner.cpp
     )
     target_include_directories(gui PRIVATE
         mainwindow
@@ -50,7 +53,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         core/profiles
         tabs/prepare
         tabs/prepare/settingsMenuWidget
-        tabs/prepare/settingsMenuWidget/printerProfileDialogs
+        tabs/prepare/settingsMenuWidget/printerProfileDialog
         tabs/preview
         tabs/monitor
         widgets/setupWizard
@@ -77,6 +80,7 @@ else()
 endif()
 
 target_link_libraries(gui PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(gui PRIVATE Qt6::Core)
 target_link_libraries(gui PRIVATE Qt6::Core)
 target_link_libraries(gui PRIVATE Qt6::Core)
 target_link_libraries(gui PRIVATE Qt6::Core)

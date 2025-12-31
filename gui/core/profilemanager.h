@@ -19,10 +19,15 @@ public:
     QList<const PrinterProfile*> getUserPrinters() const;
 
     QString getActivePrinter();
-    PrinterProfile getActivePrinterProfile();
+    PrinterProfile* getActivePrinterProfile() const;
+    void addUserPrinter(PrinterProfile* profile);
+    void updateUserPrinter(PrinterProfile* profile);
 
     // Save profiles
-    void savePrinterProfile(const PrinterProfile& profile);
+    void savePrinterProfile(const PrinterProfile* profile);
+
+    // Delete User Printer << currently used for debugging purposes
+    void deleteUserPrinter(const QString& id);
 
     // Active profile control (have defaults in already)
 
@@ -36,6 +41,8 @@ public slots:
 
 signals:
     void activePrinterChanged(const QString& printerId);
+    void printersChanged(); // list structure changes
+    void activePrinterDataChanged(const QString& activePrinterId); // name/limits/nozzle edited
 
 private:
     // Load profiles
@@ -44,6 +51,8 @@ private:
 
     QString getSystemPrinterDir() const;
     QString getUserPrinterDir() const;
+
+    QString generateUniquePrinterId(const QString& baseId, int *outSuffix) const;
 
 private:
     QMap<QString, PrinterProfile*> systemPrinters; //read only

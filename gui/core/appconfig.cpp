@@ -24,6 +24,9 @@ void AppConfig::setActivePrinter(QString printerId)
 
     appSettings.setValue("profile/activePrinter", printerId);
     qDebug() << "[APPCONFIG] Saved current printer profile to: " << appSettings.value("profile/activePrinter");
+
+    emit activePrinterChanged(printerId);
+
 }
 
 void AppConfig::setActiveMaterial(QString materialId)

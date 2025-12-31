@@ -6,6 +6,7 @@
 #include "model3d.h"
 #include "setupwizard.h"
 #include "profilemanager.h"
+#include "slicerrunner.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -26,6 +27,7 @@ private:
     AppConfig *appConfig;
     Model3D *model3D;
     ProfileManager *profileManager;
+    SlicerRunner *slicerRunner;
 
 private slots:
     void onImportClicked();
@@ -42,6 +44,8 @@ private slots:
     void onAboutClicked();
     void onSetupCompleted();
     void connectWizard(SetupWizard* wizard);
+    void onSettingsMenuEditPrinterClicked();
+    void onSliceClicked();
 
 };
 #endif // MAINWINDOW_H

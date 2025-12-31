@@ -18,10 +18,14 @@ public:
 
 signals:
     void printerSelected(const QString& printerId);
+    void settingsMenuEditPrinterClicked();
 
 public slots:
     void populatePrinterCombo(const QList<const PrinterProfile*> system, const QList<const PrinterProfile*> user, const QString &activePrinterId);
     void onPrinterSelected(int index);
+    void onEditPrinterClicked();
+    void rebuildPrinterCombo(const QList<const PrinterProfile*>& system, const QList<const PrinterProfile*>& user);
+    void refreshActivePrinterDisplay(const QString& activePrinterId);
 
 private:
     Ui::SettingsMenuWidget *ui;

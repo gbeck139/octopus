@@ -43,6 +43,13 @@
         <item>
          <widget class="PrepareTab" name="prepareTabWidget" native="true"/>
         </item>
+        <item>
+         <widget class="QPushButton" name="sliceButton">
+          <property name="text">
+           <string>Slice</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
       <widget class="QWidget" name="previewTab">

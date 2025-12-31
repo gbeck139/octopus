@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 #include "preparetab.h"
+#include "printerprofiledialog.h"
 
 #include <QFileDialog>
 #include <QMessageBox>
@@ -17,11 +18,16 @@ MainWindow::MainWindow(QWidget *parent)
     appConfig = new AppConfig(this);
     model3D = new Model3D(this);
     profileManager = new ProfileManager(this);
+    slicerRunner = new SlicerRunner(this);
 
     // Set Printer Profiles
     if (!appConfig->isFirstRun()) {
         profileManager->setActivePrinter(appConfig->getActivePrinter());
     }
+
+    //TESTING
+    //profileManager->deleteUserPrinter("cylinderOne(1)");
+
 
     // Settings, populate profiles
     SettingsMenuWidget* settingsMenu = ui->prepareTabWidget->getSettingsMenu();
@@ -57,12 +63,28 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->menuPreferences, &QMenu::triggered, this, &MainWindow::onPreferencesClicked);
     connect(ui->actionSetupWizard, &QAction::triggered, this, &MainWindow::onSetupWizardClicked);
     connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::onAboutClicked);
+    connect(ui->sliceButton, &QPushButton::clicked, this, &MainWindow::onSliceClicked);
 
     // Model Connects
     connect(settingsMenu, &SettingsMenuWidget::printerSelected, appConfig, &AppConfig::setActivePrinter);
     connect(appConfig, &AppConfig::activePrinterChanged, profileManager, &ProfileManager::setActivePrinter);
     connect(profileManager, &ProfileManager::activePrinterChanged, settingsMenu, [=](const QString& id) {
         settingsMenu->populatePrinterCombo(profileManager->getSystemPrinters(), profileManager->getUserPrinters(), id);});
+
+    connect(settingsMenu, &SettingsMenuWidget::settingsMenuEditPrinterClicked, this, &MainWindow::onSettingsMenuEditPrinterClicked);
+    connect(profileManager, &ProfileManager::printersChanged, settingsMenu, [=]() {
+        settingsMenu->rebuildPrinterCombo(profileManager->getSystemPrinters(), profileManager->getUserPrinters());});
+    connect(profileManager, &ProfileManager::activePrinterDataChanged, settingsMenu, &SettingsMenuWidget::refreshActivePrinterDisplay);
+
+    // Slicer Connects
+    connect(slicerRunner, &SlicerRunner::sliceFinished, this, [](const QString& path){
+        qDebug() << "[MAIN SLICER] Slice finished, G-code:" << path;
+    });
+
+    connect(slicerRunner, &SlicerRunner::sliceFailed, this, [](const QString& err){
+        qDebug() << "[MAIN SLICER] Slice failed:" << err;
+    });
+
 }
 
 MainWindow::~MainWindow()
@@ -172,5 +194,45 @@ void MainWindow::connectWizard(SetupWizard *wizard)
     connect(wizard, &SetupWizard::setupCompleted, this, &MainWindow::onSetupCompleted);
 
     connect(wizard, &SetupWizard::printerTypeSelected, profileManager, &ProfileManager::setActivePrinter);
+}
+
+void MainWindow::onSettingsMenuEditPrinterClicked()
+{
+    PrinterProfile* currentPrinter = profileManager->getActivePrinterProfile();
+
+    if (!currentPrinter)
+        return;
+
+    auto* dialog = new printerProfileDialog(currentPrinter, this);
+
+    connect(dialog, &printerProfileDialog::saveRequested, profileManager, &ProfileManager::updateUserPrinter);
+    connect(dialog, &printerProfileDialog::saveAsRequested, profileManager, &ProfileManager::addUserPrinter);
+    //connect(dialog, &printerProfileDialog::saveAsRequested, appConfig, &AppConfig::setActivePrinter);
+
+    dialog->exec();
+}
+
+void MainWindow::onSliceClicked()
+{
+    auto* printer = profileManager->getActivePrinterProfile();
+    //auto* material = profileManager->getActiveMaterialProfile();
+    //auto* process = profileManager->getActiveProcessProfile();
+
+    // if (!printer || !material || !process) {
+    //     qDebug() << "[MAIN] Missing profile, cannot slice";
+    //     return;
+    // }
+
+    SliceParameters params;
+    // params.layerHeight = process->getLayerHeight();
+    // params.wallLoops = process->getWallLoops();
+    // params.infillDensity = process->getInfillDensity();
+    // params.supportsEnabled = process->supportsEnabled();
+    // params.nozzleTemp = material->getNozzleTemp();
+    // params.bedTemp = material->getBedTemp();
+
+    qDebug() << "[MAIN] Triggering slice";
+
+    slicerRunner->runSlice("currentStlPath", params);
 }
 

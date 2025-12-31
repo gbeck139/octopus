@@ -36,26 +36,106 @@
      <item row="1" column="1">
       <widget class="QDoubleSpinBox" name="nozzleDiameterDoubleSpinBox"/>
      </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="xMinLabel">
+       <property name="text">
+        <string>X min:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QDoubleSpinBox" name="xMinDoubleSpinBox"/>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="xMaxLabel">
+       <property name="text">
+        <string>X max:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QDoubleSpinBox" name="xMaxDoubleSpinBox"/>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="yMinLabel">
+       <property name="text">
+        <string>Y min:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QDoubleSpinBox" name="yMinDoubleSpinBox"/>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="yMaxLabel">
+       <property name="text">
+        <string>Y max:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="QDoubleSpinBox" name="yMaxDoubleSpinBox"/>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="zMinLabel">
+       <property name="text">
+        <string>Z min:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="QDoubleSpinBox" name="zMinDoubleSpinBox"/>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLabel" name="zMaxLabel">
+       <property name="text">
+        <string>Z max:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="1">
+      <widget class="QDoubleSpinBox" name="zMaxDoubleSpinBox"/>
+     </item>
+     <item row="8" column="0">
+      <widget class="QLabel" name="rotAxisMinLabel">
+       <property name="text">
+        <string>Rot axis min:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="1">
+      <widget class="QDoubleSpinBox" name="rotAxisMinDoubleSpinBox"/>
+     </item>
+     <item row="9" column="0">
+      <widget class="QLabel" name="rotAxisMaxLabel">
+       <property name="text">
+        <string>Rot axis max:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="1">
+      <widget class="QDoubleSpinBox" name="rotAxisMaxDoubleSpinBox"/>
+     </item>
     </layout>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QPushButton" name="pushButton">
+      <widget class="QPushButton" name="saveButton">
        <property name="text">
         <string>Save</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_2">
+      <widget class="QPushButton" name="saveAsButton">
        <property name="text">
         <string>Save As</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_3">
+      <widget class="QPushButton" name="cancelButton">
        <property name="text">
         <string>Cancel</string>
        </property>
