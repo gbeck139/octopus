@@ -16,12 +16,16 @@ void SlicerRunner::runSlice(const QString& stlPath, const SliceParameters& param
 
     qDebug() << "[SLICER RUNNER] Starting slice for:" << stlPath;
 
+
+
     // QTemporaryFile jsonFile;
     // jsonFile.open();
 
     // QJsonDocument doc(params.toJson());
     // jsonFile.write(doc.toJson());
     // jsonFile.close();
+
+    //first: CALL background planar slicer!!!!!!!!!!!!
 
     // qDebug() << "[SLICER RUNNER] Launching Python with params JSON";
 
