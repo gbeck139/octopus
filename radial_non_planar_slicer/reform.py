@@ -175,7 +175,7 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
     theta_accum = 0
 
     # save transformed gcode
-    with open(f'output_gcode/{MODEL_NAME}_undeformed.gcode', 'w') as fh:
+    with open(f'radial_non_planar_slicer/output_gcode/{MODEL_NAME}_undeformed.gcode', 'w') as fh:
         # write header
         fh.write("G94 ; mm/min feed  \n")
         fh.write("G28 ; home \n")
