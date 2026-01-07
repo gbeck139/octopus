@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 def load_mesh(MODEL_NAME):
     # Load the mesh
-    mesh = pv.read(f'input_models/{MODEL_NAME}.stl')
+    mesh = pv.read(f'radial_non_planar_slicer/input_models/{MODEL_NAME}.stl')
     return mesh
 
 

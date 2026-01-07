@@ -21,7 +21,7 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
     feed = 0
     gcode_points = []
     i = 0
-    with open(f'input_gcode/{MODEL_NAME}_deformed.gcode', 'r') as fh:
+    with open(f'radial_non_planar_slicer/input_gcode/{MODEL_NAME}_deformed.gcode', 'r') as fh:
         for line_text in fh.readlines():            
             # Skip comment lines and non-standard commands like EXCLUDE_OBJECT_DEFINE
             line_stripped = line_text.strip()
