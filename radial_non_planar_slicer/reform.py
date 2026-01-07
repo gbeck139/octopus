@@ -177,14 +177,23 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
     # save transformed gcode
     with open(f'radial_non_planar_slicer/output_gcode/{MODEL_NAME}_undeformed.gcode', 'w') as fh:
         # write header
-        fh.write("G94 ; mm/min feed  \n")
-        fh.write("G28 ; home \n")
-        fh.write("M83 ; relative extrusion \n")
-        fh.write("G1 E10 ; prime extruder \n")
-        fh.write("G94 ; mm/min feed \n")
-        fh.write("G90 ; absolute positioning \n")
-        fh.write(f"G0 C{prev_theta} X{prev_r} Z{prev_z} B{-np.rad2deg(ROTATION(0))}\n")
-        fh.write("G93 ; inverse time feed \n")
+        fh.write("; --- INITIALIZATION ---\n")
+        fh.write("G21              ; Establish metric units (millimeters)\n")
+        fh.write("G90              ; Use absolute coordinates for all axes\n")
+        fh.write("G94              ; Set feedrate mode to units per minute (mm/min)\n")
+        fh.write("; M203 C3600 X5000 Z1000 B5000 E300 ; Set max feedrate limits (Currently disabled)\n")
+        fh.write("M106 S128        ; Enable cooling fan at 50% power (PWM 128/255)\n")
+        fh.write("; --- THERMAL MANAGEMENT ---\n")
+        fh.write("M104 S200        ; Start heating nozzle to 200°C (Non-blocking)\n")
+        fh.write("M109 S200        ; Wait for nozzle to reach target temperature before proceeding\n")
+        fh.write("; --- HOMING & INITIAL POSITIONING ---\n")
+        fh.write("G28              ; Execute homing sequence for all axes\n")
+        fh.write("G0 C0 X0 Z20 B-15.0 F600 ; Rapid move to safe start clearance and orientation\n")
+        fh.write("; --- EXTRUDER PREPARATION ---\n")
+        fh.write("G92 E0           ; Zero out the current extruder position\n")
+        fh.write("G1 E10 F200      ; Perform 10mm purge to prime the nozzle\n")
+        fh.write("G92 E0           ; Reset extruder position after priming\n")
+        fh.write("M83              ; Switch to relative extrusion mode (Required for RRF/standard logic)\n")
 
         for i, point in enumerate(gcode_points):
             position = new_positions[i]
@@ -246,6 +255,11 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
             prev_r = r
             prev_theta = theta
             prev_z = z
+
+        # write footer
+        fh.write("        M104 S0          ; Disable nozzle heater (Allow to cool)\n")
+        fh.write("M106 S0          ; Turn off component cooling fan\n")
+        fh.write("M84              ; Cut power to stepper motors (Enables manual movement/prevents overheating)\n")
 
 
     # #### Step 5
