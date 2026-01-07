@@ -157,7 +157,6 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
     #         point["extrusion"] *= extrusion_scales[i]
 
 
-
     # #### Step 4
     # 
     # Run the code below.
@@ -168,6 +167,7 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
 
 
     NOZZLE_OFFSET = 43 # mm
+    FLOW_MULTIPLIER = 1.5 # Increase this if under-extruding
 
     prev_r = 0
     prev_theta = 0
@@ -228,7 +228,7 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
 
 
             if point["extrusion"] is not None:
-                string += f" E{point['extrusion']:.4f}"
+                string += f" E{(point['extrusion'] * FLOW_MULTIPLIER):.4f}"
 
             no_feed_value = False
             if point["inv_time_feed"] is not None:
