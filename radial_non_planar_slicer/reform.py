@@ -25,7 +25,7 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
         for line_text in fh.readlines():            
             # Skip comment lines and non-standard commands like EXCLUDE_OBJECT_DEFINE
             line_stripped = line_text.strip()
-            if not line_stripped or line_stripped.startswith(';') or line_stripped.startswith('EXCLUDE_OBJECT') or line_stripped.startswith('SET_') or line_stripped.startswith('START_') or line_stripped.startswith('END_'):
+            if not line_stripped or line_stripped.startswith(';') or line_stripped.startswith('EXCLUDE_OBJECT') or line_stripped.startswith('SET_') or line_stripped.startswith('START_') or line_stripped.startswith('END_') or line_stripped.startswith('G93') or line_stripped.startswith('G94'):
                 continue
             
             line = Line(line_text)
