@@ -243,13 +243,13 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
                 string += f" F{(point['inv_time_feed']):.4f}"
             else:
                 string += f" F50000"
-                fh.write(f"G94\n")
+                # fh.write(f"G94\n")
                 no_feed_value = True
 
             fh.write(string + "\n")
 
-            if no_feed_value:
-                fh.write(f"G93\n") # back to inv feed
+            # if no_feed_value:
+            #     fh.write(f"G93\n") # back to inv feed
 
             # update previous values
             prev_r = r
@@ -257,7 +257,7 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
             prev_z = z
 
         # write footer
-        fh.write("        M104 S0          ; Disable nozzle heater (Allow to cool)\n")
+        fh.write("M104 S0          ; Disable nozzle heater (Allow to cool)\n")
         fh.write("M106 S0          ; Turn off component cooling fan\n")
         fh.write("M84              ; Cut power to stepper motors (Enables manual movement/prevents overheating)\n")
 
