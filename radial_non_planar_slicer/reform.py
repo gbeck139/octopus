@@ -150,11 +150,11 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
         prev_pos = new_positions[i]
 
     # rescale extrusion to compensate for rotation deformation
-    # distances_to_center = np.linalg.norm(new_positions[:, :2], axis=1)
-    # extrusion_scales = np.cos(ROTATION(distances_to_center))
-    # for i, point in enumerate(gcode_points):
-    #     if point["extrusion"] is not None:
-    #         point["extrusion"] *= extrusion_scales[i]
+    distances_to_center = np.linalg.norm(new_positions[:, :2], axis=1)
+    extrusion_scales = np.cos(ROTATION(distances_to_center))
+    for i, point in enumerate(gcode_points):
+        if point["extrusion"] is not None:
+            point["extrusion"] *= extrusion_scales[i]
 
 
     # #### Step 4
@@ -167,7 +167,6 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
 
 
     NOZZLE_OFFSET = 43 # mm
-    FLOW_MULTIPLIER = 1.5 # Increase this if under-extruding
 
     prev_r = 0
     prev_theta = 0
@@ -228,7 +227,7 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
 
 
             if point["extrusion"] is not None:
-                string += f" E{(point['extrusion'] * FLOW_MULTIPLIER):.4f}"
+                string += f" E{point['extrusion']:.4f}"
 
             no_feed_value = False
             if point["inv_time_feed"] is not None:
