@@ -150,11 +150,11 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
         prev_pos = new_positions[i]
 
     # rescale extrusion to compensate for rotation deformation
-    distances_to_center = np.linalg.norm(new_positions[:, :2], axis=1)
-    extrusion_scales = np.cos(ROTATION(distances_to_center))
-    for i, point in enumerate(gcode_points):
-        if point["extrusion"] is not None:
-            point["extrusion"] *= extrusion_scales[i]
+    # distances_to_center = np.linalg.norm(new_positions[:, :2], axis=1)
+    # extrusion_scales = np.cos(ROTATION(distances_to_center))
+    # for i, point in enumerate(gcode_points):
+    #     if point["extrusion"] is not None:
+    #         point["extrusion"] *= extrusion_scales[i]
 
 
 
