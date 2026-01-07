@@ -1,6 +1,10 @@
 venv/
-output_models/
-input_models/
-output_gcode/
-input_gcode/
+**/output_models/*
+!**/output_models/.gitkeep
+**/input_models/*
+!**/input_models/.gitkeep
+**/output_gcode/*
+!**/output_gcode/.gitkeep
+**/input_gcode/*
+!**/input_gcode/.gitkeep
 __pycache__/
