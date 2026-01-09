@@ -8,6 +8,8 @@ import deform
 import reform
 
 
+#TODO separate reform and deform and make command with arguments
+
 MODEL_NAME = 'hand'
 
 mesh = deform.load_mesh(MODEL_NAME)
@@ -15,4 +17,13 @@ deformed_mesh, ROTATION, offsets_applied = deform.deform_mesh(mesh, scale=.7)
 # deform.save_deformed_mesh(deformed_mesh, MODEL_NAME)
 # deform.plot_deformed_mesh(deformed_mesh)
 # input("Press Enter after slicing is complete...")
+#TODO call subprocess to run slicer here
+"""
+subprocess.run([
+    "orca-slicer",
+    "--load", "profile.ini",
+    "--input", config["paths"]["deformed_stl"],
+    "--output", config["paths"]["deformed_gcode"]
+], check=True)
+"""
 reform.load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied)
