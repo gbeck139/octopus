@@ -67,7 +67,7 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
             delta_pos = pos - prev_pos
             distance = np.linalg.norm(delta_pos)
             if distance > 0 and gcode.word == "G01":
-                seg_size = 1 # mm
+                seg_size = 1 # mm # Parameter: Process Settings - Quality
                 num_segments = -(-distance // seg_size) # hacky round up
                 seg_distance = distance/num_segments
 
@@ -111,6 +111,7 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
     
     # Hardcoded center for Creality K1 Max (300x300mm bed)
     # We use this instead of bounding box to avoid issues with purge lines/skirts
+    # PARAMETER: Printer Settings - X min/max limits, Y min/max limits
     center_x = 150.0
     center_y = 150.0
     
@@ -166,7 +167,7 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
     # In[12]:
 
 
-    NOZZLE_OFFSET = 43 # mm
+    NOZZLE_OFFSET = 43 # mm # PARAMETER: Printer Settings - Nozzle diameter (implied offset)
 
     prev_r = 0
     prev_theta = 0
@@ -184,6 +185,7 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
         fh.write("; M203 C3600 X5000 Z1000 B5000 E300 ; Set max feedrate limits (Currently disabled)\n")
         fh.write("M106 S128        ; Enable cooling fan at 50% power (PWM 128/255)\n")
         fh.write("; --- THERMAL MANAGEMENT ---\n")
+        # PARAMETER: Filament Settings - Nozzle temp
         fh.write("M104 S200        ; Start heating nozzle to 200°C (Non-blocking)\n")
         fh.write("M109 S200        ; Wait for nozzle to reach target temperature before proceeding\n")
         fh.write("; --- HOMING & INITIAL POSITIONING ---\n")

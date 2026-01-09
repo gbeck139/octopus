@@ -30,6 +30,8 @@ def deform_mesh(mesh, scale=1.0):
 
     # TODO make this user definable
 
+    # PARAMETER: Rotational axis min/max limits
+
     ROTATION = lambda radius: np.deg2rad(15 + 30 * (radius / max_radius)) # Use for propeller and tree
     # ROTATION = lambda radius: np.full_like(radius, np.deg2rad(-40)) # Fixed rotation inwards
     # ROTATION = lambda radius: np.deg2rad(-40 + 30 * (1 - (radius / max_radius)) ** 2) # Use for bridge
