@@ -10,7 +10,7 @@ import reform
 
 #TODO separate reform and deform and make command with arguments
 
-MODEL_NAME = 'hand'
+MODEL_NAME = '3DBenchy'
 
 mesh = deform.load_mesh(MODEL_NAME)
 deformed_mesh, ROTATION, offsets_applied = deform.deform_mesh(mesh, scale=.7)

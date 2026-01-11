@@ -7,7 +7,7 @@ import os
 SHOW_TRAVEL_MOVES = True # Set to True to see G0 moves (travel), False for only G1 (extrusion)
 
 def visualize_gcode(model_name, nozzle_offset=43):
-    filepath = f'output_gcode/{model_name}_undeformed.gcode'
+    filepath = f'radial_non_planar_slicer/output_gcode/{model_name}_undeformed.gcode'
     
     if not os.path.exists(filepath):
         print(f"File not found: {filepath}")
@@ -141,5 +141,5 @@ def visualize_gcode(model_name, nozzle_offset=43):
 
 if __name__ == "__main__":
     # Default model name from main.py context
-    MODEL_NAME = 'hand'  # Change as needed
+    MODEL_NAME = '3DBenchy'  # Change as needed
     visualize_gcode(MODEL_NAME)
