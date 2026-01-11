@@ -50,7 +50,7 @@ def deform_mesh(mesh, scale=1.0):
 
 def save_deformed_mesh(deformed_mesh, MODEL_NAME):
     # save the mesh
-    deformed_mesh.save(f'output_models/{MODEL_NAME}_deformed.stl')
+    deformed_mesh.save(f'radial_non_planar_slicer/output_models/{MODEL_NAME}_deformed.stl')
 
 
 def plot_deformed_mesh(deformed_mesh):
