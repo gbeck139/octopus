@@ -1,15 +1,3 @@
-# #### Step 2
-# 
-# Take output_models/MODEL_NAME_unwrapped.stl and slice it in cura. Make sure the origin of the printer is the center of the print bed, and that the model is in the middle of the printbed.
-# 
-# Upload MODEL_NAME_unwrapped.gcode into input_gcode.
-
-# #### Step 3
-# 
-# Run the code below.
-# 
-# It parses the gcode and un-deforms it.
-
 import numpy as np
 import json
 from pygcode import Line
@@ -40,18 +28,19 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
     i = 0
     with open(f'radial_non_planar_slicer/input_gcode/{MODEL_NAME}_deformed.gcode', 'r') as fh:
         for line_text in fh.readlines():            
-            # Skip comment lines and non-standard commands like EXCLUDE_OBJECT_DEFINE
+            
+            # Skip comment lines and non-standard commands
             line_stripped = line_text.strip()
             if not line_stripped or line_stripped.startswith(';') or line_stripped.startswith('EXCLUDE_OBJECT') or line_stripped.startswith('SET_') or line_stripped.startswith('START_') or line_stripped.startswith('END_') or line_stripped.startswith('G93') or line_stripped.startswith('G94'):
                 continue
             
             line = Line(line_text)
-            extrusion = None
-
-            move_command_seen = False
 
             if not line.block.gcodes:
                 continue
+
+            extrusion = None
+            move_command_seen = False
 
             # extract position and feedrate
             for gcode in sorted(line.block.gcodes):
@@ -89,7 +78,7 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
             distance = np.linalg.norm(delta_pos)
             if distance > 0 and gcode.word == "G01":
                 seg_size = 1 # mm
-                num_segments = -(-distance // seg_size) # hacky round up
+                num_segments = -(-distance // seg_size) # ceiling division
                 seg_distance = distance/num_segments
 
                 # calculate inverse time feed
@@ -111,6 +100,8 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
                         "end_position": pos,
                         "unsegmented_move_length": distance
                     })
+                    if extrusion is not None:
+                        print(f"DEBUG: Extrusion={extrusion/num_segments:.4f}")
             else:
                 gcode_points.append({
                     "position": pos.copy() + offsets_applied,
@@ -129,33 +120,16 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
     # untransform gcode
     positions = np.array([point["position"] for point in gcode_points])
     
-    # DEBUG: Check input positions range
-    print(f"DEBUG: Input G-code X range: {positions[:,0].min():.2f} to {positions[:,0].max():.2f}")
-    print(f"DEBUG: Input G-code Y range: {positions[:,1].min():.2f} to {positions[:,1].max():.2f}")
-    
-    # Center the G-code positions
-    # center_x = (positions[:,0].max() + positions[:,0].min()) / 2
-    # center_y = (positions[:,1].max() + positions[:,1].min()) / 2
-    
     # Hardcoded center for Creality K1 Max (300x300mm bed)
     # We use this instead of bounding box to avoid issues with purge lines/skirts
     center_x = 150.0
     center_y = 150.0
-    
     center_offset = np.array([center_x, center_y, 0])
-    
-    print(f"DEBUG: Centering G-code by subtracting fixed bed center: {center_offset}")
     positions -= center_offset
     
     distances_to_center = np.linalg.norm(positions[:, :2], axis=1)
-    
-    # DEBUG: Check calculated radius and rotation
-    print(f"DEBUG: Max radius from center: {distances_to_center.max():.2f}")
-    rotations = ROTATION(distances_to_center)
-    print(f"DEBUG: Max rotation (deg): {np.rad2deg(rotations).max():.2f}")
-    
+    rotations = ROTATION(distances_to_center) 
     translate_upwards = np.hstack([np.zeros((len(positions), 2)), np.tan(rotations.reshape(-1, 1)) * distances_to_center.reshape(-1, 1)])
-
     new_positions = positions - translate_upwards
 
     # NOTE: reminder to use for our printer
@@ -186,21 +160,9 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
             point["extrusion"] *= extrusion_scales[i]
 
 
-    # #### Step 4
-    # 
-    # Run the code below.
-    # 
-    # It writes the un-deformed model to output_models/MODEL_NAME_unwrapped.gcode
-
-    # In[12]:
-
-
     NOZZLE_OFFSET = 43 # mm
 
-    prev_r = 0
     prev_theta = 0
-    prev_z = 20
-
     theta_accum = 0
 
     # save transformed gcode
@@ -250,6 +212,7 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
             r += np.sin(rotation) * NOZZLE_OFFSET
             z += (np.cos(rotation) - 1) * NOZZLE_OFFSET
 
+            # NOTE: change for non-continuous rotation
             delta_theta = theta - prev_theta
             if delta_theta > np.pi:
                 delta_theta -= 2*np.pi
@@ -281,9 +244,7 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
             #     fh.write(f"G93\n") # back to inv feed
 
             # update previous values
-            prev_r = r
             prev_theta = theta
-            prev_z = z
 
         # write footer
         fh.write("M104 S0          ; Disable nozzle heater (Allow to cool)\n")
@@ -291,19 +252,10 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
         fh.write("M84              ; Cut power to stepper motors (Enables manual movement/prevents overheating)\n")
 
 
-    # #### Step 5
-    # 
-    # View the un-deformed model
-
-    # In[20]:
-
-
     # get where z > 0
     z = new_positions[:, 2]
     point_cloud = pv.PolyData(new_positions[z > 0])
-
-
-    # point_cloud.plot(scalars=np.arange(len(new_positions[z > 0]))%2000, point_size=20, render_points_as_spheres=True) # doesnt work in google colab? uncomment to view if not in google colab
+    point_cloud.plot(scalars=np.arange(len(new_positions[z > 0]))%2000, point_size=20, render_points_as_spheres=True) # doesnt work in google colab? uncomment to view if not in google colab
 
     # plot in matplotlib
     g01_points = np.array([new_positions[i] for i, point in enumerate(gcode_points) if point["command"] == "G01"])
