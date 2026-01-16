@@ -136,6 +136,45 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
     translate_upwards = np.hstack([np.zeros((len(positions), 2)), np.tan(rotations.reshape(-1, 1)) * distances_to_center.reshape(-1, 1)])
     new_positions = positions - translate_upwards
 
+    # --- SAFETY FILTERING ---
+    # Filter out points that are geometrically impossible or dangerous (e.g. infinite wrapping of origin)
+    # This keeps visualizations clean and print safe.
+    NOZZLE_OFFSET = 43 # mm
+    MIN_SAFE_Z = -5.0
+    MAX_SAFE_Z = 200.0
+    MAX_SAFE_R = 1000.0
+
+    valid_mask = []
+    
+    for i, pos in enumerate(new_positions):
+        # Replicate the kinematic calculation to check safety
+        r = np.linalg.norm(pos[:2])
+        z = pos[2]
+        
+        # We need the rotation for this specific point to check Z-dip
+        # Rotation was calculated above based on 'distances_to_center', which corresponds to these indices
+        rotation = rotations[i]
+
+        # Apply nozzle compensation
+        r_comp = r + np.sin(rotation) * NOZZLE_OFFSET
+        z_comp = z + (np.cos(rotation) - 1) * NOZZLE_OFFSET
+
+        if z_comp < MIN_SAFE_Z or z_comp > MAX_SAFE_Z or r_comp > MAX_SAFE_R:
+            valid_mask.append(False)
+        else:
+            valid_mask.append(True)
+
+    valid_mask = np.array(valid_mask, dtype=bool)
+    
+    # Apply filter to both the numpy array and the list
+    new_positions = new_positions[valid_mask]
+    # Rebuild gcode_points list using itertools or list comp
+    gcode_points = [point for i, point in enumerate(gcode_points) if valid_mask[i]]
+    # Recalculate rotations array to keep it in sync for later use if needed (though we mainly used it for filtering)
+    rotations = rotations[valid_mask]
+    
+    print(f"Safety Filter: Removed {len(valid_mask) - sum(valid_mask)} unsafe points.")
+
     # NOTE: reminder to use for our printer
     # cap travel move height to be just above the part and to not travel over the origin
     max_z = 0
@@ -164,12 +203,7 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
             point["extrusion"] *= extrusion_scales[i]
 
 
-    NOZZLE_OFFSET = 43 # mm
-    
-    # SAFETY LIMITS
-    MIN_SAFE_Z = -5.0   # Minimum allowed Z height (prevents bed crashes if origin wraps downwards)
-    MAX_SAFE_Z = 200.0  # Maximum allowed Z height
-    MAX_SAFE_R = 1000.0  # Maximum allowed Radius (prevents crazy wrapping of far-away points)
+    NOZZLE_OFFSET = 43 # mm (Defined earlier now)
 
     prev_theta = 0
     theta_accum = 0
@@ -220,14 +254,6 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
             # compensate for nozzle offset
             r += np.sin(rotation) * NOZZLE_OFFSET
             z += (np.cos(rotation) - 1) * NOZZLE_OFFSET
-
-            # SAFETY CLAMP: Filter out points that exceed machine limits due to deformation artifacts
-            if z < MIN_SAFE_Z:
-                continue
-            if z > MAX_SAFE_Z:
-                continue
-            if r > MAX_SAFE_R:
-                continue
 
             # NOTE: change for non-continuous rotation
             delta_theta = theta - prev_theta
