@@ -13,8 +13,8 @@ import reform
 MODEL_NAME = '3DBenchy'
 
 mesh = deform.load_mesh(MODEL_NAME)
-deformed_mesh, ROTATION, offsets_applied = deform.deform_mesh(mesh, scale=.7)
-# deform.save_deformed_mesh(deformed_mesh, MODEL_NAME)
+deformed_mesh, transform_params = deform.deform_mesh(mesh)
+# deform.save_deformed_mesh(deformed_mesh, transform_params, MODEL_NAME)
 # deform.plot_deformed_mesh(deformed_mesh)
 # input("Press Enter after slicing is complete...")
 #TODO call subprocess to run slicer here
@@ -26,4 +26,3 @@ subprocess.run([
     "--output", config["paths"]["deformed_gcode"]
 ], check=True)
 """
-reform.load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied)

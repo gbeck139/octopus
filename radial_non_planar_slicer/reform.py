@@ -11,11 +11,28 @@
 # It parses the gcode and un-deforms it.
 
 import numpy as np
+import json
 from pygcode import Line
 import pyvista as pv
 import matplotlib.pyplot as plt
 
-def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
+def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
+    
+    if transform_params is None:
+        try:
+             with open(f'radial_non_planar_slicer/output_models/{MODEL_NAME}_transform.json', 'r') as f:
+                transform_params = json.load(f)
+        except FileNotFoundError:
+            print(f"Error: Transform parameters not found for {MODEL_NAME}")
+            return
+
+    max_radius = transform_params["max_radius"]
+    angle_base = transform_params["angle_base"]
+    angle_factor = transform_params["angle_factor"]
+    offsets_applied = np.array(transform_params["offsets_applied"])
+    
+    ROTATION = lambda radius: np.deg2rad(angle_base + angle_factor * (radius / max_radius))
+
     # read gcode
     pos = np.array([0., 0., 20.])
     feed = 0
@@ -60,7 +77,11 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
                 if param.letter == "E":
                     extrusion = param.value
 
-
+            """
+            
+            FOR NEXT MEETING
+            
+            """
             # segment moves
             # prevents G0 (rapid moves) from hitting the part
             # makes G1 (feed moves) less jittery
@@ -83,6 +104,7 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
                         "position": (prev_pos + delta_pos * (i+1) / num_segments) + offsets_applied,
                         "command": gcode.word,
                         "extrusion": extrusion/num_segments if extrusion is not None else None,
+                        # check for zero division or small nums
                         "inv_time_feed": inv_time_feed,
                         "move_length": seg_distance,
                         "start_position": prev_pos,
@@ -97,6 +119,12 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
                     "inv_time_feed": None,
                     "move_length": 0
                 })
+
+            """
+            
+            FOR NEXT MEETING: END
+            
+            """
 
     # untransform gcode
     positions = np.array([point["position"] for point in gcode_points])
@@ -130,6 +158,7 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
 
     new_positions = positions - translate_upwards
 
+    # NOTE: reminder to use for our printer
     # cap travel move height to be just above the part and to not travel over the origin
     max_z = 0
     for i, point in enumerate(gcode_points):
@@ -146,7 +175,7 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
     for i, point in enumerate(gcode_points):
         if point["extrusion"] is not None and point["move_length"] != 0:
             extrusion_scale = np.linalg.norm(new_positions[i] - prev_pos) / point["move_length"]
-            point["extrusion"] *= min(extrusion_scale, 10)
+            point["extrusion"] *= min(extrusion_scale, 1) # cap to prevent extreme extrusion
         prev_pos = new_positions[i]
 
     # rescale extrusion to compensate for rotation deformation
@@ -289,3 +318,7 @@ def load_gcode_and_undeform(MODEL_NAME, ROTATION, offsets_applied):
     plt.title("Scatter Plot of G-code Points")
     # plt.show()
 
+
+if __name__ == "__main__":
+    MODEL_NAME = '3DBenchy'
+    load_gcode_and_undeform(MODEL_NAME)
