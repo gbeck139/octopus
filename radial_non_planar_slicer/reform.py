@@ -100,8 +100,6 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
                         "end_position": pos,
                         "unsegmented_move_length": distance
                     })
-                    if extrusion is not None:
-                        print(f"DEBUG: Extrusion={extrusion/num_segments:.4f}")
             else:
                 gcode_points.append({
                     "position": pos.copy() + offsets_applied,
@@ -149,7 +147,7 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
     for i, point in enumerate(gcode_points):
         if point["extrusion"] is not None and point["move_length"] != 0:
             extrusion_scale = np.linalg.norm(new_positions[i] - prev_pos) / point["move_length"]
-            point["extrusion"] *= min(extrusion_scale, 1) # cap to prevent extreme extrusion
+            point["extrusion"] *= extrusion_scale
         prev_pos = new_positions[i]
 
     # rescale extrusion to compensate for rotation deformation
@@ -185,7 +183,7 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
         fh.write("G1 E10 F200      ; Perform 10mm purge to prime the nozzle\n")
         fh.write("G92 E0           ; Reset extruder position after priming\n")
         fh.write("M83              ; Switch to relative extrusion mode (Required for RRF/standard logic)\n")
-
+        current_feed_mode = "G94"        
         for i, point in enumerate(gcode_points):
             position = new_positions[i]
 
@@ -230,18 +228,18 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
             if point["extrusion"] is not None:
                 string += f" E{point['extrusion']:.4f}"
 
-            no_feed_value = False
             if point["inv_time_feed"] is not None:
+                if current_feed_mode != "G93":
+                    fh.write("G93\n")
+                    current_feed_mode = "G93"
                 string += f" F{(point['inv_time_feed']):.4f}"
             else:
+                if current_feed_mode != "G94":
+                    fh.write("G94\n")
+                    current_feed_mode = "G94"
                 string += f" F50000"
-                # fh.write(f"G94\n")
-                no_feed_value = True
 
             fh.write(string + "\n")
-
-            # if no_feed_value:
-            #     fh.write(f"G93\n") # back to inv feed
 
             # update previous values
             prev_theta = theta
@@ -272,5 +270,5 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
 
 
 if __name__ == "__main__":
-    MODEL_NAME = '3DBenchy'
+    MODEL_NAME = 'propeller'
     load_gcode_and_undeform(MODEL_NAME)
