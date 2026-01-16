@@ -1,0 +1,5 @@
+{
+  "material": "PLA",
+  "print_temperature": 210,
+  "bed_temperature": 60
+}

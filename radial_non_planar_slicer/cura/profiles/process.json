@@ -1,0 +1,13 @@
+{
+  "planar": {
+    "layer_height": 0.2,
+    "wall_count": 2,
+    "infill_density": 20,
+    "print_speed": 50
+  },
+  "non_planar": {
+    "enabled": true,
+    "strategy": "radial",
+    "amplitude": 0.6
+  }
+}

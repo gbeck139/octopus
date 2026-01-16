@@ -17,6 +17,6 @@ class CuraEngineWrapper:
             cmd.extend(["-s", f"{key}={value}"])
         
         print("Running CuraEngine:")
-        print(" ".json(cmd))
+        print(" ".join(cmd))
 
         subprocess.run(cmd, check=True)
