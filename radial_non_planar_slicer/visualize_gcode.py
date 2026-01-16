@@ -7,7 +7,7 @@ import os
 SHOW_TRAVEL_MOVES = True # Set to True to see G0 moves (travel), False for only G1 (extrusion)
 
 def visualize_gcode(model_name, nozzle_offset=43):
-    filepath = f'radial_non_planar_slicer/output_gcode/{model_name}_undeformed.gcode'
+    filepath = f'radial_non_planar_slicer/output_gcode/{model_name}_reformed.gcode'
     
     if not os.path.exists(filepath):
         print(f"File not found: {filepath}")

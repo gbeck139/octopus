@@ -291,7 +291,7 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
     plt.xlabel("X")
     plt.ylabel("Y")
     plt.title("Scatter Plot of G-code Points")
-    # plt.show()
+    plt.show()
 
 
 if __name__ == "__main__":
