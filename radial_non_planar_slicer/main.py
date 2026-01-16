@@ -26,3 +26,4 @@ subprocess.run([
     "--output", config["paths"]["deformed_gcode"]
 ], check=True)
 """
+reform.load_gcode_and_undeform(MODEL_NAME, transform_params)
