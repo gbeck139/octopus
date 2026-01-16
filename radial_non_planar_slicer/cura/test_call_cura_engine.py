@@ -1,9 +1,5 @@
 import json
 
-import sys
-
-print(sys.path)
-
 from cura_engine_wrapper import CuraEngineWrapper
 from cura_mapping import build_cura_settings
 
@@ -13,17 +9,17 @@ def load_json(path):
         return json.load(f)
 
 # --- load configs ---
-printer_cfg  = load_json("../profiles/printer.json")
-material_cfg = load_json("../profiles/material.json")
-process_cfg  = load_json("../profiles/process.json")
+printer_cfg  = load_json("profiles/printer.json")
+material_cfg = load_json("profiles/material.json")
+process_cfg  = load_json("profiles/process.json")
 
 planar_cfg    = process_cfg["planar"]
 nonplanar_cfg = process_cfg["non_planar"]
 
 # --- init cura engine ---
 cura = CuraEngineWrapper(
-    cura_path="CuraEngine",  # or absolute path, see section 3
-    machine_def="../cura/machine_research.def.json"
+    cura_path=r"C:\Program Files\UltiMaker Cura 5.10.2\CuraEngine.exe",  # or absolute path, see section 3
+    machine_def="research_printer.def.json"
 )
 
 # --- build cura settings ---
