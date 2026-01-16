@@ -34,6 +34,10 @@ MainWindow::MainWindow(QWidget *parent)
     // Populate printer combo
     settingsMenu->populatePrinterCombo(profileManager->getSystemPrinters(), profileManager->getUserPrinters(), profileManager->getActivePrinter());
 
+    //Attach Slice and Print buttons to tab bar
+    //TODO: make a qwidget class for this
+    //ui->tabWidget->setCornerWidget(ui->slicePrintHWidget, Qt::TopRightCorner);
+
 
     //testing purposes~~~~~~~~~~~~~~~~~~~~~
     //appConfig->setFirstRunCompleted(false);

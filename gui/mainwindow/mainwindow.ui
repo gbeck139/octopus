@@ -44,10 +44,26 @@
          <widget class="PrepareTab" name="prepareTabWidget" native="true"/>
         </item>
         <item>
-         <widget class="QPushButton" name="sliceButton">
-          <property name="text">
-           <string>Slice</string>
-          </property>
+         <widget class="QWidget" name="slicePrintHWidget" native="true">
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <widget class="QPushButton" name="sliceButton">
+             <property name="text">
+              <string>Slice</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="printButton">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Print</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </widget>
         </item>
        </layout>

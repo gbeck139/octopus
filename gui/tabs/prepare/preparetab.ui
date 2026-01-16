@@ -18,7 +18,17 @@
     <widget class="SettingsMenuWidget" name="settingsMenuWidget" native="true"/>
    </item>
    <item>
-    <widget class="QWidget" name="visual3DWidget" native="true"/>
+    <widget class="QWidget" name="visual3DWidget" native="true">
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>OpenGL 3D View Goes here</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
    </item>
   </layout>
  </widget>
