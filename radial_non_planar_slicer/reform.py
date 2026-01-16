@@ -98,15 +98,21 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
                         "move_length": seg_distance,
                         "start_position": prev_pos,
                         "end_position": pos,
-                        "unsegmented_move_length": distance
+                        "unsegmented_move_length": distance,
+                        "feedrate": feed
                     })
             else:
+                # Filter out null moves (no motion, no extrusion) to prevent stuttering
+                if extrusion is None and distance == 0:
+                    continue
+                    
                 gcode_points.append({
                     "position": pos.copy() + offsets_applied,
                     "command": gcode.word,
                     "extrusion": extrusion,
                     "inv_time_feed": None,
-                    "move_length": 0
+                    "move_length": 0,
+                    "feedrate": feed
                 })
 
             """
@@ -159,12 +165,17 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
 
 
     NOZZLE_OFFSET = 43 # mm
+    
+    # SAFETY LIMITS
+    MIN_SAFE_Z = -5.0   # Minimum allowed Z height (prevents bed crashes if origin wraps downwards)
+    MAX_SAFE_Z = 200.0  # Maximum allowed Z height
+    MAX_SAFE_R = 1000.0  # Maximum allowed Radius (prevents crazy wrapping of far-away points)
 
     prev_theta = 0
     theta_accum = 0
 
     # save transformed gcode
-    with open(f'radial_non_planar_slicer/output_gcode/{MODEL_NAME}_undeformed.gcode', 'w') as fh:
+    with open(f'radial_non_planar_slicer/output_gcode/{MODEL_NAME}_reformed.gcode', 'w') as fh:
         # write header
         fh.write("; --- INITIALIZATION ---\n")
         fh.write("G21              ; Establish metric units (millimeters)\n")
@@ -210,6 +221,14 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
             r += np.sin(rotation) * NOZZLE_OFFSET
             z += (np.cos(rotation) - 1) * NOZZLE_OFFSET
 
+            # SAFETY CLAMP: Filter out points that exceed machine limits due to deformation artifacts
+            if z < MIN_SAFE_Z:
+                continue
+            if z > MAX_SAFE_Z:
+                continue
+            if r > MAX_SAFE_R:
+                continue
+
             # NOTE: change for non-continuous rotation
             delta_theta = theta - prev_theta
             if delta_theta > np.pi:
@@ -237,7 +256,13 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
                 if current_feed_mode != "G94":
                     fh.write("G94\n")
                     current_feed_mode = "G94"
-                string += f" F50000"
+                
+                # Use original feedrate if available, otherwise safe default for rapids/retracts
+                f_val = point.get('feedrate')
+                if f_val is None or f_val == 0:
+                     f_val = 50000 if point['command'] == 'G00' else 2400 # 2400mm/min = 40mm/s for G1/Retracts
+
+                string += f" F{f_val:.4f}"
 
             fh.write(string + "\n")
 
@@ -270,5 +295,5 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
 
 
 if __name__ == "__main__":
-    MODEL_NAME = 'propeller'
+    MODEL_NAME = '3DBenchy'
     load_gcode_and_undeform(MODEL_NAME)

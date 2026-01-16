@@ -78,7 +78,7 @@ def plot_deformed_mesh(deformed_mesh):
 
 
 if __name__ == "__main__":
-    MODEL_NAME = 'propeller'
+    MODEL_NAME = '3DBenchy'
     mesh = load_mesh(MODEL_NAME)
     deformed_mesh, transform_params = deform_mesh(mesh)
     save_deformed_mesh(deformed_mesh, transform_params, MODEL_NAME)
