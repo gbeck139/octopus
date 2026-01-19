@@ -1,0 +1,22 @@
+import subprocess
+import os
+
+slicer_path = r"C:\Program Files\Prusa3D\PrusaSlicer\prusa-slicer-console.exe"
+stl_path = r"C:\Users\canca\Downloads\Cute Simple Halloween Pumpkin  - 6711982\files\pumpkin.stl"
+output_gcode = r"C:\Users\canca\Documents\3D Printing Slicer App\octopus\radial_non_planar_slicer\output_gcode\test_output.gcode"
+ini_path = r"C:\Users\canca\Documents\3D Printing Slicer App\octopus\radial_non_planar_slicer\my_printer_config.ini"
+
+# Make sure output folder exists
+os.makedirs(os.path.dirname(output_gcode), exist_ok=True)
+
+# Run slicing
+subprocess.run([
+    slicer_path,
+    "--load", ini_path,          # your printer/material/settings INI
+    "--export-gcode",            # tells it to slice and export
+    stl_path,
+    "--output", output_gcode
+], check=True)
+
+
+print(f"G-code exported to {output_gcode}")
