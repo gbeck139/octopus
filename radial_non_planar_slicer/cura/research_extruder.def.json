@@ -3,6 +3,9 @@
     "name": "Extruder",
     "metadata":
     {
+        "machine": "kosher",
+        "material": "generic_pla.xel.fdm_material",
+        "quality": "bp_PLA_Normal_Quality.inst.cfg",
         "visible": false,
         "author": "Ultimaker",
         "manufacturer": "Unknown",
