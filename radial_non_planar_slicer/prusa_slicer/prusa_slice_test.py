@@ -1,7 +1,7 @@
 import subprocess
 import os
 
-# TODO: currently absolute paths. Change to relative paths.
+# TODO: currently absolute paths. Change to relative paths. 
 slicer_path = r"C:\Program Files\Prusa3D\PrusaSlicer\prusa-slicer-console.exe"
 stl_path = r"C:\Users\canca\Downloads\Cute Simple Halloween Pumpkin  - 6711982\files\pumpkin.stl"
 output_gcode = r"C:\Users\canca\Documents\3D Printing Slicer App\octopus\radial_non_planar_slicer\output_gcode\test_output.gcode"
