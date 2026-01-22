@@ -21,6 +21,34 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
     
     ROTATION = lambda radius: np.deg2rad(angle_base + angle_factor * (radius / max_radius))
 
+    def get_curve_parameters(r_vals):
+        """
+        Calculates height, normal vectors, and rotation for given radii.
+        """
+        # Theta calc
+        theta = ROTATION(r_vals)
+        
+        # dTheta/dR (constant for this linear theta function)
+        d_theta_dr = np.deg2rad(angle_factor / max_radius)
+        
+        # Height (Z_surface)
+        # z = r * tan(theta)
+        z_surf = r_vals * np.tan(theta)
+        
+        # Slope (dZ/dR)
+        # Product rule: tan(theta) + r * sec^2(theta) * d_theta_dr
+        tan_theta = np.tan(theta)
+        sec_sq_theta = 1 / (np.cos(theta) ** 2)
+        slope = tan_theta + r_vals * sec_sq_theta * d_theta_dr
+        
+        # Normal Vector (-slope, 1) normalized
+        # We handle vectors as (N_r, N_z)
+        norm_len = np.sqrt(slope**2 + 1)
+        nr = -slope / norm_len
+        nz = 1 / norm_len
+        
+        return z_surf, nr, nz, theta
+
     # read gcode
     pos = np.array([0., 0., 20.])
     feed = 0
@@ -132,9 +160,29 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
     positions -= center_offset
     
     distances_to_center = np.linalg.norm(positions[:, :2], axis=1)
-    rotations = ROTATION(distances_to_center) 
-    translate_upwards = np.hstack([np.zeros((len(positions), 2)), np.tan(rotations.reshape(-1, 1)) * distances_to_center.reshape(-1, 1)])
-    new_positions = positions - translate_upwards
+    
+    # --- NON-PLANAR REFORMING ---
+    z_surf, nr, nz, rotations = get_curve_parameters(distances_to_center)
+
+    # G-code Z is vertical. Convert to Normal Thickness.
+    z_gcode = positions[:, 2]
+    vertical_thickness = z_gcode - z_surf
+    normal_thickness = vertical_thickness * nz 
+
+    # Offset X/Y along the normal vector (r_shift)
+    r_shift = normal_thickness * nr
+    
+    with np.errstate(divide='ignore', invalid='ignore'):
+         scale_factor = (distances_to_center + r_shift) / distances_to_center
+         scale_factor[distances_to_center == 0] = 1.0
+
+    new_positions = positions.copy()
+    new_positions[:, 0] *= scale_factor
+    new_positions[:, 1] *= scale_factor
+    
+    # Z becomes the Normal Thickness (Distance from Bed)
+    new_positions[:, 2] = normal_thickness
+    # ----------------------------
 
     # --- SAFETY FILTERING ---
     # Filter out points that are geometrically impossible or dangerous (e.g. infinite wrapping of origin)
