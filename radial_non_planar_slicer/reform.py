@@ -167,21 +167,19 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
     # G-code Z is vertical. Convert to Normal Thickness.
     z_gcode = positions[:, 2]
     vertical_thickness = z_gcode - z_surf
-    normal_thickness = vertical_thickness * nz 
 
-    # Offset X/Y along the normal vector (r_shift)
-    r_shift = normal_thickness * nr
-    
-    with np.errstate(divide='ignore', invalid='ignore'):
-         scale_factor = (distances_to_center + r_shift) / distances_to_center
-         scale_factor[distances_to_center == 0] = 1.0
+    # "Hill" Fix: Multiply by Normal Z component (Cosine of slope)
+    # This reduces the height where the slope is steep, effectively flattening
+    # the artifacts caused by vertical slicing of curved surfaces.
+    thickness_corrected = vertical_thickness * nz
 
     new_positions = positions.copy()
-    new_positions[:, 0] *= scale_factor
-    new_positions[:, 1] *= scale_factor
     
-    # Z becomes the Normal Thickness (Distance from Bed)
-    new_positions[:, 2] = normal_thickness
+    # We maintain the X/Y coordinates exactly as provided by the slicer.
+    # Shifting them (r_shift) caused the explosive "Tornado" effect.
+    
+    # Z becomes the Corrected Thickness
+    new_positions[:, 2] = thickness_corrected
     # ----------------------------
 
     # --- SAFETY FILTERING ---
@@ -297,7 +295,7 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
             theta = np.arctan2(position[1], position[0])
             z = position[2]
 
-            rotation = ROTATION(r) * 1
+            rotation = rotations[i]
 
             # compensate for nozzle offset
             r += np.sin(rotation) * NOZZLE_OFFSET
