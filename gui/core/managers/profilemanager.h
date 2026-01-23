@@ -3,8 +3,10 @@
 
 #include <QObject>
 #include <QMap>
+#include <QList>
 
 #include "printerprofile.h"
+#include "printerviewdata.h"
 //#include "materialprofile.h"
 //#include "processprofile.h"
 
@@ -14,38 +16,29 @@ class ProfileManager : public QObject
 public:
     explicit ProfileManager(QObject *parent = nullptr);
 
-    // Printer profiles
-    QList<const PrinterProfile*> getSystemPrinters() const;
-    QList<const PrinterProfile*> getUserPrinters() const;
+    // View
+    QList<PrinterViewData> getSystemPrintersForView() const;  //////////////
+    QList<PrinterViewData> getUserPrintersForView() const; //////////////
 
-    QString getActivePrinter();
-    PrinterProfile* getActivePrinterProfile() const;
-    void addUserPrinter(PrinterProfile* profile);
-    void updateUserPrinter(PrinterProfile* profile);
+    QString getActivePrinter(); //////////////
+    PrinterViewData getActivePrinterDataForView(); //////////////
 
-    // Save profiles
-    void savePrinterProfile(const PrinterProfile* profile);
+    // Methods
+    void setActivePrinter(const QString& printerId); //////////////
 
-    // Delete User Printer << currently used for debugging purposes
-    void deleteUserPrinter(const QString& id);
+    void addUserPrinter(const PrinterProfile& profile); //////////////
+    void updateUserPrinter(const PrinterProfile& profile); //////////////
+    void deleteUserPrinter(const QString& printerId); //////// // Delete User Printer << currently used for debugging purposes
 
-    // Active profile control (have defaults in already)
-
-    // Lookup
-
-public slots:
-    void setActivePrinter(const QString& printerId);
-
-    // void addUserPrinter(PrinterProfile* profile);
-    // void updateUserPrinter(PrinterProfile* profile);
+    // void savePrinterProfile(const PrinterProfile* profile); ///// DELETED
 
 signals:
-    void activePrinterChanged(const QString& printerId);
     void printersChanged(); // list structure changes
-    void activePrinterDataChanged(const QString& activePrinterId); // name/limits/nozzle edited
+    void activePrinterChanged(const QString& printerId); // selection changed
+    void activePrinterDataChanged(const QString& printerId); // contents changed
 
 private:
-    // Load profiles
+    // Helper methods
     void loadPrinterProfiles();
     void loadPrinterDirectory(const QString& path, bool system);
 
@@ -54,16 +47,17 @@ private:
 
     QString generateUniquePrinterId(const QString& baseId, int *outSuffix) const;
 
+    PrinterViewData makeViewData(const PrinterProfile& profile) const; ///////////////
+
 private:
     QMap<QString, PrinterProfile*> systemPrinters; //read only
     QMap<QString, PrinterProfile*> userPrinters; //editable & savable
 
+    //QMap<QString, MaterialProfile> systemMaterial;
+    //QMap<QString, ProcessProfile> systemProcesses;
+    //QMap<QString, ProcessProfile> userProcesses;
+
     QString activePrinterId;
-
-    //QMap<QString, MaterialProfile> materialMap;
-    //QMap<QString, ProcessProfile> processMap;
-
-
 };
 
 #endif // PROFILEMANAGER_H

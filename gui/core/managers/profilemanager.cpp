@@ -11,19 +11,10 @@ ProfileManager::ProfileManager(QObject *parent)
     loadPrinterProfiles();
 }
 
-QList<const PrinterProfile*> ProfileManager::getSystemPrinters() const
+QList<PrinterViewData> ProfileManager::getSystemPrintersForView() const
 {
-    QList<const PrinterProfile*> profiles;
+    QList<PrinterViewData> profiles;
     for (PrinterProfile* profile : systemPrinters.values()) {
-        profiles.append(profile);
-    }
-    return profiles;
-}
-
-QList<const PrinterProfile*> ProfileManager::getUserPrinters() const
-{
-    QList<const PrinterProfile*> profiles;
-    for (PrinterProfile* profile : userPrinters.values()) {
         profiles.append(profile);
     }
     return profiles;

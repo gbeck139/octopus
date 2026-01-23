@@ -7,54 +7,56 @@
 class PrinterProfile
 {
 public:
-    explicit PrinterProfile(const QString& profileId, bool system);
+    explicit PrinterProfile(QString& profileId, bool system);
 
-    //JSON
+    // JSON Serialization
     static PrinterProfile* fromJson(const QJsonObject& obj, bool system);
     QJsonObject toJson() const;
 
-    // ID
+    // ID (immutable)
     QString getId() const;
-    QString getDisplayName() const;
     bool isSystemProfile() const;
 
-    // Get Limits
+    // Display
+    QString getDisplayName() const;
+    //void setDisplayName(const QString& name); // In case I need this?
+
+    // Get Settings
     int getMaxNozzleTemp() const;
     int getMaxBedTemp() const;
     double getBuildX() const;
     double getBuildY() const;
     double getBuildZ() const;
-
     double getNozzleDiameter() const;
-    void setNozzleDiameter(double d);
 
-    double getXMin() const;
-    double getXMax() const;
-    double getYMin() const;
-    double getYMax() const;
-    double getZMin() const;
-    double getZMax() const;
-    double getRotMin() const;
-    double getRotMax() const;
+    // double getXMin() const;
+    // double getXMax() const;
+    // double getYMin() const;
+    // double getYMax() const;
+    // double getZMin() const;
+    // double getZMax() const;
+    // double getRotMin() const;
+    // double getRotMax() const;
 
+    // Set Settings
+    //void setId(QString& name);
+    //void setIsSystem(bool system);
+    void setMaxNozzleTemp(int temp);
+    void setMaxBedTemp(int temp);
+    void setBuildVolume(double x, double y, double z);
     void setAxisLimits(double _xMin, double _xMax,
                        double _yMin, double _yMax,
                        double _zMin, double _zMax,
                        double _rotMin, double _rotMax);
+    void setNozzleDiameter(double d);
 
-    // Setters
-    void setId(QString& name);
-    void setDisplayName(const QString& name);
-    void setIsSystem(bool system);
-    void setMaxNozzleTemp(int temp);
-    void setMaxBedTemp(int temp);
-    void setBuildVolume(double x, double y, double z);
-
-    PrinterProfile* clone() const;
+    // Copy only for editors
+    PrinterProfile clone() const; /////// changed * to none, return value, editors use copies
 
 private:
     QString id;
     QString displayName;
+    bool isSystem;
 
     int maxNozzleTemp = 0;
     int maxBedTemp = 0;
@@ -75,7 +77,6 @@ private:
     double rotMin = 0;
     double rotMax = 0;
 
-    bool isSystem;
 };
 
 #endif // PRINTERPROFILE_H

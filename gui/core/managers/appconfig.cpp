@@ -11,50 +11,58 @@ bool AppConfig::isFirstRun() const
     return !appSettings.value("app/firstRunCompleted", false).toBool();
 }
 
-void AppConfig::setFirstRunCompleted(bool completed)
+void AppConfig::markFirstRunCompleted()
 {
-    appSettings.setValue("app/firstRunCompleted", completed);
+    appSettings.setValue("app/firstRunCompleted", true);
 }
 
-void AppConfig::setActivePrinter(QString printerId)
+QString AppConfig::getActivePrinterId() const
+{
+    qDebug() << "[APPCONFIG] Current active printer:" << appSettings.value("profile/activePrinter").toString();
+    return appSettings.value("profile/activePrinter").toString();
+}
+
+QString AppConfig::getActiveMaterialId() const
+{
+    return appSettings.value("profile/activeMaterial").toString();
+}
+
+QString AppConfig::getActiveProcessId() const
+{
+    return appSettings.value("profile/activeProcess").toString();
+}
+
+void AppConfig::setActivePrinterId(const QString& printerId)
 {
 
     if (printerId == appSettings.value("profile/activePrinter"))
         return;
 
     appSettings.setValue("profile/activePrinter", printerId);
-    qDebug() << "[APPCONFIG] Saved current printer profile to: " << appSettings.value("profile/activePrinter");
+    qDebug() << "[APPCONFIG] Saved current printer profile to: " << printerId;
 
     emit activePrinterChanged(printerId);
 
 }
 
-void AppConfig::setActiveMaterial(QString materialId)
+void AppConfig::setActiveMaterialId(const QString& materialId)
 {
+    if (materialId == appSettings.value("profile/activeMaterial"))
+        return;
+
     appSettings.setValue("profile/activeMaterial", materialId);
     qDebug() << "[APPCONFIG] Saved current material profile to: " << materialId;
+
+    emit activeMaterialChanged(materialId);
 }
 
-void AppConfig::setActiveProcess(QString processId)
+void AppConfig::setActiveProcessId(const QString& processId)
 {
+    if (processId == appSettings.value("profile/activeProcess"))
+        return;
+
     appSettings.setValue("profile/activeProcess", processId);
     qDebug() << "[APPCONFIG] Saved current process profile to: " << processId;
-    emit activePrinterChanged(processId);
-}
 
-QString AppConfig::getActivePrinter() const
-{
-    qDebug() << "[APPCONFIG] Current active printer:" << appSettings.value("profile/activePrinter").toString();
-    return appSettings.value("profile/activePrinter").toString();
+    emit activeProcessChanged(processId);
 }
-
-QString AppConfig::getActiveMaterial() const
-{
-    return appSettings.value("profile/activeMaterial").toString();
-}
-
-QString AppConfig::getActiveProcess() const
-{
-    return appSettings.value("profile/activeProcess").toString();
-}
-

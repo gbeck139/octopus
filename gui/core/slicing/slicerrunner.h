@@ -10,11 +10,12 @@ class SlicerRunner : public QObject
     Q_OBJECT
 public:
     explicit SlicerRunner(QObject *parent = nullptr);
+
     void runSlice(const QString& stlPath, const SliceParameters& params);
 
 signals:
-    void sliceFinished(const QString& gcodePath);
-    void sliceFailed(const QString& error);
+    void sliceFinished(QString gcodePath); /////////////
+    void sliceFailed(QString error); //////////////
 
 private slots:
     void onProcessFinished(int exitCode);

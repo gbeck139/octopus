@@ -5,8 +5,8 @@
 #include <QSettings>
 
 ///
-/// \brief The AppConfig class stores user preferences to
-/// persist settings across launches.
+/// \brief Stores persistent application-level user configuration
+/// to persist settings across launches.
 ///
 class AppConfig : public QObject
 {
@@ -14,24 +14,28 @@ class AppConfig : public QObject
 public:
     explicit AppConfig(QObject *parent = nullptr);
 
-    // First-run flag
+    // First-run
     bool isFirstRun() const;
+    void markFirstRunCompleted();
 
-    // Profile Settings
-    void setActivePrinter(QString printerId);
-    void setActiveMaterial(QString materialId);
-    void setActiveProcess(QString processId);
+    // Active profile IDs
+    QString getActivePrinterId() const;
+    QString getActiveMaterialId() const;
+    QString getActiveProcessId() const;
 
-    QString getActivePrinter() const;
-    QString getActiveMaterial() const;
-    QString getActiveProcess() const;
+    void setActivePrinterId(const QString& printerId);
+    void setActiveMaterialId(const QString& materialId);
+    void setActiveProcessId(const QString& processId);
 
-    //User Preferences
+    // TODO: Add more User Preferences here
 
 signals:
     void activePrinterChanged(const QString& printerId);
-public slots:
-    void setFirstRunCompleted(bool completed);
+    void activeMaterialChanged(const QString& materialId); /////////////////////
+    void activeProcessChanged(const QString& processId); /////////////////////
+
+//public slots:
+    //void setFirstRunCompleted(bool completed);  ///////////////////// DELETED
 
 private:
     QSettings appSettings;

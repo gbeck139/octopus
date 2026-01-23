@@ -45,6 +45,16 @@ public:
 signals:
     void modelChanged(); //when model's geometry changes
 
+
+private:
+    ///
+    /// \brief computeBoundingBox finds the smallest rectangular box
+    /// that completely contains the 3D model
+    ///
+    void computeBoundingBox();
+    bool loadAsciiSTL(QFile &file);
+    bool loadBinarySTL(QFile &file);
+
 private:
     QVector<Triangle> meshTriangles;
     QString sourceFilePath;
@@ -60,15 +70,6 @@ private:
     /// with the largest x, y, z
     ///
     QVector3D boxMax;
-
-    ///
-    /// \brief computeBoundingBox finds the smallest rectangular box
-    /// that completely contains the 3D model
-    ///
-    void computeBoundingBox();
-
-    bool loadAsciiSTL(QFile &file);
-    bool loadBinarySTL(QFile &file);
 };
 
 #endif // MODEL3D_H
