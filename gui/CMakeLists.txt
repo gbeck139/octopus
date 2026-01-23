@@ -32,8 +32,8 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         tabs/prepare/preparetab.h tabs/prepare/preparetab.cpp tabs/prepare/preparetab.ui
         tabs/preview/previewtab.h tabs/preview/previewtab.cpp tabs/preview/previewtab.ui
         tabs/monitor/monitortab.h tabs/monitor/monitortab.cpp tabs/monitor/monitortab.ui
-        core/appconfig.h core/appconfig.cpp
-        core/model3d.h core/model3d.cpp
+        core/managers/appconfig.h core/managers/appconfig.cpp
+        core/model3d/model3d.h core/model3d/model3d.cpp
         widgets/setupWizard/setupwizard.h widgets/setupWizard/setupwizard.cpp
         widgets/setupWizard/pages/welcomepage/welcomepage.h widgets/setupWizard/pages/welcomepage/welcomepage.cpp widgets/setupWizard/pages/welcomepage/welcomepage.ui
         widgets/setupWizard/pages/profilepage/profilepage.h widgets/setupWizard/pages/profilepage/profilepage.cpp widgets/setupWizard/pages/profilepage/profilepage.ui
@@ -42,14 +42,16 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         core/profiles/printerprofile.h core/profiles/printerprofile.cpp
         core/profiles/materialprofile.h core/profiles/materialprofile.cpp
         core/profiles/processprofile.h core/profiles/processprofile.cpp
-        core/profilemanager.h core/profilemanager.cpp
+        core/managers/profilemanager.h core/managers/profilemanager.cpp
         tabs/prepare/settingsMenuWidget/printerProfileDialog/printerprofiledialog.h tabs/prepare/settingsMenuWidget/printerProfileDialog/printerprofiledialog.cpp tabs/prepare/settingsMenuWidget/printerProfileDialog/printerprofiledialog.ui
-        core/sliceparameters.h core/sliceparameters.cpp
-        core/slicerrunner.h core/slicerrunner.cpp
+        core/slicing/sliceparameters.h core/slicing/sliceparameters.cpp
+        core/slicing/slicerrunner.h core/slicing/slicerrunner.cpp
     )
     target_include_directories(gui PRIVATE
         mainwindow
-        core
+        core/managers
+        core/model3d
+        core/slicing
         core/profiles
         tabs/prepare
         tabs/prepare/settingsMenuWidget
