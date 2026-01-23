@@ -3,40 +3,26 @@
 
 #include <QJsonObject>
 
-class SliceParameters
+struct SliceParameters
 {
-public:
-    SliceParameters();
+    double layerHeight = 0.2;
+    int nozzleTemp = 200;
+    int bedTemp = 60;
+    int wallLoops = 2;
+    int infillDensity = 20;
+    bool supportsEnabled = false;
 
-public:
-
-    ///
-    /// Immutable slicing parameter bundle.
-    /// Built from Drafts / Profiles at slice time.
-    ///
-    // struct SliceParameters
-    // {
-    //     double layerHeight = 0.0;
-    //     int nozzleTemp = 0;
-    //     int bedTemp = 0;
-    //     int wallLoops = 0;
-    //     int infillDensity = 0;
-    //     bool supportsEnabled = false;
-
-    //     QJsonObject toJson() const;
-    // };
-
-
-    double layerHeight;
-    int nozzleTemp;
-    int bedTemp;
-    int wallLoops;
-    int infillDensity;
-    bool supportsEnabled;
-
-    // more...
-
-    QJsonObject toJson() const;
+    QJsonObject toJson() const
+    {
+        QJsonObject obj;
+        obj["layer_height"] = layerHeight;
+        obj["nozzle_temp"] = nozzleTemp;
+        obj["bed_temp"] = bedTemp;
+        obj["wall_loops"] = wallLoops;
+        obj["infill_density"] = infillDensity;
+        obj["supports"] = supportsEnabled;
+        return obj;
+    }
 };
 
 #endif // SLICEPARAMETERS_H
