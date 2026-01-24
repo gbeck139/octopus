@@ -10,6 +10,10 @@
 //#include "materialprofile.h"
 //#include "processprofile.h"
 
+/**
+ * @brief ProfileManager owns all profile objects, loads and saves JSON, validates IDs,
+ * and tracks active profiles.
+ */
 class ProfileManager : public QObject
 {
     Q_OBJECT
@@ -17,20 +21,18 @@ public:
     explicit ProfileManager(QObject *parent = nullptr);
 
     // View
-    QList<PrinterViewData> getSystemPrintersForView() const;  //////////////
-    QList<PrinterViewData> getUserPrintersForView() const; //////////////
+    QList<PrinterViewData> getSystemPrintersForView() const;
+    QList<PrinterViewData> getUserPrintersForView() const;
 
-    QString getActivePrinter(); //////////////
-    PrinterViewData getActivePrinterDataForView(); //////////////
+    QString getActivePrinter();
+    PrinterViewData getActivePrinterDataForView();
 
     // Methods
-    void setActivePrinter(const QString& printerId); //////////////
-
-    void addUserPrinter(const PrinterProfile& profile); //////////////
-    void updateUserPrinter(const PrinterProfile& profile); //////////////
-    void deleteUserPrinter(const QString& printerId); //////// // Delete User Printer << currently used for debugging purposes
-
-    // void savePrinterProfile(const PrinterProfile* profile); ///// DELETED
+    void setActivePrinter(const QString& printerId);
+    void addUserPrinter(const PrinterProfile& profile);
+    void updateUserPrinter(const PrinterProfile& profile);
+    void deleteUserPrinter(const QString& printerId); // Delete User Printer << currently used for debugging purposes
+    void savePrinterProfile(const PrinterProfile* profile);
 
 signals:
     void printersChanged(); // list structure changes

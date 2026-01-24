@@ -7,7 +7,7 @@
 class PrinterProfile
 {
 public:
-    explicit PrinterProfile(QString& profileId, bool system);
+    explicit PrinterProfile(const QString& profileId, bool system);
 
     // JSON Serialization
     static PrinterProfile* fromJson(const QJsonObject& obj, bool system);
@@ -19,7 +19,7 @@ public:
 
     // Display
     QString getDisplayName() const;
-    //void setDisplayName(const QString& name); // In case I need this?
+    void setDisplayName(const QString& name);
 
     // Get Settings
     int getMaxNozzleTemp() const;
@@ -29,18 +29,18 @@ public:
     double getBuildZ() const;
     double getNozzleDiameter() const;
 
-    // double getXMin() const;
-    // double getXMax() const;
-    // double getYMin() const;
-    // double getYMax() const;
-    // double getZMin() const;
-    // double getZMax() const;
-    // double getRotMin() const;
-    // double getRotMax() const;
+    double getXMin() const;
+    double getXMax() const;
+    double getYMin() const;
+    double getYMax() const;
+    double getZMin() const;
+    double getZMax() const;
+    double getRotMin() const;
+    double getRotMax() const;
 
     // Set Settings
-    //void setId(QString& name);
-    //void setIsSystem(bool system);
+    void setId(QString& name);
+    void setIsSystem(bool system);
     void setMaxNozzleTemp(int temp);
     void setMaxBedTemp(int temp);
     void setBuildVolume(double x, double y, double z);
@@ -51,7 +51,7 @@ public:
     void setNozzleDiameter(double d);
 
     // Copy only for editors
-    PrinterProfile clone() const; /////// changed * to none, return value, editors use copies
+    PrinterProfile* clone() const; /////// changed * to none, return value, editors use copies
 
 private:
     QString id;

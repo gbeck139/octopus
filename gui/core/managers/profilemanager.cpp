@@ -1,6 +1,7 @@
 #include "profilemanager.h"
 
 #include <QDir>
+#include <QFile>
 #include <QJsonDocument>
 #include <QCoreApplication>
 #include <QRegularExpression>
@@ -13,11 +14,39 @@ ProfileManager::ProfileManager(QObject *parent)
 
 QList<PrinterViewData> ProfileManager::getSystemPrintersForView() const
 {
-    QList<PrinterViewData> profiles;
-    for (PrinterProfile* profile : systemPrinters.values()) {
-        profiles.append(profile);
+    QList<PrinterViewData> printerData;
+    for (const PrinterProfile* profile : systemPrinters) {
+        printerData.append(makeViewData(*profile));
     }
-    return profiles;
+    return printerData;
+}
+
+QList<PrinterViewData> ProfileManager::getUserPrintersForView() const
+{
+    QList<PrinterViewData> printerData;
+    for (const PrinterProfile* profile : userPrinters) {
+        printerData.append(makeViewData(*profile));
+    }
+    return printerData;
+}
+
+QString ProfileManager::getActivePrinter()
+{
+    return activePrinterId;
+}
+
+PrinterViewData ProfileManager::getActivePrinterDataForView()
+{
+    if (systemPrinters.contains(activePrinterId)) {
+        return makeViewData(*systemPrinters.value(activePrinterId));
+    }
+
+    if (userPrinters.contains(activePrinterId)) {
+        return makeViewData(*userPrinters.value(activePrinterId));
+    }
+
+    qDebug() << "[PROFILE MANAGER] Active printer not found:" << activePrinterId;
+    return {};
 }
 
 void ProfileManager::setActivePrinter(const QString &printerId)
@@ -37,55 +66,26 @@ void ProfileManager::setActivePrinter(const QString &printerId)
     emit activePrinterChanged(printerId);
 }
 
-QString ProfileManager::getActivePrinter()
+void ProfileManager::addUserPrinter(const PrinterProfile& profile)
 {
-    return activePrinterId;
-}
-
-PrinterProfile *ProfileManager::getActivePrinterProfile() const
-{
-    //QMap<QString, PrinterProfile*> systemPrinters; //read only
-    //QMap<QString, PrinterProfile*> userPrinters; //editable & savable
-
-    //TODO: find active printer profile in one of the QMaps above without adding any
-    if (systemPrinters.contains(activePrinterId)) {
-        return systemPrinters.value(activePrinterId);
-    }
-
-    if (userPrinters.contains(activePrinterId)) {
-        return userPrinters.value(activePrinterId);
-    }
-
-    qWarning() << "[PROFILE MANAGER] Active printer not found:" << activePrinterId;
-    return nullptr;
-}
-
-void ProfileManager::addUserPrinter(PrinterProfile *profile)
-{
-    if (!profile) {
-        return;
-    }
-
-    //force isSystem = false
-    profile->setIsSystem(false);
-
-    QString id = profile->getId();
+    PrinterProfile* copy = profile.clone();
+    copy->setIsSystem(false);
 
     // Ensure unique ID
     int suffix = 0;
-    QString newId = generateUniquePrinterId(id, &suffix);
-    profile->setId(newId);
+    QString newId = generateUniquePrinterId(copy->getId(), &suffix);
+    copy->setId(newId);
 
     // Update display name: add suffix if necessary
     if (suffix > 0) {
-        profile->setDisplayName(
-            profile->getDisplayName() + " (" + QString::number(suffix) + ")");
+        copy->setDisplayName(
+            copy->getDisplayName() + " (" + QString::number(suffix) + ")");
     }
 
-    userPrinters.insert(newId, profile);
+    userPrinters.insert(newId, copy);
 
     // Write JSON to user directory
-    savePrinterProfile(profile);
+    savePrinterProfile(copy);
 
     activePrinterId = newId;
 
@@ -93,13 +93,9 @@ void ProfileManager::addUserPrinter(PrinterProfile *profile)
     emit activePrinterChanged(newId);
 }
 
-void ProfileManager::updateUserPrinter(PrinterProfile *profile)
+void ProfileManager::updateUserPrinter(const PrinterProfile &profile)
 {
-    if (!profile) {
-        return;
-    }
-
-    const QString id = profile->getId();
+    const QString id = profile.getId();
 
     // Ensure unique ID
     if (!userPrinters.contains(id)) {
@@ -107,28 +103,15 @@ void ProfileManager::updateUserPrinter(PrinterProfile *profile)
         return;
     }
 
-    userPrinters[id] = profile;
+    delete userPrinters[id];
+    userPrinters[id] = profile.clone();
 
     // Overwrite JSON
-    savePrinterProfile(profile);
+    savePrinterProfile(&profile);
 
     if (id == activePrinterId) {
         emit activePrinterChanged(id);
     }
-}
-
-void ProfileManager::loadPrinterProfiles()
-{
-    qDeleteAll(systemPrinters);
-    qDeleteAll(userPrinters);
-
-    systemPrinters.clear();
-    userPrinters.clear();
-
-    loadPrinterDirectory(getSystemPrinterDir(), true);
-    loadPrinterDirectory(getUserPrinterDir(), false);
-
-    qDebug() << "[PROFILE MANAGER] Loaded printers:" << systemPrinters.keys() << userPrinters.keys() << ", from:" << getSystemPrinterDir() << "and" << getUserPrinterDir();
 }
 
 void ProfileManager::savePrinterProfile(const PrinterProfile *profile)
@@ -144,26 +127,26 @@ void ProfileManager::savePrinterProfile(const PrinterProfile *profile)
     file.close();
 }
 
-void ProfileManager::deleteUserPrinter(const QString &id)
+void ProfileManager::deleteUserPrinter(const QString &printerId)
 {
-    if (!userPrinters.contains(id)) {
-        qDebug() << "[PROFILE MANAGER] Tried to delete non-existent printer:" << id;
+    if (!userPrinters.contains(printerId)) {
+        qDebug() << "[PROFILE MANAGER] Tried to delete non-existent printer:" << printerId;
         return;
     }
 
     // Delete JSON file
-    QString path = getUserPrinterDir() + "/" + id + ".json";
+    QString path = getUserPrinterDir() + "/" + printerId + ".json";
     if (QFile::exists(path)) {
         QFile::remove(path);
     }
 
     // Remove from map
-    userPrinters.remove(id);
+    userPrinters.remove(printerId);
 
     emit printersChanged();
 
     // If the deleted printer was active, set a new active printer
-    if (activePrinterId == id) {
+    if (activePrinterId == printerId) {
         if (!userPrinters.isEmpty()) {
             setActivePrinter(userPrinters.firstKey());
         } else if (!systemPrinters.isEmpty()) {
@@ -172,6 +155,20 @@ void ProfileManager::deleteUserPrinter(const QString &id)
             activePrinterId.clear();
         }
     }
+}
+
+void ProfileManager::loadPrinterProfiles()
+{
+    qDeleteAll(systemPrinters);
+    qDeleteAll(userPrinters);
+
+    systemPrinters.clear();
+    userPrinters.clear();
+
+    loadPrinterDirectory(getSystemPrinterDir(), true);
+    loadPrinterDirectory(getUserPrinterDir(), false);
+
+    qDebug() << "[PROFILE MANAGER] Loaded printers:" << systemPrinters.keys() << userPrinters.keys() << ", from:" << getSystemPrinterDir() << "and" << getUserPrinterDir();
 }
 
 void ProfileManager::loadPrinterDirectory(const QString &path, bool system)
@@ -200,13 +197,13 @@ void ProfileManager::loadPrinterDirectory(const QString &path, bool system)
         }
 
         QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
-        file.close();
-
         if (!doc.isObject())
             continue;
 
         PrinterProfile* profile = PrinterProfile::fromJson(doc.object(), system);
         (system ? systemPrinters : userPrinters).insert(profile->getId(), profile);
+
+        file.close();
 
         qDebug() << "[PROFILE MANAGER] System printers loaded:" << systemPrinters.keys();
         qDebug() << "[PROFILE MANAGER] User printers loaded:" << userPrinters.keys();
@@ -233,13 +230,20 @@ QString ProfileManager::generateUniquePrinterId(const QString &baseId, int *outS
 
     int suffix = 1;
     QString newId;
-
     do {
-        newId = baseId + QString::number(suffix);
-        suffix++;
+        newId = baseId + QString::number(suffix++);
     } while (systemPrinters.contains(newId) || userPrinters.contains(newId));
 
     if (outSuffix) *outSuffix = suffix - 1;
     return newId;
+}
+
+PrinterViewData ProfileManager::makeViewData(const PrinterProfile &profile) const
+{
+    PrinterViewData view;
+    view.id = profile.getId();
+    view.name = profile.getDisplayName();
+    view.isSystem = profile.isSystemProfile();
+    return view;
 }
 
