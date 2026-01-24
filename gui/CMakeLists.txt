@@ -45,8 +45,9 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         core/managers/profilemanager.h core/managers/profilemanager.cpp
         tabs/prepare/settingsMenuWidget/printerProfileDialog/printerprofiledialog.h tabs/prepare/settingsMenuWidget/printerProfileDialog/printerprofiledialog.cpp tabs/prepare/settingsMenuWidget/printerProfileDialog/printerprofiledialog.ui
         core/slicing/slicerrunner.h core/slicing/slicerrunner.cpp
-        core/viewdata/printerviewdata.h
+        core/profiles/viewdata/printerviewdata.h
         core/slicing/sliceparameters.h
+
     )
     target_include_directories(gui PRIVATE
         mainwindow
@@ -54,7 +55,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         core/model3d
         core/slicing
         core/profiles
-        core/viewdata
+        core/profiles/viewdata
         tabs/prepare
         tabs/prepare/settingsMenuWidget
         tabs/prepare/settingsMenuWidget/printerProfileDialog

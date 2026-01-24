@@ -26,11 +26,12 @@ public:
 
     QString getActivePrinter();
     PrinterViewData getActivePrinterDataForView();
+    PrinterProfile* getActivePrinterProfile();
 
     // Methods
     void setActivePrinter(const QString& printerId);
-    void addUserPrinter(const PrinterProfile& profile);
-    void updateUserPrinter(const PrinterProfile& profile);
+    void addUserPrinter(const PrinterProfile* profile);
+    void updateUserPrinter(const PrinterProfile* profile);
     void deleteUserPrinter(const QString& printerId); // Delete User Printer << currently used for debugging purposes
     void savePrinterProfile(const PrinterProfile* profile);
 

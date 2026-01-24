@@ -45,8 +45,22 @@ PrinterViewData ProfileManager::getActivePrinterDataForView()
         return makeViewData(*userPrinters.value(activePrinterId));
     }
 
-    qDebug() << "[PROFILE MANAGER] Active printer not found:" << activePrinterId;
+    qDebug() << "[PROFILE MANAGER] Active printer view not found:" << activePrinterId;
     return {};
+}
+
+PrinterProfile *ProfileManager::getActivePrinterProfile()
+{
+    if (systemPrinters.contains(activePrinterId)) {
+        return systemPrinters.value(activePrinterId);
+    }
+
+    if (userPrinters.contains(activePrinterId)) {
+        return userPrinters.value(activePrinterId);
+    }
+
+    qDebug() << "[PROFILE MANAGER] Active printer profile not found:" << activePrinterId;
+    return nullptr;
 }
 
 void ProfileManager::setActivePrinter(const QString &printerId)
@@ -66,9 +80,9 @@ void ProfileManager::setActivePrinter(const QString &printerId)
     emit activePrinterChanged(printerId);
 }
 
-void ProfileManager::addUserPrinter(const PrinterProfile& profile)
+void ProfileManager::addUserPrinter(const PrinterProfile* profile)
 {
-    PrinterProfile* copy = profile.clone();
+    PrinterProfile* copy = profile->clone();
     copy->setIsSystem(false);
 
     // Ensure unique ID
@@ -93,9 +107,9 @@ void ProfileManager::addUserPrinter(const PrinterProfile& profile)
     emit activePrinterChanged(newId);
 }
 
-void ProfileManager::updateUserPrinter(const PrinterProfile &profile)
+void ProfileManager::updateUserPrinter(const PrinterProfile* profile)
 {
-    const QString id = profile.getId();
+    const QString id = profile->getId();
 
     // Ensure unique ID
     if (!userPrinters.contains(id)) {
@@ -104,10 +118,10 @@ void ProfileManager::updateUserPrinter(const PrinterProfile &profile)
     }
 
     delete userPrinters[id];
-    userPrinters[id] = profile.clone();
+    userPrinters[id] = profile->clone();
 
     // Overwrite JSON
-    savePrinterProfile(&profile);
+    savePrinterProfile(profile);
 
     if (id == activePrinterId) {
         emit activePrinterChanged(id);

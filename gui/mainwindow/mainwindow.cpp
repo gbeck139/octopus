@@ -22,7 +22,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Set Printer Profiles
     if (!appConfig->isFirstRun()) {
-        profileManager->setActivePrinter(appConfig->getActivePrinter());
+        profileManager->setActivePrinter(appConfig->getActivePrinterId());
     }
 
     //TESTING
@@ -32,7 +32,7 @@ MainWindow::MainWindow(QWidget *parent)
     // Settings, populate profiles
     SettingsMenuWidget* settingsMenu = ui->prepareTabWidget->getSettingsMenu();
     // Populate printer combo
-    settingsMenu->populatePrinterCombo(profileManager->getSystemPrinters(), profileManager->getUserPrinters(), profileManager->getActivePrinter());
+    settingsMenu->populatePrinterCombo(profileManager->getSystemPrintersForView(), profileManager->getUserPrintersForView(), profileManager->getActivePrinter());
 
     //Attach Slice and Print buttons to tab bar
     //TODO: make a qwidget class for this
@@ -70,14 +70,14 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->sliceButton, &QPushButton::clicked, this, &MainWindow::onSliceClicked);
 
     // Model Connects
-    connect(settingsMenu, &SettingsMenuWidget::printerSelected, appConfig, &AppConfig::setActivePrinter);
+    connect(settingsMenu, &SettingsMenuWidget::printerSelected, appConfig, &AppConfig::setActivePrinterId);
     connect(appConfig, &AppConfig::activePrinterChanged, profileManager, &ProfileManager::setActivePrinter);
     connect(profileManager, &ProfileManager::activePrinterChanged, settingsMenu, [=](const QString& id) {
-        settingsMenu->populatePrinterCombo(profileManager->getSystemPrinters(), profileManager->getUserPrinters(), id);});
+        settingsMenu->populatePrinterCombo(profileManager->getSystemPrintersForView(), profileManager->getUserPrintersForView(), id);});
 
     connect(settingsMenu, &SettingsMenuWidget::settingsMenuEditPrinterClicked, this, &MainWindow::onSettingsMenuEditPrinterClicked);
     connect(profileManager, &ProfileManager::printersChanged, settingsMenu, [=]() {
-        settingsMenu->rebuildPrinterCombo(profileManager->getSystemPrinters(), profileManager->getUserPrinters());});
+        settingsMenu->rebuildPrinterCombo(profileManager->getSystemPrintersForView(), profileManager->getUserPrintersForView());});
     connect(profileManager, &ProfileManager::activePrinterDataChanged, settingsMenu, &SettingsMenuWidget::refreshActivePrinterDisplay);
 
     // Slicer Connects
@@ -188,13 +188,13 @@ void MainWindow::onAboutClicked()
 void MainWindow::onSetupCompleted()
 {
     if (appConfig->isFirstRun()) {
-        appConfig->setFirstRunCompleted(true);
+        appConfig->markFirstRunCompleted();
     }
 }
 
 void MainWindow::connectWizard(SetupWizard *wizard)
 {
-    connect(wizard, &SetupWizard::printerTypeSelected, appConfig, &AppConfig::setActivePrinter);
+    connect(wizard, &SetupWizard::printerTypeSelected, appConfig, &AppConfig::setActivePrinterId);
     connect(wizard, &SetupWizard::setupCompleted, this, &MainWindow::onSetupCompleted);
 
     connect(wizard, &SetupWizard::printerTypeSelected, profileManager, &ProfileManager::setActivePrinter);
@@ -204,21 +204,17 @@ void MainWindow::onSettingsMenuEditPrinterClicked()
 {
     PrinterProfile* currentPrinter = profileManager->getActivePrinterProfile();
 
-    if (!currentPrinter)
-        return;
-
     auto* dialog = new printerProfileDialog(currentPrinter, this);
 
     connect(dialog, &printerProfileDialog::saveRequested, profileManager, &ProfileManager::updateUserPrinter);
     connect(dialog, &printerProfileDialog::saveAsRequested, profileManager, &ProfileManager::addUserPrinter);
-    //connect(dialog, &printerProfileDialog::saveAsRequested, appConfig, &AppConfig::setActivePrinter);
 
     dialog->exec();
 }
 
 void MainWindow::onSliceClicked()
 {
-    auto* printer = profileManager->getActivePrinterProfile();
+    //auto* printer = profileManager->getActivePrinterDataForView()
     //auto* material = profileManager->getActiveMaterialProfile();
     //auto* process = profileManager->getActiveProcessProfile();
 

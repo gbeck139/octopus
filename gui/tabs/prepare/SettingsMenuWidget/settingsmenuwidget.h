@@ -2,7 +2,7 @@
 #define SETTINGSMENUWIDGET_H
 
 #include <QWidget>
-#include "printerprofile.h"
+#include "printerviewdata.h"
 
 namespace Ui {
 class SettingsMenuWidget;
@@ -21,11 +21,13 @@ signals:
     void settingsMenuEditPrinterClicked();
 
 public slots:
-    void populatePrinterCombo(const QList<const PrinterProfile*> system, const QList<const PrinterProfile*> user, const QString &activePrinterId);
+    void populatePrinterCombo(const QList<PrinterViewData>& system, const QList<PrinterViewData>& user, const QString &activePrinterId);
+    void rebuildPrinterCombo(const QList<PrinterViewData>& system, const QList<PrinterViewData>& user);
+    void refreshActivePrinterDisplay(const QString& activePrinterId);
+
+private slots:
     void onPrinterSelected(int index);
     void onEditPrinterClicked();
-    void rebuildPrinterCombo(const QList<const PrinterProfile*>& system, const QList<const PrinterProfile*>& user);
-    void refreshActivePrinterDisplay(const QString& activePrinterId);
 
 private:
     Ui::SettingsMenuWidget *ui;
