@@ -21,6 +21,16 @@ def deform_mesh(mesh, scale=1.0, angle_base=15, angle_factor=30):
     :return: Deformed mesh, transform_params dict.
     """ 
 
+    # Ensure mesh is triangulated
+    if not mesh.is_all_triangles:
+        mesh = mesh.triangulate()
+
+    # Subdivide if the mesh is too coarse (e.g. a simple box)
+    # This prevents flat surfaces from staying flat when they should curve
+    TARGET_POINT_COUNT = 20000
+    while mesh.n_points < TARGET_POINT_COUNT:
+        mesh = mesh.subdivide(1, subfilter='linear')
+
     mesh.field_data["faces"] = mesh.faces.reshape(-1, 4)[:, 1:]
     mesh.points *= scale
 
@@ -37,8 +47,17 @@ def deform_mesh(mesh, scale=1.0, angle_base=15, angle_factor=30):
     # ROTATION = lambda radius: np.full_like(radius, np.deg2rad(-40)) # Fixed rotation inwards
     # ROTATION = lambda radius: np.deg2rad(-40 + 30 * (1 - (radius / max_radius)) ** 2) # Use for bridge
 
+    rotations = ROTATION(distances_to_center) # calculate rotations for all points
+
+    # Scale Z to preserve thickness perpendicular to the surface
+    # Without this, the part gets thinner as the slope increases (vertical shear vs bending)
+    cos_rotations = np.cos(rotations)
+    # Clamp to avoid extreme stretching or division by zero close to 90 degrees
+    cos_rotations = np.maximum(cos_rotations, 0.1) 
+    mesh.points[:, 2] /= cos_rotations
+
     # create delta vector for each point
-    translate_upwards = np.hstack([np.zeros((len(mesh.points), 2)), np.tan(ROTATION(distances_to_center).reshape(-1, 1)) * distances_to_center.reshape(-1, 1)])
+    translate_upwards = np.hstack([np.zeros((len(mesh.points), 2)), np.tan(rotations.reshape(-1, 1)) * distances_to_center.reshape(-1, 1)])
     # apply deformation
     mesh.points = mesh.points + translate_upwards
 
@@ -78,7 +97,7 @@ def plot_deformed_mesh(deformed_mesh):
 
 
 if __name__ == "__main__":
-    MODEL_NAME = '3DBenchy'
+    MODEL_NAME = '3DBenchy'  # Change as needed
     mesh = load_mesh(MODEL_NAME)
     deformed_mesh, transform_params = deform_mesh(mesh, scale=1)
     save_deformed_mesh(deformed_mesh, transform_params, MODEL_NAME)

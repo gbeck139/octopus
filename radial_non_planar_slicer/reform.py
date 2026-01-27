@@ -136,15 +136,29 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
     translate_upwards = np.hstack([np.zeros((len(positions), 2)), np.tan(rotations.reshape(-1, 1)) * distances_to_center.reshape(-1, 1)])
     new_positions = positions - translate_upwards
 
+    # Compensate for the Z-scaling applied in deform.py
+    # NOTE: user reported "hill" artifacts / bowing at the bottom.
+    # While mathematically strictly correct for surface normals, applying the cos(theta)
+    # scaling to planar-sliced G-code (which has stair-steps) involves mapping flat disks to domes.
+    # Disabling this scaling often results in a visually "flatter" restoration for solid blocks,
+    # effectively treating the transform as a simple vertical shear.
+    
+    # cos_rotations = np.cos(rotations)
+    # cos_rotations = np.maximum(cos_rotations, 0.1)
+    # new_positions[:, 2] *= cos_rotations
+
     # --- SAFETY FILTERING ---
     # Filter out points that are geometrically impossible or dangerous (e.g. infinite wrapping of origin)
     # This keeps visualizations clean and print safe.
     NOZZLE_OFFSET = 43 # mm
-    MIN_SAFE_Z = -5.0
+    # Relaxed safety limits to allow for 4-axis dip
+    MIN_SAFE_Z = -50.0 
     MAX_SAFE_Z = 200.0
     MAX_SAFE_R = 1000.0
 
     valid_mask = []
+    
+    z_comp_min = 1000
     
     for i, pos in enumerate(new_positions):
         # Replicate the kinematic calculation to check safety
@@ -158,11 +172,16 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
         # Apply nozzle compensation
         r_comp = r + np.sin(rotation) * NOZZLE_OFFSET
         z_comp = z + (np.cos(rotation) - 1) * NOZZLE_OFFSET
+        
+        if z_comp < z_comp_min:
+            z_comp_min = z_comp
 
         if z_comp < MIN_SAFE_Z or z_comp > MAX_SAFE_Z or r_comp > MAX_SAFE_R:
             valid_mask.append(False)
         else:
             valid_mask.append(True)
+
+    print(f"Minimum machine Z required: {z_comp_min:.2f} mm")
 
     valid_mask = np.array(valid_mask, dtype=bool)
     
@@ -304,7 +323,7 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
     # get where z > 0
     z = new_positions[:, 2]
     point_cloud = pv.PolyData(new_positions[z > 0])
-    point_cloud.plot(scalars=np.arange(len(new_positions[z > 0]))%2000, point_size=20, render_points_as_spheres=True) # doesnt work in google colab? uncomment to view if not in google colab
+    point_cloud.plot(scalars=np.arange(len(new_positions[z > 0]))%2000, point_size=3, render_points_as_spheres=True) # doesnt work in google colab? uncomment to view if not in google colab
 
     # plot in matplotlib
     g01_points = np.array([new_positions[i] for i, point in enumerate(gcode_points) if point["command"] == "G01"])
@@ -315,11 +334,11 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
     plt.scatter(g01_points[:, 0], g01_points[:, 2], s=1, c=c)
     plt.gca().set_aspect('equal')
     plt.xlabel("X")
-    plt.ylabel("Y")
+    plt.ylabel("Z")
     plt.title("Scatter Plot of G-code Points")
     plt.show()
 
 
 if __name__ == "__main__":
-    MODEL_NAME = '3DBenchy'
+    MODEL_NAME = '3DBenchy'  # Change as needed
     load_gcode_and_undeform(MODEL_NAME)
