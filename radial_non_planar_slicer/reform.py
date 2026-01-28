@@ -137,15 +137,10 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
     new_positions = positions - translate_upwards
 
     # Compensate for the Z-scaling applied in deform.py
-    # NOTE: user reported "hill" artifacts / bowing at the bottom.
-    # While mathematically strictly correct for surface normals, applying the cos(theta)
-    # scaling to planar-sliced G-code (which has stair-steps) involves mapping flat disks to domes.
-    # Disabling this scaling often results in a visually "flatter" restoration for solid blocks,
-    # effectively treating the transform as a simple vertical shear.
-    
-    # cos_rotations = np.cos(rotations)
-    # cos_rotations = np.maximum(cos_rotations, 0.1)
-    # new_positions[:, 2] *= cos_rotations
+    # We recover the original Z height (perpendicular thickness)
+    cos_rotations = np.cos(rotations)
+    cos_rotations = np.maximum(cos_rotations, 0.1)
+    new_positions[:, 2] *= cos_rotations
 
     # --- SAFETY FILTERING ---
     # Filter out points that are geometrically impossible or dangerous (e.g. infinite wrapping of origin)
