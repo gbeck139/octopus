@@ -27,94 +27,140 @@
       <widget class="QLineEdit" name="nameLineEdit"/>
      </item>
      <item row="1" column="0">
-      <widget class="QLabel" name="nozzleDiameterLabel">
+      <widget class="QLabel" name="label">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="font">
+        <font>
+         <kerning>true</kerning>
+        </font>
+       </property>
        <property name="text">
-        <string>Nozzle Diameter:</string>
+        <string>---Limits---</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignCenter</set>
        </property>
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QDoubleSpinBox" name="nozzleDiameterDoubleSpinBox"/>
+      <widget class="QLabel" name="emptylabel">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
      </item>
      <item row="2" column="0">
-      <widget class="QLabel" name="xMinLabel">
+      <widget class="QLabel" name="xLimitLabel">
        <property name="text">
-        <string>X min:</string>
+        <string>x Limit:</string>
        </property>
       </widget>
      </item>
      <item row="2" column="1">
-      <widget class="QDoubleSpinBox" name="xMinDoubleSpinBox"/>
+      <widget class="QDoubleSpinBox" name="xLimitDoubleSpinBox"/>
      </item>
      <item row="3" column="0">
-      <widget class="QLabel" name="xMaxLabel">
+      <widget class="QLabel" name="zLimitLabel">
        <property name="text">
-        <string>X max:</string>
+        <string>z Limit:</string>
        </property>
       </widget>
      </item>
      <item row="3" column="1">
-      <widget class="QDoubleSpinBox" name="xMaxDoubleSpinBox"/>
+      <widget class="QDoubleSpinBox" name="zLimitDoubleSpinBox"/>
      </item>
      <item row="4" column="0">
-      <widget class="QLabel" name="yMinLabel">
+      <widget class="QLabel" name="cRotationLimitLabel">
        <property name="text">
-        <string>Y min:</string>
+        <string>c Rotation Limit:</string>
        </property>
       </widget>
      </item>
      <item row="4" column="1">
-      <widget class="QDoubleSpinBox" name="yMinDoubleSpinBox"/>
+      <widget class="QDoubleSpinBox" name="cRotationLimitDoubleSpinBox"/>
      </item>
      <item row="5" column="0">
-      <widget class="QLabel" name="yMaxLabel">
+      <widget class="QLabel" name="bRotationLimitLabel">
        <property name="text">
-        <string>Y max:</string>
+        <string>b Rotation Limit:</string>
        </property>
       </widget>
      </item>
      <item row="5" column="1">
-      <widget class="QDoubleSpinBox" name="yMaxDoubleSpinBox"/>
-     </item>
-     <item row="6" column="0">
-      <widget class="QLabel" name="zMinLabel">
-       <property name="text">
-        <string>Z min:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="1">
-      <widget class="QDoubleSpinBox" name="zMinDoubleSpinBox"/>
+      <widget class="QDoubleSpinBox" name="bRotationLimitDoubleSpinBox"/>
      </item>
      <item row="7" column="0">
-      <widget class="QLabel" name="zMaxLabel">
+      <widget class="QLabel" name="nozzleThicknessLabel">
        <property name="text">
-        <string>Z max:</string>
+        <string>Nozzle Thickness:</string>
        </property>
       </widget>
      </item>
      <item row="7" column="1">
-      <widget class="QDoubleSpinBox" name="zMaxDoubleSpinBox"/>
+      <widget class="QDoubleSpinBox" name="nozzleThicknessDoubleSpinBox"/>
      </item>
      <item row="8" column="0">
-      <widget class="QLabel" name="rotAxisMinLabel">
+      <widget class="QLabel" name="nozzleHeightLabel">
        <property name="text">
-        <string>Rot axis min:</string>
+        <string>Nozzle Height:</string>
        </property>
       </widget>
      </item>
      <item row="8" column="1">
-      <widget class="QDoubleSpinBox" name="rotAxisMinDoubleSpinBox"/>
+      <widget class="QDoubleSpinBox" name="nozzleHeightDoubleSpinBox"/>
      </item>
      <item row="9" column="0">
-      <widget class="QLabel" name="rotAxisMaxLabel">
+      <widget class="QLabel" name="rotationHeightLabel">
        <property name="text">
-        <string>Rot axis max:</string>
+        <string>Rotation Height</string>
        </property>
       </widget>
      </item>
      <item row="9" column="1">
-      <widget class="QDoubleSpinBox" name="rotAxisMaxDoubleSpinBox"/>
+      <widget class="QDoubleSpinBox" name="rotationHeightDoubleSpinBox"/>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>---Nozzle---</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="11" column="0">
+      <widget class="QLabel" name="ofExtrudersLabel">
+       <property name="text">
+        <string># of Extruders:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="11" column="1">
+      <widget class="QSpinBox" name="ofExtrudersSpinBox"/>
+     </item>
+     <item row="10" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>---Extruders---</string>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="1">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

@@ -50,35 +50,35 @@ void printerProfileDialog::onSaveAsClicked()
 
 void printerProfileDialog::setPrinter(const PrinterProfile *printer)
 {
-    ui->nameLineEdit->setText(printer->getDisplayName());
-    ui->nozzleDiameterDoubleSpinBox->setValue(printer->getNozzleDiameter());
-    ui->xMinDoubleSpinBox->setValue(printer->getXMin());
-    ui->xMaxDoubleSpinBox->setValue(printer->getXMax());
-    ui->yMinDoubleSpinBox->setValue(printer->getYMin());
-    ui->yMaxDoubleSpinBox->setValue(printer->getYMax());
-    ui->zMinDoubleSpinBox->setValue(printer->getZMin());
-    ui->zMaxDoubleSpinBox->setValue(printer->getZMax());
-    ui->rotAxisMinDoubleSpinBox->setValue(printer->getRotMin());
-    ui->rotAxisMaxDoubleSpinBox->setValue(printer->getRotMax());
+    // ui->nameLineEdit->setText(printer->getDisplayName());
+    // ui->nozzleDiameterDoubleSpinBox->setValue(printer->getNozzleDiameter());
+    // ui->xMinDoubleSpinBox->setValue(printer->getXMin());
+    // ui->xMaxDoubleSpinBox->setValue(printer->getXMax());
+    // ui->yMinDoubleSpinBox->setValue(printer->getYMin());
+    // ui->yMaxDoubleSpinBox->setValue(printer->getYMax());
+    // ui->zMinDoubleSpinBox->setValue(printer->getZMin());
+    // ui->zMaxDoubleSpinBox->setValue(printer->getZMax());
+    // ui->rotAxisMinDoubleSpinBox->setValue(printer->getRotMin());
+    // ui->rotAxisMaxDoubleSpinBox->setValue(printer->getRotMax());
 }
 
 void printerProfileDialog::applyChangesToProfile(PrinterProfile* profile)
 {
-    profile->setDisplayName(ui->nameLineEdit->text());
-    profile->setNozzleDiameter(ui->nozzleDiameterDoubleSpinBox->value());
-    profile->setAxisLimits(
-        ui->xMinDoubleSpinBox->value(),
-        ui->xMaxDoubleSpinBox->value(),
-        ui->yMinDoubleSpinBox->value(),
-        ui->yMaxDoubleSpinBox->value(),
-        ui->zMinDoubleSpinBox->value(),
-        ui->zMaxDoubleSpinBox->value(),
-        ui->rotAxisMinDoubleSpinBox->value(),
-        ui->rotAxisMaxDoubleSpinBox->value()
-        );
-    profile->setBuildVolume(
-        ui->xMaxDoubleSpinBox->value(),
-        ui->yMaxDoubleSpinBox->value(),
-        ui->zMaxDoubleSpinBox->value()
-        );
+    // profile->setDisplayName(ui->nameLineEdit->text());
+    // profile->setNozzleDiameter(ui->nozzleDiameterDoubleSpinBox->value());
+    // profile->setAxisLimits(
+    //     ui->xMinDoubleSpinBox->value(),
+    //     ui->xMaxDoubleSpinBox->value(),
+    //     ui->yMinDoubleSpinBox->value(),
+    //     ui->yMaxDoubleSpinBox->value(),
+    //     ui->zMinDoubleSpinBox->value(),
+    //     ui->zMaxDoubleSpinBox->value(),
+    //     ui->rotAxisMinDoubleSpinBox->value(),
+    //     ui->rotAxisMaxDoubleSpinBox->value()
+    //     );
+    // profile->setBuildVolume(
+    //     ui->xMaxDoubleSpinBox->value(),
+    //     ui->yMaxDoubleSpinBox->value(),
+    //     ui->zMaxDoubleSpinBox->value()
+    //     );
 }
