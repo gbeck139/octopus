@@ -10,6 +10,7 @@ class SetupWizard : public QWizard
 public:
     explicit SetupWizard(QWidget *parent = nullptr);
     void setFirstRunMode(bool enabled);
+    void setAvailablePrinters(const QList<PrinterViewData>& printers);
 
 protected:
     void closeEvent(QCloseEvent *event) override;

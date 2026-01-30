@@ -36,6 +36,11 @@ void SetupWizard::setFirstRunMode(bool enabled)
     }
 }
 
+void SetupWizard::setAvailablePrinters(const QList<PrinterViewData> &printers)
+{
+    profilePage->setAvailablePrinters(printers);
+}
+
 void SetupWizard::closeEvent(QCloseEvent *event)
 {
     if (isFirstRun) {

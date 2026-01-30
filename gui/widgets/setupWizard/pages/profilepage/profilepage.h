@@ -4,6 +4,8 @@
 #include <QWizardPage>
 #include <QButtonGroup>
 
+#include "printerviewdata.h"
+
 namespace Ui {
 class ProfilePage;
 }
@@ -18,6 +20,7 @@ public:
 
     bool isComplete() const override;
     bool validatePage() override;
+    void setAvailablePrinters(const QList<PrinterViewData>& printers);
 
 signals:
     void printerTypeSelected(QString printerId); // change int to PrinterType later? (enum)

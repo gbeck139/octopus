@@ -47,6 +47,9 @@ MainWindow::MainWindow(QWidget *parent)
         SetupWizard* firstWizard = new SetupWizard(this);
         firstWizard->setFirstRunMode(true);
 
+        QList<PrinterViewData> printers = profileManager->getSystemPrintersForView();
+        firstWizard->setAvailablePrinters(printers);
+
         connectWizard(firstWizard);
 
         firstWizard->exec();
@@ -174,6 +177,9 @@ void MainWindow::onSetupWizardClicked()
     SetupWizard* setupWizard = new SetupWizard(this);
     setupWizard->setFirstRunMode(false);
 
+    QList<PrinterViewData> printers = profileManager->getSystemPrintersForView();
+    setupWizard->setAvailablePrinters(printers);
+
     connectWizard(setupWizard);
 
     setupWizard->exec();
@@ -196,7 +202,6 @@ void MainWindow::connectWizard(SetupWizard *wizard)
 {
     connect(wizard, &SetupWizard::printerTypeSelected, appConfig, &AppConfig::setActivePrinterId);
     connect(wizard, &SetupWizard::setupCompleted, this, &MainWindow::onSetupCompleted);
-
     connect(wizard, &SetupWizard::printerTypeSelected, profileManager, &ProfileManager::setActivePrinter);
 }
 
