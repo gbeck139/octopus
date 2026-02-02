@@ -77,7 +77,7 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
             delta_pos = pos - prev_pos
             distance = np.linalg.norm(delta_pos)
             if distance > 0 and gcode.word == "G01":
-                seg_size = 1 # mm
+                seg_size = .1 # mm
                 num_segments = -(-distance // seg_size) # ceiling division
                 seg_distance = distance/num_segments
 
@@ -335,5 +335,5 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
 
 
 if __name__ == "__main__":
-    MODEL_NAME = '3DBenchy'  # Change as needed
+    MODEL_NAME = 'dogbone_mini_flat'  # Change as needed
     load_gcode_and_undeform(MODEL_NAME)

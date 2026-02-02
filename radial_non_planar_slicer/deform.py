@@ -91,13 +91,13 @@ def plot_deformed_mesh(deformed_mesh):
     plt.scatter(deformed_mesh.points[:, 0], deformed_mesh.points[:, 2], s=1)
     plt.gca().set_aspect('equal')
     plt.xlabel("X")
-    plt.ylabel("Y")
+    plt.ylabel("Z")
     plt.title("Scatter Plot of Deformed Mesh")
     plt.show()
 
 
 if __name__ == "__main__":
-    MODEL_NAME = '3DBenchy'  # Change as needed
+    MODEL_NAME = 'dogbone_mini_flat'  # Change as needed
     mesh = load_mesh(MODEL_NAME)
     deformed_mesh, transform_params = deform_mesh(mesh, scale=1)
     save_deformed_mesh(deformed_mesh, transform_params, MODEL_NAME)
