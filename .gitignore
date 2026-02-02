@@ -8,3 +8,4 @@ venv/
 **/input_gcode/*
 !**/input_gcode/.gitkeep
 __pycache__/
+**/_*
