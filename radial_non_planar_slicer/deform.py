@@ -97,7 +97,7 @@ def plot_deformed_mesh(deformed_mesh):
 
 
 if __name__ == "__main__":
-    MODEL_NAME = 'dogbone_mini_flat'  # Change as needed
+    MODEL_NAME = 'dogbone_mini_flat_proper'  # Change as needed
     mesh = load_mesh(MODEL_NAME)
     deformed_mesh, transform_params = deform_mesh(mesh, scale=1)
     save_deformed_mesh(deformed_mesh, transform_params, MODEL_NAME)

@@ -335,5 +335,5 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
 
 
 if __name__ == "__main__":
-    MODEL_NAME = 'dogbone_mini_flat'  # Change as needed
+    MODEL_NAME = 'dogbone_mini_flat_proper'  # Change as needed
     load_gcode_and_undeform(MODEL_NAME)
