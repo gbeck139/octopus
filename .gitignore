@@ -7,5 +7,6 @@ venv/
 !**/output_gcode/.gitkeep
 **/input_gcode/*
 !**/input_gcode/.gitkeep
+gifs/
 __pycache__/
 **/_*

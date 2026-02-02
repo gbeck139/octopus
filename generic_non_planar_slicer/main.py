@@ -8,8 +8,14 @@ import open3d as o3d
 import time
 import pickle
 import base64
+import os # Make sure os is imported
 
 pv.global_theme.notebook = True
+
+# Create necessary directories so script doesn't error
+for folder in ['gifs', 'output_models', 'pickle_files', 'input_gcode', 'output_gcode']:
+    if not os.path.exists(folder):
+        os.makedirs(folder)
 
 def encode_object(obj):
     return base64.b64encode(pickle.dumps(obj)).decode('utf-8')
@@ -20,13 +26,47 @@ def decode_object(encoded_str):
 up_vector = np.array([0, 0, 1])
 
 # Load mesh
-model_name = "pi 3mm"
+model_name = "propeller"
 mesh = o3d.io.read_triangle_mesh(f'input_models/{model_name}.stl')
 
+mesh.remove_duplicated_vertices()
+mesh.remove_duplicated_triangles()
+mesh.remove_degenerate_triangles()
+
 # convert to tetrahedral mesh
-input_tet = tetgen.TetGen(np.asarray(mesh.vertices), np.asarray(mesh.triangles))
-# input_tet.make_manifold() # comment out if not needed
-input_tet.tetrahedralize()
+def robust_tetrahedralize(vertices, triangles):
+    # Attempt 1: High Quality (q1.5)
+    # This often fails on complex STLs by adding infinite points trying to fix sharp angles
+    try:
+        print("Attempting tetrahedralize with switches='pq1.5'...")
+        tgen = tetgen.TetGen(vertices, triangles)
+        tgen.make_manifold()
+        tgen.tetrahedralize(switches="pq1.5")
+        return tgen
+    except RuntimeError:
+        print("Failed. Retrying with relaxed constraints...")
+
+    # Attempt 2: Relaxed Quality (q2.0)
+    # Allows for "uglier" tetrahedrons but is more likely to succeed
+    try:
+        print("Attempting tetrahedralize with switches='pq2.0'...")
+        tgen = tetgen.TetGen(vertices, triangles)
+        tgen.make_manifold()
+        tgen.tetrahedralize(switches="pq2.0")
+        return tgen
+    except RuntimeError:
+        print("Failed. Retrying with no quality refinement...")
+
+    # Attempt 3: No Quality Refinement (p)
+    # Just creates a valid tetrahedral mesh without enforcing shape quality
+    # This almost always succeeds for valid geometries
+    print("Attempting tetrahedralize with switches='p'...")
+    tgen = tetgen.TetGen(vertices, triangles)
+    tgen.make_manifold()
+    tgen.tetrahedralize(switches="p")
+    return tgen
+
+input_tet = robust_tetrahedralize(np.asarray(mesh.vertices), np.asarray(mesh.triangles))
 input_tet = input_tet.grid
 
 # rotate
@@ -47,23 +87,33 @@ PART_OFFSET = np.array([0., 0., 0.])
 x_min, x_max, y_min, y_max, z_min, z_max = input_tet.bounds
 input_tet.points -= np.array([(x_min + x_max) / 2, (y_min + y_max) / 2, z_min]) + PART_OFFSET
 
+print(f"Mesh generated with {input_tet.number_of_cells} cells. Calculating neighbours (this is slow)...")
 
 # find neighbours
 cell_neighbour_dict = {neighbour_type: {face: [] for face in range(input_tet.number_of_cells)} for neighbour_type in ["point", "edge", "face"]}
 for neighbour_type in ["point", "edge", "face"]:
+    print(f"  - Processing {neighbour_type} neighbours...")
     cell_neighbours = []
     for cell_index in range(input_tet.number_of_cells):
+        if cell_index % 10000 == 0:
+             print(f"    [{neighbour_type}] Cell {cell_index}/{input_tet.number_of_cells}")
         neighbours = input_tet.cell_neighbors(cell_index, f"{neighbour_type}s")
         for neighbour in neighbours:
             if neighbour > cell_index:
                 cell_neighbours.append((cell_index, neighbour))
+    
+    print(f"    building dictionary for {neighbour_type}...")
     for face_1, face_2 in np.array(cell_neighbours):
         cell_neighbour_dict[neighbour_type][face_1].append(face_2)
         cell_neighbour_dict[neighbour_type][face_2].append(face_1)
 
     input_tet.field_data[f"cell_{neighbour_type}_neighbours"] = np.array(cell_neighbours)
 
+print("Neighbour calculation complete.")
+
 cell_neighbour_graph = nx.Graph()
+
+
 cell_centers = input_tet.cell_centers().points
 for edge in input_tet.field_data["cell_point_neighbours"]: # use point neighbours for best accuracy
     distance = np.linalg.norm(cell_centers[edge[0]] - cell_centers[edge[1]])
@@ -579,7 +629,7 @@ SET_INITIAL_ROTATION_TO_ZERO = False # reduces influence of initial rotation fie
 INITIAL_ROTATION_FIELD_SMOOTHING = 30
 MAX_POS_ROTATION = np.deg2rad(3600) # normally set to 360 unless you get collisions
 MAX_NEG_ROTATION = np.deg2rad(-3600) # normally set to 360 unless you get collisions
-ITERATIONS = 100
+ITERATIONS = 50
 SAVE_GIF = True
 STEEP_OVERHANG_COMPENSATION = True
 
@@ -926,6 +976,15 @@ deformed_tet.extract_surface().save(f'output_models/{model_name}_deformed_tet.st
 # save to pickle
 with open(f'pickle_files/deformed_{model_name}.pkl', 'wb') as f:
     pickle.dump(deformed_tet, f)
+
+print(f"\n[STEP 1 COMPLETE] Deformed mesh saved to: output_models/{model_name}_deformed_tet.stl")
+print("----------------------------------------------------------------")
+print("ACTION REQUIRED:")
+print("1. Open output_models/{}_deformed_tet.stl in Cura".format(model_name))
+print("2. Slice the model (Settings: Center on buildplate, no Z-hop)")
+print(f"3. Save the G-code to this exact path: input_gcode/{model_name}_deformed_tet.gcode")
+print("----------------------------------------------------------------")
+input(">>> Press ENTER to continue once you have saved the G-code file...")
 
 
 # # Now, go and slice the stl file in Cura!
