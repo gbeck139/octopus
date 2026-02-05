@@ -7,6 +7,8 @@ ProfilePage::ProfilePage(QWidget *parent)
 {
     ui->setupUi(this);
 
+    setFinalPage(true);
+
     setTitle("Default Profiles");
     setSubTitle("Choose printer type");
 

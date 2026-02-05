@@ -9,9 +9,12 @@ SetupWizard::SetupWizard(QWidget *parent)
 
     setWindowTitle("Setup Wizard");
 
-    profilePage = new ProfilePage;
-
     addPage(new WelcomePage);
+
+    prusaSlicerPage = new PrusaSlicerPage;
+    addPage(prusaSlicerPage);
+
+    profilePage = new ProfilePage;
     addPage(profilePage);
 
     connect(profilePage, &ProfilePage::printerTypeSelected, this, &SetupWizard::printerTypeSelected);

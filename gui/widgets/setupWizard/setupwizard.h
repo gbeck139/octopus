@@ -3,6 +3,7 @@
 
 #include <QWizard>
 #include "profilepage.h"
+#include "prusaslicerpage.h"
 
 class SetupWizard : public QWizard
 {
@@ -21,6 +22,7 @@ signals:
     void setupCompleted();
 private:
     ProfilePage *profilePage;
+    PrusaSlicerPage *prusaSlicerPage;
     bool isFirstRun = false;
 };
 

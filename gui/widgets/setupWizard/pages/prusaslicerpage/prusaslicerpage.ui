@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>PrusaSlicerPage</class>
+ <widget class="QWizardPage" name="PrusaSlicerPage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>618</width>
+    <height>393</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>WizardPage</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;To generate toolpaths, this application relies on &lt;span style=&quot; font-weight:700;&quot;&gt;PrusaSlicer&lt;/span&gt;, an external slicing engine that must already be installed on your machine. If PrusaSlicer is not installed, you can download it from the official website &amp;lt;a href=\&amp;quot;https://www.prusa3d.com/page/prusaslicer_424/\&amp;quot;&amp;gt;here&amp;lt;/a&amp;gt;.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;&amp;quot;&amp;lt;b&amp;gt;Installation guides:&amp;lt;/b&amp;gt;&amp;lt;br&amp;gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;• &amp;lt;a href=\&amp;quot;https://help.prusa3d.com/article/installing-prusaslicer_2043\&amp;quot;&amp;gt;Windows&amp;lt;/a&amp;gt;&amp;lt;br&amp;gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;• &amp;lt;a href=\&amp;quot;https://help.prusa3d.com/article/installing-prusaslicer_2043\&amp;quot;&amp;gt;macOS&amp;lt;/a&amp;gt;&amp;lt;br&amp;gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;• &amp;lt;a href=\&amp;quot;https://help.prusa3d.com/article/installing-prusaslicer_2043\&amp;quot;&amp;gt;Linux&amp;lt;/a&amp;gt;&amp;quot;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Once installed, please locate the PrusaSlicer executable on your system:&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;&amp;lt;em&amp;gt;The executable is typically name &amp;lt;code&amp;gt;PrusaSlicer.app/.../PrusaSlicer&amp;lt;/code&amp;gt; (macOS), &amp;lt;code&amp;gt;PrusaSlicer-*.AppImage&amp;lt;/code&amp;gt; (Linux) or &amp;lt;code&amp;gt;prusa-slicer-console.exe&amp;lt;/code&amp;gt; (windows)&amp;lt;/em&amp;gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QFrame" name="frame">
+     <property name="frameShape">
+      <enum>QFrame::Shape::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Shadow::Raised</enum>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QLabel" name="pathLabel">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="browseButton">
+        <property name="text">
+         <string>Browse...</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

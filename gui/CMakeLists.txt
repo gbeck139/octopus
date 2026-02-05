@@ -47,6 +47,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         core/slicing/slicerrunner.h core/slicing/slicerrunner.cpp
         core/profiles/viewdata/printerviewdata.h
         core/slicing/sliceparameters.h
+        widgets/setupWizard/pages/prusaslicerpage/prusaslicerpage.h widgets/setupWizard/pages/prusaslicerpage/prusaslicerpage.cpp widgets/setupWizard/pages/prusaslicerpage/prusaslicerpage.ui
 
     )
     target_include_directories(gui PRIVATE
@@ -64,7 +65,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         widgets/setupWizard
         widgets/setupWizard/pages/welcomepage
         widgets/setupWizard/pages/profilepage
-
+        widgets/setupWizard/pages/prusaslicerpage
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET gui APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
