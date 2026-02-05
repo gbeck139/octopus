@@ -201,8 +201,9 @@ void MainWindow::onSetupCompleted()
 void MainWindow::connectWizard(SetupWizard *wizard)
 {
     connect(wizard, &SetupWizard::printerTypeSelected, appConfig, &AppConfig::setActivePrinterId);
-    connect(wizard, &SetupWizard::setupCompleted, this, &MainWindow::onSetupCompleted);
     connect(wizard, &SetupWizard::printerTypeSelected, profileManager, &ProfileManager::setActivePrinter);
+    connect(wizard, &SetupWizard::prusaSlicerPathSelected, appConfig, &AppConfig::setPrusaSlicerPath);
+    connect(wizard, &SetupWizard::setupCompleted, this, &MainWindow::onSetupCompleted);
 }
 
 void MainWindow::onSettingsMenuEditPrinterClicked()

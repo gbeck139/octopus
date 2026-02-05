@@ -16,8 +16,6 @@ PrusaSlicerPage::PrusaSlicerPage(QWidget *parent)
     setTitle("PrusaSlicer Install");
     setSubTitle("This application requires PrusaSlicer to be installed on your system.");
 
-    //connect(ui->pathLineEdit, &QLineEdit::textChanged,
-    //        this, &QWizardPage::completeChanged);
     connect(ui->browseButton, &QPushButton::clicked, this, &PrusaSlicerPage::browseButtonClicked);
 }
 
@@ -36,8 +34,8 @@ void PrusaSlicerPage::browseButtonClicked()
 {
     QString prusaPath = QFileDialog::getOpenFileName(this, "Located PrusaSlicer Executable", "", "All Files (*)");
 
-    if (!prusaPath.isEmpty()) {
-        qDebug() << "PrusaSlicer path found";
+    if (prusaPath.isEmpty()) {
+        return;
     }
 
     bool isValidPath = isValidPrusaSlicer(prusaPath);
@@ -49,7 +47,9 @@ void PrusaSlicerPage::browseButtonClicked()
     }
 
     ui->pathLabel->setText(prusaPath);
-    emit completeChanged(); //WHAT???? i think imma need to give the prusapath to appconfig somehow?
+
+    emit prusaSlicerPathSelected(prusaPath);
+    emit completeChanged();
 
 }
 
@@ -73,5 +73,5 @@ bool PrusaSlicerPage::isValidPrusaSlicer(const QString &path)
 
     // Accept common names across platforms
     //TODO: test this to make sure it works on windows, mac, and linux
-    return fileName.contains("prusa");
+    return fileName.contains("prusa") && fileName.contains("slicer");
 }

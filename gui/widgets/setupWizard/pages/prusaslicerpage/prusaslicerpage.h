@@ -17,6 +17,10 @@ public:
 
     bool isComplete() const override;
 
+signals:
+    void prusaSlicerPathSelected(QString prusaSlicerPath);
+
+
 private:
     Ui::PrusaSlicerPage *ui;
 

@@ -66,3 +66,19 @@ void AppConfig::setActiveProcessId(const QString& processId)
 
     emit activeProcessChanged(processId);
 }
+
+QString AppConfig::getPrusaSlicerPath() const
+{
+    return appSettings.value("paths/prusaSlicerPath").toString();
+}
+
+void AppConfig::setPrusaSlicerPath(const QString &prusaSlicerPath)
+{
+    if (prusaSlicerPath == appSettings.value("paths/prusaSlicerPath"))
+        return;
+
+    appSettings.setValue("paths/prusaSlicerPath", prusaSlicerPath);
+    qDebug() << "[APPCONFIG] Saved current prusaSlicerPath to: " << prusaSlicerPath;
+}
+
+

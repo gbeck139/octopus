@@ -18,6 +18,7 @@ SetupWizard::SetupWizard(QWidget *parent)
     addPage(profilePage);
 
     connect(profilePage, &ProfilePage::printerTypeSelected, this, &SetupWizard::printerTypeSelected);
+    connect(prusaSlicerPage, &PrusaSlicerPage::prusaSlicerPathSelected, this, &SetupWizard::prusaSlicerPathSelected);
 }
 
 void SetupWizard::accept()

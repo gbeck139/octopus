@@ -19,6 +19,7 @@ protected:
     void accept() override;
 signals:
     void printerTypeSelected(QString printerId);
+    void prusaSlicerPathSelected(QString prusaSlicerPath);
     void setupCompleted();
 private:
     ProfilePage *profilePage;
