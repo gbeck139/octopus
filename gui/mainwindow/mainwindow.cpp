@@ -19,6 +19,7 @@ MainWindow::MainWindow(QWidget *parent)
     model3D = new Model3D(this);
     profileManager = new ProfileManager(this);
     slicerRunner = new SlicerRunner(this);
+    loadingDialog = new SlicerLoadingDialog(this);
 
     // Set Printer Profiles
     if (!appConfig->isFirstRun()) {
@@ -239,6 +240,26 @@ void MainWindow::onSliceClicked()
     // params.bedTemp = material->getBedTemp();
 
     qDebug() << "[MAIN] Triggering slice";
+
+
+    // Show Loading Dialog for Slicer
+    loadingDialog->show();
+
+    //SlicerLoadingDialog dlg(this);
+    //dlg.show();
+    //dlg.repaint(); // force immediate paint
+
+    //QProcess *proc = new QProcess(this);
+
+    // connect finished signals
+    //connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+    //        &dlg, [&dlg](int, QProcess::ExitStatus) {
+    //            dlg.accept(); // closes the dialog
+    //        });
+
+    // start slicing
+    //proc->start("python", {"-u", "myslicer.py"});
+
 
     slicerRunner->runSlice("currentStlPath", params);
 }

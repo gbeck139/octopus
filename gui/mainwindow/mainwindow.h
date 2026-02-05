@@ -7,6 +7,7 @@
 #include "setupwizard.h"
 #include "profilemanager.h"
 #include "slicerrunner.h"
+#include "slicerloadingdialog.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -28,6 +29,7 @@ private:
     Model3D *model3D;
     ProfileManager *profileManager;
     SlicerRunner *slicerRunner;
+    SlicerLoadingDialog *loadingDialog;
 
 private slots:
     void onImportClicked();
