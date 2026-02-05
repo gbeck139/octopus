@@ -1,0 +1,28 @@
+{
+  "id": "cylinderTwo",
+  "name": "Cylinder Two",
+
+  "limits": {
+    "nozzleMax": 260,
+    "bedMax": 110
+  },
+
+  "buildVolume": {
+    "x": 150,
+    "y": 150,
+    "z": 250
+  },
+
+  "nozzleDiameter": 0.8,
+
+  "axisLimits": {
+    "xMin": 0,
+    "xMax": 150,
+    "yMin": 0,
+    "yMax": 150,
+    "zMin": 0,
+    "zMax": 250,
+    "rotMin": 0,
+    "rotMax": 360
+    }
+}

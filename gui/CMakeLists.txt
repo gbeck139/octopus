@@ -14,16 +14,57 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
 set(PROJECT_SOURCES
         main.cpp
-        mainwindow.cpp
-        mainwindow.h
-        mainwindow.ui
+        mainwindow/mainwindow.cpp
+        mainwindow/mainwindow.h
+        mainwindow/mainwindow.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+    find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Core)
+
     qt_add_executable(gui
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
         version.h
+        tabs/prepare/preparetab.h tabs/prepare/preparetab.cpp tabs/prepare/preparetab.ui
+        tabs/preview/previewtab.h tabs/preview/previewtab.cpp tabs/preview/previewtab.ui
+        tabs/monitor/monitortab.h tabs/monitor/monitortab.cpp tabs/monitor/monitortab.ui
+        core/managers/appconfig.h core/managers/appconfig.cpp
+        core/model3d/model3d.h core/model3d/model3d.cpp
+        widgets/setupWizard/setupwizard.h widgets/setupWizard/setupwizard.cpp
+        widgets/setupWizard/pages/welcomepage/welcomepage.h widgets/setupWizard/pages/welcomepage/welcomepage.cpp widgets/setupWizard/pages/welcomepage/welcomepage.ui
+        widgets/setupWizard/pages/profilepage/profilepage.h widgets/setupWizard/pages/profilepage/profilepage.cpp widgets/setupWizard/pages/profilepage/profilepage.ui
+        resource.qrc
+        tabs/prepare/settingsMenuWidget/settingsmenuwidget.h tabs/prepare/settingsMenuWidget/settingsmenuwidget.cpp tabs/prepare/settingsMenuWidget/settingsmenuwidget.ui
+        core/profiles/printerprofile.h core/profiles/printerprofile.cpp
+        core/profiles/materialprofile.h core/profiles/materialprofile.cpp
+        core/profiles/processprofile.h core/profiles/processprofile.cpp
+        core/managers/profilemanager.h core/managers/profilemanager.cpp
+        tabs/prepare/settingsMenuWidget/printerProfileDialog/printerprofiledialog.h tabs/prepare/settingsMenuWidget/printerProfileDialog/printerprofiledialog.cpp tabs/prepare/settingsMenuWidget/printerProfileDialog/printerprofiledialog.ui
+        core/slicing/slicerrunner.h core/slicing/slicerrunner.cpp
+        core/profiles/viewdata/printerviewdata.h
+        core/slicing/sliceparameters.h
+
+    )
+    target_include_directories(gui PRIVATE
+        mainwindow
+        core/managers
+        core/model3d
+        core/slicing
+        core/profiles
+        core/profiles/viewdata
+        tabs/prepare
+        tabs/prepare/settingsMenuWidget
+        tabs/prepare/settingsMenuWidget/printerProfileDialog
+        tabs/preview
+        tabs/monitor
+        widgets/setupWizard
+        widgets/setupWizard/pages/welcomepage
+        widgets/setupWizard/pages/profilepage
+
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET gui APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -44,6 +85,10 @@ else()
 endif()
 
 target_link_libraries(gui PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(gui PRIVATE Qt6::Core)
+target_link_libraries(gui PRIVATE Qt6::Core)
+target_link_libraries(gui PRIVATE Qt6::Core)
+target_link_libraries(gui PRIVATE Qt6::Core)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
@@ -56,7 +101,7 @@ set_target_properties(gui PROPERTIES
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE
-    WIN32_EXECUTABLE TRUE
+    WIN32_EXECUTABLE FALSE
 )
 
 include(GNUInstallDirs)
