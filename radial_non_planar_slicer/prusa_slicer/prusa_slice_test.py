@@ -1,11 +1,13 @@
 import subprocess
 import os
 
+model_name = "dogbone_mini_flat"
+
 # TODO: currently absolute paths. Change to relative paths. 
-slicer_path = r"C:\Program Files\Prusa3D\PrusaSlicer\prusa-slicer-console.exe"
-stl_path = r"C:\Users\canca\Downloads\Cute Simple Halloween Pumpkin  - 6711982\files\pumpkin.stl"
-output_gcode = r"C:\Users\canca\Documents\3D Printing Slicer App\octopus\radial_non_planar_slicer\output_gcode\test_output.gcode"
-ini_path = r"C:\Users\canca\Documents\3D Printing Slicer App\octopus\radial_non_planar_slicer\prusa_slicer\my_printer_config.ini"
+slicer_path = r"/home/grant/PrusaSlicer.AppImage"
+stl_path = rf"radial_non_planar_slicer/output_models/{model_name}_deformed.stl"
+output_gcode = rf"radial_non_planar_slicer/output_gcode/{model_name}_deformed.gcode"
+ini_path = r"radial_non_planar_slicer/prusa_slicer/my_printer_config.ini"
 
 # Make sure output folder exists
 os.makedirs(os.path.dirname(output_gcode), exist_ok=True)
