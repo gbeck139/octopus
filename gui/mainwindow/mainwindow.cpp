@@ -56,7 +56,6 @@ MainWindow::MainWindow(QWidget *parent)
         firstWizard->deleteLater();
     }
 
-
     // UI Connects
     connect(ui->actionImport, &QAction::triggered, this, &MainWindow::onImportClicked);
     connect(ui->actionExport, &QAction::triggered, this, &MainWindow::onExportClicked);
@@ -91,6 +90,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(slicerRunner, &SlicerRunner::sliceFailed, this, [](const QString& err){
         qDebug() << "[MAIN SLICER] Slice failed:" << err;
     });
+
+    qDebug() << "[GUI] Current PrusaSlicer Path: " + appConfig->getPrusaSlicerPath();
 
 }
 
