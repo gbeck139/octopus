@@ -27,7 +27,7 @@ def deform_mesh(mesh, scale=1.0, angle_base=15, angle_factor=30):
 
     # Subdivide if the mesh is too coarse (e.g. a simple box)
     # This prevents flat surfaces from staying flat when they should curve
-    TARGET_POINT_COUNT = 20000
+    TARGET_POINT_COUNT = 1000000
     while mesh.n_points < TARGET_POINT_COUNT:
         mesh = mesh.subdivide(1, subfilter='linear')
 
@@ -97,7 +97,7 @@ def plot_deformed_mesh(deformed_mesh):
 
 
 if __name__ == "__main__":
-    MODEL_NAME = 'dogbone_mini_flat_proper'  # Change as needed
+    MODEL_NAME = '3DBenchy'  # Change as needed
     mesh = load_mesh(MODEL_NAME)
     deformed_mesh, transform_params = deform_mesh(mesh, scale=1)
     save_deformed_mesh(deformed_mesh, transform_params, MODEL_NAME)
