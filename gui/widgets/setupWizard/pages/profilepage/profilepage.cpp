@@ -74,6 +74,9 @@ void ProfilePage::setAvailablePrinters(const QList<PrinterViewData> &printers)
         printerGroup->addButton(btn, id++);
         ui->printerGroupFrame->layout()->addWidget(btn); // Or some container layout
     }
+
+    // DELETE THIS LATER!!!!! (doesn't show Cylinder 2 for hardcoded integration purpose)
+    printerGroup->button(1)->setEnabled(false);
 }
 
 int ProfilePage::getSelectedPrinterType() const

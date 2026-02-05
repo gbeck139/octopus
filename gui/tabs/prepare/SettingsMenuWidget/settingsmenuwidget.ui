@@ -16,6 +16,9 @@
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QGroupBox" name="printerSettings">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="title">
       <string>Printer</string>
      </property>
@@ -35,14 +38,14 @@
          <item>
           <widget class="QComboBox" name="printerCombo">
            <property name="enabled">
-            <bool>true</bool>
+            <bool>false</bool>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QPushButton" name="editPrinterButton">
            <property name="enabled">
-            <bool>true</bool>
+            <bool>false</bool>
            </property>
            <property name="text">
             <string>Edit</string>
@@ -57,6 +60,9 @@
    </item>
    <item>
     <widget class="QGroupBox" name="filamentSettings">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="title">
       <string>Filament</string>
      </property>
@@ -74,7 +80,11 @@
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_8">
          <item>
-          <widget class="QComboBox" name="filamentSelector"/>
+          <widget class="QComboBox" name="filamentSelector">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+          </widget>
          </item>
          <item>
           <layout class="QFormLayout" name="formLayout">
@@ -87,6 +97,9 @@
            </item>
            <item row="1" column="0">
             <widget class="QLabel" name="bedTempLabel">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <property name="text">
               <string>Bed Temp:</string>
              </property>
@@ -101,6 +114,9 @@
            </item>
            <item row="0" column="0">
             <widget class="QLabel" name="nozzleTempLabel">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <property name="text">
               <string>Nozzle Temp:</string>
              </property>
@@ -147,14 +163,14 @@
             <item>
              <widget class="QComboBox" name="processPresetsSelector">
               <property name="enabled">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QPushButton" name="saveButton">
               <property name="enabled">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
               <property name="text">
                <string>Save</string>
@@ -167,7 +183,7 @@
          <item>
           <widget class="QTabWidget" name="tabWidget">
            <property name="enabled">
-            <bool>true</bool>
+            <bool>false</bool>
            </property>
            <property name="currentIndex">
             <number>0</number>
@@ -252,7 +268,7 @@
                <item row="1" column="0">
                 <widget class="QLabel" name="infillPatternLabel">
                  <property name="enabled">
-                  <bool>true</bool>
+                  <bool>false</bool>
                  </property>
                  <property name="text">
                   <string>Infill pattern:</string>
@@ -262,7 +278,7 @@
                <item row="1" column="1">
                 <widget class="QComboBox" name="infillPatternComboBox">
                  <property name="enabled">
-                  <bool>true</bool>
+                  <bool>false</bool>
                  </property>
                 </widget>
                </item>
@@ -297,7 +313,7 @@
                <item row="1" column="0">
                 <widget class="QLabel" name="typeLabel">
                  <property name="enabled">
-                  <bool>true</bool>
+                  <bool>false</bool>
                  </property>
                  <property name="text">
                   <string>Type:</string>
@@ -307,7 +323,7 @@
                <item row="1" column="1">
                 <widget class="QComboBox" name="typeComboBox">
                  <property name="enabled">
-                  <bool>true</bool>
+                  <bool>false</bool>
                  </property>
                 </widget>
                </item>
