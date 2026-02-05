@@ -9,6 +9,7 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
     if transform_params is None:
         try:
              with open(f'radial_non_planar_slicer/output_models/{MODEL_NAME}_transform.json', 'r') as f:
+             #with open(f'output_models/{MODEL_NAME}_transform.json', 'r') as f:
                 transform_params = json.load(f)
         except FileNotFoundError:
             print(f"Error: Transform parameters not found for {MODEL_NAME}")
@@ -27,6 +28,7 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
     gcode_points = []
     i = 0
     with open(f'radial_non_planar_slicer/input_gcode/{MODEL_NAME}_deformed.gcode', 'r') as fh:
+    #with open(f'input_gcode/{MODEL_NAME}_deformed.gcode', 'r') as fh:
         for line_text in fh.readlines():            
             
             # Skip comment lines and non-standard commands
@@ -224,6 +226,7 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
 
     # save transformed gcode
     with open(f'radial_non_planar_slicer/output_gcode/{MODEL_NAME}_reformed.gcode', 'w') as fh:
+    #with open(f'output_gcode/{MODEL_NAME}_reformed.gcode', 'w') as fh:
         # write header
         fh.write("; --- INITIALIZATION ---\n")
         fh.write("G21              ; Establish metric units (millimeters)\n")
