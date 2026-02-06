@@ -222,6 +222,7 @@ void MainWindow::onSettingsMenuEditPrinterClicked()
 
 void MainWindow::onSliceClicked()
 {
+    // Paramaters (Commented out for Hardcoding purposes)
     //auto* printer = profileManager->getActivePrinterDataForView()
     //auto* material = profileManager->getActiveMaterialProfile();
     //auto* process = profileManager->getActiveProcessProfile();
@@ -231,7 +232,7 @@ void MainWindow::onSliceClicked()
     //     return;
     // }
 
-    SliceParameters params;
+    //SliceParameters params;
     // params.layerHeight = process->getLayerHeight();
     // params.wallLoops = process->getWallLoops();
     // params.infillDensity = process->getInfillDensity();
@@ -241,28 +242,45 @@ void MainWindow::onSliceClicked()
 
     qDebug() << "[MAIN] Triggering slice";
 
-
     // Show Loading Dialog for Slicer
     loadingDialog->show();
 
-    //SlicerLoadingDialog dlg(this);
-    //dlg.show();
-    //dlg.repaint(); // force immediate paint
+    QProcess *proc = new QProcess(this);
 
-    // Open a Log dialog here?
+    // TODO: Open a Log dialog here?
 
-    //QProcess *proc = new QProcess(this);
+    // When slicing finishes: hide loading dialog
+    connect(proc,
+            QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            this,
+            [this, proc](int exitCode, QProcess::ExitStatus status)
+        {
+            loadingDialog->hide();
 
-    // connect finished signals
-    //connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-    //        &dlg, [&dlg](int, QProcess::ExitStatus) {
-    //            dlg.accept(); // closes the dialog
-    //        });
+            if (status == QProcess::NormalExit && exitCode == 0) {
+                qDebug() << "[MAIN] Slicing finished successfully";
+                // TODO: trigger G-code load / visualization
+            } else {
+                qWarning() << "[MAIN] Slicing failed";
+                // TODO: add or log specific ERROR message from Python
+                QMessageBox::warning(this, "SLICING ERROR", "Slicing Failed");
+            }
 
-    // start slicing
-    //proc->start("python", {"-u", "myslicer.py"});
+            proc->deleteLater();
+        });
 
+    // Hardcoded for now
+    QString python = "python"; //????? what is this
+    QString script = "/absolute/path/to/main.py"; //relative pat to main.py...
+    QString prusaPath = appConfig->getPrusaSlicerPath();
 
-    slicerRunner->runSlice("currentStlPath", params);
+    QStringList args;
+    args << script << "--model" << "3DBenchy" << "--prusa" << prusaPath;
+    // Later: << "--stl" << stlPath
+
+    // Start slicing
+    proc->start(python, args);
+
+    //slicerRunner->runSlice("currentStlPath", params);
 }
 
