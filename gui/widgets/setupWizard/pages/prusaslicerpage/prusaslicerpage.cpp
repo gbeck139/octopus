@@ -69,6 +69,11 @@ bool PrusaSlicerPage::isValidPrusaSlicer(const QString &path)
     if (path.endsWith(".app")) {
         QString internalExec = path + "/Contents/MacOS/PrusaSlicer";
         return QFileInfo(internalExec).isExecutable();
+
+        // if above doesn't work change to this:
+        //QDir macDir(path + "/Contents/MacOS");
+        //QStringList files = macDir.entryList(QDir::Files | QDir::Executable);
+        //return !files.isEmpty(); // accept any executable inside
     }
 
     if (!info.isExecutable()) {

@@ -93,7 +93,7 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     qDebug() << "[GUI] Current PrusaSlicer Path: " + appConfig->getPrusaSlicerPath();
-
+    qDebug() << "[GUI] Current Python Path: " + appConfig->getPythonPath();
 }
 
 MainWindow::~MainWindow()
@@ -205,6 +205,7 @@ void MainWindow::connectWizard(SetupWizard *wizard)
     connect(wizard, &SetupWizard::printerTypeSelected, appConfig, &AppConfig::setActivePrinterId);
     connect(wizard, &SetupWizard::printerTypeSelected, profileManager, &ProfileManager::setActivePrinter);
     connect(wizard, &SetupWizard::prusaSlicerPathSelected, appConfig, &AppConfig::setPrusaSlicerPath);
+    connect(wizard, &SetupWizard::pythonPathSelected, appConfig, &AppConfig::setPythonPath);
     connect(wizard, &SetupWizard::setupCompleted, this, &MainWindow::onSetupCompleted);
 }
 
@@ -270,8 +271,8 @@ void MainWindow::onSliceClicked()
         });
 
     // Hardcoded for now
-    QString python = "python"; //????? what is this
-    QString script = "/absolute/path/to/main.py"; //relative pat to main.py...
+    QString python = appConfig->getPythonPath();
+    QString script = "../../radial_non_planar_slicer/main.py";
     QString prusaPath = appConfig->getPrusaSlicerPath();
 
     QStringList args;

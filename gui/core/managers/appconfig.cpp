@@ -81,4 +81,18 @@ void AppConfig::setPrusaSlicerPath(const QString &prusaSlicerPath)
     qDebug() << "[APPCONFIG] Saved current prusaSlicerPath to: " << prusaSlicerPath;
 }
 
+QString AppConfig::getPythonPath() const
+{
+    return appSettings.value("paths/pythonPath").toString();
+}
+
+void AppConfig::setPythonPath(const QString &pythonPath)
+{
+    if (pythonPath == appSettings.value("paths/pythonPath"))
+        return;
+
+    appSettings.setValue("paths/pythonPath", pythonPath);
+    qDebug() << "[APPCONFIG] Saved current pythonPath to: " << pythonPath;
+}
+
 

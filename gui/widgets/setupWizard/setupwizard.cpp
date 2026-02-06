@@ -14,11 +14,16 @@ SetupWizard::SetupWizard(QWidget *parent)
     prusaSlicerPage = new PrusaSlicerPage;
     addPage(prusaSlicerPage);
 
+    pythonPage = new PythonPage;
+    addPage(pythonPage);
+
     profilePage = new ProfilePage;
     addPage(profilePage);
 
     connect(profilePage, &ProfilePage::printerTypeSelected, this, &SetupWizard::printerTypeSelected);
     connect(prusaSlicerPage, &PrusaSlicerPage::prusaSlicerPathSelected, this, &SetupWizard::prusaSlicerPathSelected);
+    connect(pythonPage, &PythonPage::pythonPathSelected, this, &SetupWizard::pythonPathSelected);
+
 }
 
 void SetupWizard::accept()
