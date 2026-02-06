@@ -25,6 +25,9 @@
         <property name="text">
          <string>OpenGL 3D View Goes here</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignCenter</set>
+        </property>
        </widget>
       </item>
      </layout>

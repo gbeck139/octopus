@@ -17,7 +17,7 @@
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;To generate toolpaths, this application relies on &lt;span style=&quot; font-weight:700;&quot;&gt;PrusaSlicer&lt;/span&gt;, an external slicing engine that must already be installed on your machine. If PrusaSlicer is not installed, you can download it from the official website &amp;lt;a href=\&amp;quot;https://www.prusa3d.com/page/prusaslicer_424/\&amp;quot;&amp;gt;here&amp;lt;/a&amp;gt;.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;&amp;quot;&amp;lt;b&amp;gt;Installation guides:&amp;lt;/b&amp;gt;&amp;lt;br&amp;gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;• &amp;lt;a href=\&amp;quot;https://help.prusa3d.com/article/installing-prusaslicer_2043\&amp;quot;&amp;gt;Windows&amp;lt;/a&amp;gt;&amp;lt;br&amp;gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;• &amp;lt;a href=\&amp;quot;https://help.prusa3d.com/article/installing-prusaslicer_2043\&amp;quot;&amp;gt;macOS&amp;lt;/a&amp;gt;&amp;lt;br&amp;gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;• &amp;lt;a href=\&amp;quot;https://help.prusa3d.com/article/installing-prusaslicer_2043\&amp;quot;&amp;gt;Linux&amp;lt;/a&amp;gt;&amp;quot;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Once installed, please locate the PrusaSlicer executable on your system:&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;&amp;lt;em&amp;gt;The executable is typically name &amp;lt;code&amp;gt;PrusaSlicer.app/.../PrusaSlicer&amp;lt;/code&amp;gt; (macOS), &amp;lt;code&amp;gt;PrusaSlicer-*.AppImage&amp;lt;/code&amp;gt; (Linux) or &amp;lt;code&amp;gt;prusa-slicer-console.exe&amp;lt;/code&amp;gt; (windows)&amp;lt;/em&amp;gt;&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;To generate toolpaths, this application relies on PrusaSlicer, an external slicing engine that must already be installed on your machine. If PrusaSlicer is not installed, you can download it from the official website &lt;/span&gt;&lt;a href=&quot;https://www.prusa3d.com/page/prusaslicer_424/&quot;&gt;&lt;span style=&quot; font-size:10pt; text-decoration: underline; color:#1f9b5d;&quot;&gt;here&lt;/span&gt;&lt;/a&gt;&lt;a href=&quot;https://www.prusa3d.com/page/prusaslicer_424&quot;&gt;&lt;span style=&quot; font-size:10pt; text-decoration: underline; color:#1f9b5d;&quot;&gt;.&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Installation guides:&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;• &lt;/span&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=-kt9pug-wfU&quot;&gt;&lt;span style=&quot; font-size:10pt; text-decoration: underline; color:#1f9b5d;&quot;&gt;Windows&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;: Find prusa-slicer-console.exe&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;• &lt;/span&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=q4oBUIuPwtk&quot;&gt;&lt;span style=&quot; font-size:10pt; text-decoration: underline; color:#1f9b5d;&quot;&gt;macOS&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;: Find PrusaSlicer.app/.../PrusaSlicer&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;• &lt;/span&gt;&lt;a href=&quot;https://help.prusa3d.com/article/install-prusaslicer_1903?_gl=1*7fgo5w*_gcl_au*MTIyNTYxMDk2LjE3Njg4NjE3MDQ.*_ga*MjQ3MDQ5NjUuMTc2ODg2MTcwNA..*_ga_3HK7B7RT5V*czE3NzAzNDc4MjEkbzMkZzEkdDE3NzAzNDgyNDgkajYwJGwwJGgw&quot;&gt;&lt;span style=&quot; font-size:10pt; text-decoration: underline; color:#1f9b5d;&quot;&gt;Linux&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;: Find PrusaSlicer-*.AppImage&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Once installed, please locate the PrusaSlicer executable on your system below.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
@@ -26,24 +26,101 @@
    </item>
    <item>
     <widget class="QFrame" name="frame">
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
      <property name="frameShape">
-      <enum>QFrame::Shape::StyledPanel</enum>
+      <enum>QFrame::Shape::NoFrame</enum>
      </property>
      <property name="frameShadow">
-      <enum>QFrame::Shadow::Raised</enum>
+      <enum>QFrame::Shadow::Plain</enum>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout">
+     <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0">
+      <property name="spacing">
+       <number>5</number>
+      </property>
+      <property name="leftMargin">
+       <number>3</number>
+      </property>
+      <property name="topMargin">
+       <number>5</number>
+      </property>
+      <property name="rightMargin">
+       <number>3</number>
+      </property>
+      <property name="bottomMargin">
+       <number>5</number>
+      </property>
       <item>
-       <widget class="QLabel" name="pathLabel">
+       <widget class="QLineEdit" name="pathLineEdit">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+          <kerning>true</kerning>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QLineEdit {
+        background-color: transparent;
+        border: 1px solid #777;
+        border-radius: 4px;
+        padding: 4px 6px;
+    }
+
+ QLineEdit:read-only {
+        background-color: transparent;
+        color: palette(text);
+ }</string>
+        </property>
         <property name="text">
          <string/>
+        </property>
+        <property name="frame">
+         <bool>false</bool>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="browseButton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
         <property name="text">
          <string>Browse...</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+        <property name="default">
+         <bool>false</bool>
+        </property>
+        <property name="flat">
+         <bool>false</bool>
         </property>
        </widget>
       </item>

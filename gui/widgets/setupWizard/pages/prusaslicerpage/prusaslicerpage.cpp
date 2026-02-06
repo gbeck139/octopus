@@ -16,6 +16,12 @@ PrusaSlicerPage::PrusaSlicerPage(QWidget *parent)
     setTitle("PrusaSlicer Install");
     setSubTitle("This application requires PrusaSlicer to be installed on your system.");
 
+    ui->label->setFocusPolicy(Qt::NoFocus);
+    ui->label->setAttribute(Qt::WA_TransparentForMouseEvents, false);
+    ui->label->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    ui->label->setOpenExternalLinks(true);
+
+
     connect(ui->browseButton, &QPushButton::clicked, this, &PrusaSlicerPage::browseButtonClicked);
 }
 
@@ -26,13 +32,13 @@ PrusaSlicerPage::~PrusaSlicerPage()
 
 bool PrusaSlicerPage::isComplete() const
 {
-    return !ui->pathLabel->text().isEmpty()
-    && QFile::exists(ui->pathLabel->text());
+    return !ui->pathLineEdit->text().isEmpty()
+    && QFile::exists(ui->pathLineEdit->text());
 }
 
 void PrusaSlicerPage::browseButtonClicked()
 {
-    QString prusaPath = QFileDialog::getOpenFileName(this, "Located PrusaSlicer Executable", "", "All Files (*)");
+    QString prusaPath = QFileDialog::getOpenFileName(this, "Located PrusaSlicer Executable", QDir::homePath(), "All Files (*)");
 
     if (prusaPath.isEmpty()) {
         return;
@@ -46,7 +52,7 @@ void PrusaSlicerPage::browseButtonClicked()
         return;
     }
 
-    ui->pathLabel->setText(prusaPath);
+    ui->pathLineEdit->setText(prusaPath);
 
     emit prusaSlicerPathSelected(prusaPath);
     emit completeChanged();

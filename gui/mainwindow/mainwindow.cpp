@@ -249,6 +249,8 @@ void MainWindow::onSliceClicked()
     //dlg.show();
     //dlg.repaint(); // force immediate paint
 
+    // Open a Log dialog here?
+
     //QProcess *proc = new QProcess(this);
 
     // connect finished signals
