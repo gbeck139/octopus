@@ -6,8 +6,8 @@ import os
 
 def load_mesh(MODEL_NAME):
     # Load the mesh
-    mesh = pv.read(f'radial_non_planar_slicer/input_models/{MODEL_NAME}.stl')
-    #mesh = pv.read(f'input_models/{MODEL_NAME}.stl')
+    #mesh = pv.read(f'radial_non_planar_slicer/input_models/{MODEL_NAME}.stl')
+    mesh = pv.read(f'input_models/{MODEL_NAME}.stl')
     return mesh
 
 
@@ -79,12 +79,12 @@ def deform_mesh(mesh, scale=1.0, angle_base=15, angle_factor=30):
 
 def save_deformed_mesh(deformed_mesh, transform_params, MODEL_NAME):
     # save the mesh
-    deformed_mesh.save(f'radial_non_planar_slicer/output_models/{MODEL_NAME}_deformed.stl')
-    #deformed_mesh.save(f'output_models/{MODEL_NAME}_deformed.stl')
+    #deformed_mesh.save(f'radial_non_planar_slicer/output_models/{MODEL_NAME}_deformed.stl')
+    deformed_mesh.save(f'output_models/{MODEL_NAME}_deformed.stl')
 
     # save transform params
-    with open(f'radial_non_planar_slicer/output_models/{MODEL_NAME}_transform.json', 'w') as f:
-    #with open(f'output_models/{MODEL_NAME}_transform.json', 'w') as f:
+    #with open(f'radial_non_planar_slicer/output_models/{MODEL_NAME}_transform.json', 'w') as f:
+    with open(f'output_models/{MODEL_NAME}_transform.json', 'w') as f:
         json.dump(transform_params, f, indent=4)
 
 

@@ -17,7 +17,7 @@
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Download Python &lt;a href=&quot;https://www.python.org/downloads/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#1f9b5d;&quot;&gt;here&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;p&gt;Windows: download Python Install Manager on Microsoft Store&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Download Python &lt;a href=&quot;https://www.python.org/downloads/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#1f9b5d;&quot;&gt;here&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;p&gt;Windows: download Python Install Manager on Microsoft Store&lt;/p&gt;&lt;p&gt;tip: open terminal, python--version, py -0p&lt;/p&gt;&lt;p&gt;Once you have python installed:&lt;/p&gt;&lt;p&gt;1. Find the path below in &amp;quot;Browse&amp;quot;&lt;/p&gt;&lt;p&gt;2. Copy the entire path&lt;/p&gt;&lt;p&gt;3. Open a terminal&lt;/p&gt;&lt;p&gt;4. Paste the python path&lt;/p&gt;&lt;p&gt;5. Copy and paste this: (including the '-')&lt;/p&gt;&lt;p&gt;	-m pip install numpy pyvista networkx pygcode scipy matplotlib&lt;/p&gt;&lt;p&gt;6. Press enter&lt;/p&gt;&lt;p&gt;This should install all Python modules needed for the Slicer.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;~If you are having problems send them Marina's or Grant's way.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
    </item>

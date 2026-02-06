@@ -8,51 +8,75 @@ import deform
 import reform
 import subprocess
 import os
+import argparse
 
 
 #TODO separate reform and deform and make command with arguments
 
-MODEL_NAME = '3DBenchy'
+#MODEL_NAME = '3DBenchy'
 
-# Deform
+def run_slicer_pipeline(MODEL_NAME: str, slicer_path: str):
 
-mesh = deform.load_mesh(MODEL_NAME)
-deformed_mesh, transform_params = deform.deform_mesh(mesh, scale=1)
-deform.save_deformed_mesh(deformed_mesh, transform_params, MODEL_NAME)
-deform.plot_deformed_mesh(deformed_mesh)
+    # Save the original cwd
+    original_cwd = os.getcwd()
 
-# Get paths for PrusaSlicer call
+    # Change cwd to the folder where main.py is
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-slicer_path = r"/home/grant/PrusaSlicer.AppImage"
-stl_path = rf"radial_non_planar_slicer/output_models/{MODEL_NAME}_deformed.stl"
-output_gcode = rf"radial_non_planar_slicer/input_gcode/{MODEL_NAME}_deformed.gcode"
-ini_path = r"radial_non_planar_slicer/prusa_slicer/my_printer_config.ini"
+    # Deform
+    mesh = deform.load_mesh(MODEL_NAME)
+    deformed_mesh, transform_params = deform.deform_mesh(mesh, scale=1)
+    deform.save_deformed_mesh(deformed_mesh, transform_params, MODEL_NAME)
+    #deform.plot_deformed_mesh(deformed_mesh)
 
-#slicer_path = r"C:\Program Files\Prusa3D\PrusaSlicer\prusa-slicer-console.exe"
-#stl_path = rf"output_models/{MODEL_NAME}_deformed.stl"
-#output_gcode = rf"input_gcode/{MODEL_NAME}_deformed.gcode"
-#ini_path = r"prusa_slicer/my_printer_config.ini"
+    # Get paths for PrusaSlicer call
 
-# Make sure output folder exists
-os.makedirs(os.path.dirname(output_gcode), exist_ok=True)
+    #slicer_path = r"/home/grant/PrusaSlicer.AppImage"
+    #stl_path = rf"radial_non_planar_slicer/output_models/{MODEL_NAME}_deformed.stl"
+    #output_gcode = rf"radial_non_planar_slicer/input_gcode/{MODEL_NAME}_deformed.gcode"
+    #ini_path = r"radial_non_planar_slicer/prusa_slicer/my_printer_config.ini"
 
-print("\n***PRUSA*** planar slicer is running...\n")
+    #slicer_path = r"C:\Program Files\Prusa3D\PrusaSlicer\prusa-slicer-console.exe"
+    stl_path = rf"output_models/{MODEL_NAME}_deformed.stl"
+    output_gcode = rf"input_gcode/{MODEL_NAME}_deformed.gcode"
+    ini_path = r"prusa_slicer/my_printer_config.ini"
 
-# Run slicing
-subprocess.run([
-    slicer_path,
-    "--load", ini_path,          # merges your printer/material/settings INI with PrusaSlicer's default settings
-    "--ensure-on-bed",
-    "--export-gcode",            # tells it to slice and export
-    stl_path,
-    "--output", output_gcode
-], check=True)
+    # Make sure output folder exists
+    os.makedirs(os.path.dirname(output_gcode), exist_ok=True)
+
+    print("\n***PRUSA*** planar slicer is running...\n")
+
+    # Run slicing
+    subprocess.run([
+        slicer_path,
+        "--load", ini_path,          # merges your printer/material/settings INI with PrusaSlicer's default settings
+        "--ensure-on-bed",
+        "--export-gcode",            # tells it to slice and export
+        stl_path,
+        "--output", output_gcode
+    ], check=True)
 
 
-print(f"G-code exported to {output_gcode}")
+    print(f"G-code exported to {output_gcode}")
 
-print("\n***PRUSA*** planar slicing finished\n")
+    print("\n***PRUSA*** planar slicing finished\n")
 
-# Reform
+    # Reform
 
-reform.load_gcode_and_undeform(MODEL_NAME, transform_params)
+    reform.load_gcode_and_undeform(MODEL_NAME, transform_params)
+
+    # Restore the original cwd afterwards (optional but safe)
+    os.chdir(original_cwd)
+
+def main():
+    # CLI
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", required=True)
+    parser.add_argument("--prusa", required=True)
+    args = parser.parse_args()
+
+    run_slicer_pipeline(args.model, args.prusa)
+
+
+if __name__ == "__main__":
+    main()

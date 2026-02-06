@@ -249,6 +249,13 @@ void MainWindow::onSliceClicked()
     QProcess *proc = new QProcess(this);
 
     // TODO: Open a Log dialog here?
+    connect(proc, &QProcess::readyReadStandardOutput, this, [proc]() {
+        qDebug().noquote() << proc->readAllStandardOutput();
+    });
+
+    connect(proc, &QProcess::readyReadStandardError, this, [proc]() {
+        qWarning().noquote() << proc->readAllStandardError();
+    });
 
     // When slicing finishes: hide loading dialog
     connect(proc,
@@ -272,7 +279,7 @@ void MainWindow::onSliceClicked()
 
     // Hardcoded for now
     QString python = appConfig->getPythonPath();
-    QString script = "../../radial_non_planar_slicer/main.py";
+    QString script = "C:/Users/canca/Documents/3d printing slicer project/octopus/radial_non_planar_slicer/main.py";
     QString prusaPath = appConfig->getPrusaSlicerPath();
 
     QStringList args;
