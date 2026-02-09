@@ -11,6 +11,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+find_package(Qt6 REQUIRED COMPONENTS
+    Widgets
+    3DCore
+    3DRender
+    3DExtras
+    3DInput
+)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -24,6 +31,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
     qt_add_executable(gui
         MANUAL_FINALIZATION
@@ -50,6 +58,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         widgets/setupWizard/pages/prusaslicerpage/prusaslicerpage.h widgets/setupWizard/pages/prusaslicerpage/prusaslicerpage.cpp widgets/setupWizard/pages/prusaslicerpage/prusaslicerpage.ui
         widgets/dialogs/loadingdialog/slicerloadingdialog.h widgets/dialogs/loadingdialog/slicerloadingdialog.cpp widgets/dialogs/loadingdialog/slicerloadingdialog.ui
         widgets/setupWizard/pages/pythonpage/pythonpage.h widgets/setupWizard/pages/pythonpage/pythonpage.cpp widgets/setupWizard/pages/pythonpage/pythonpage.ui
+        tabs/prepare/ViewerWidget/viewerwidget.h tabs/prepare/ViewerWidget/viewerwidget.cpp
 
     )
     target_include_directories(gui PRIVATE
@@ -70,6 +79,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         widgets/setupWizard/pages/prusaslicerpage
         widgets/dialogs/loadingdialog
         widgets/setupWizard/pages/pythonpage
+        tabs/prepare/ViewerWidget
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET gui APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -94,6 +104,14 @@ target_link_libraries(gui PRIVATE Qt6::Core)
 target_link_libraries(gui PRIVATE Qt6::Core)
 target_link_libraries(gui PRIVATE Qt6::Core)
 target_link_libraries(gui PRIVATE Qt6::Core)
+target_link_libraries(gui PRIVATE Qt6::Widgets)
+target_link_libraries(gui PRIVATE
+    Qt6::Widgets
+    Qt6::3DCore
+    Qt6::3DRender
+    Qt6::3DExtras
+    Qt6::3DInput
+)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an

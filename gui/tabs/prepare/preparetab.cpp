@@ -6,6 +6,8 @@ PrepareTab::PrepareTab(QWidget *parent)
     , ui(new Ui::PrepareTab)
 {
     ui->setupUi(this);
+
+    ui->visual3DWidget->loadSTL("C:/Users/canca/Downloads/3DBenchy_deformed.gcode");
 }
 
 PrepareTab::~PrepareTab()

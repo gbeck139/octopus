@@ -18,19 +18,8 @@
     <widget class="SettingsMenuWidget" name="settingsMenuWidget" native="true"/>
    </item>
    <item>
-    <widget class="QWidget" name="visual3DWidget" native="true">
-     <layout class="QVBoxLayout" name="verticalLayout">
-      <item>
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>OpenGL 3D View Goes here</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-     </layout>
+    <widget class="ViewerWidget" name="visual3DWidget" native="true">
+     <layout class="QVBoxLayout" name="verticalLayout"/>
     </widget>
    </item>
   </layout>
@@ -40,6 +29,12 @@
    <class>SettingsMenuWidget</class>
    <extends>QWidget</extends>
    <header>settingsmenuwidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ViewerWidget</class>
+   <extends>QWidget</extends>
+   <header>viewerwidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
