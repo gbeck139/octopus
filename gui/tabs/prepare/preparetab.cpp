@@ -7,7 +7,7 @@ PrepareTab::PrepareTab(QWidget *parent)
 {
     ui->setupUi(this);
 
-    ui->visual3DWidget->loadSTL("C:/Users/canca/Downloads/3DBenchy_deformed.gcode");
+    ui->visual3DWidget->loadSTL("C:/Users/canca/Downloads/pumpkin.stl");
 }
 
 PrepareTab::~PrepareTab()

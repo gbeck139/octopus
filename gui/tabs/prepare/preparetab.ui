@@ -18,7 +18,7 @@
     <widget class="SettingsMenuWidget" name="settingsMenuWidget" native="true"/>
    </item>
    <item>
-    <widget class="ViewerWidget" name="visual3DWidget" native="true">
+    <widget class="QuickViewer" name="visual3DWidget" native="true">
      <layout class="QVBoxLayout" name="verticalLayout"/>
     </widget>
    </item>
@@ -32,9 +32,9 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>ViewerWidget</class>
+   <class>QuickViewer</class>
    <extends>QWidget</extends>
-   <header>viewerwidget.h</header>
+   <header>quickviewer.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

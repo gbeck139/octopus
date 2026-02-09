@@ -8,4 +8,7 @@
         <file>json/cylinderOne.json</file>
         <file>json/cylinderTwo.json</file>
     </qresource>
+    <qresource prefix="/qml">
+        <file>tabs/prepare/QuickViewer/QuickViewer.qml</file>
+    </qresource>
 </RCC>

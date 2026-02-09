@@ -3,6 +3,8 @@
 #include <QVBoxLayout>
 #include <QUrl>
 #include <Qt3DExtras/QForwardRenderer>
+#include <QDebug>
+#include <QFileInfo>
 
 ViewerWidget::ViewerWidget(QWidget *parent)
     : QWidget{parent}
@@ -39,18 +41,42 @@ ViewerWidget::ViewerWidget(QWidget *parent)
     modelTransform = new Qt3DCore::QTransform();
     modelEntity->addComponent(modelTransform);
 
+    auto *light = new Qt3DRender::QPointLight(lightEntity);
+    light->setColor(Qt::white);
+    light->setIntensity(1.0f);
+
+    auto *lightTransform = new Qt3DCore::QTransform(lightEntity);
+    lightTransform->setTranslation(QVector3D(10, 10, 10));
+
+    lightEntity->addComponent(light);
+    lightEntity->addComponent(lightTransform);
 }
 
 void ViewerWidget::loadSTL(const QString &filePath)
 {
-    auto *mesh = new Qt3DRender::QMesh();
+    QFileInfo check_file(filePath);
+    if (!check_file.exists()) {
+        qDebug() << "File does not exist:" << filePath;
+        return;
+    }
+
+    // Clear previous model
+    for (auto *c : modelEntity->components())
+        modelEntity->removeComponent(c);
+
+    modelEntity->addComponent(modelTransform);
+    modelTransform->setScale(0.1f);
+
+    auto *mesh = new Qt3DRender::QMesh(modelEntity);
     mesh->setSource(QUrl::fromLocalFile(filePath));
 
-    auto *material = new Qt3DExtras::QPhongMaterial();
+    auto *material = new Qt3DExtras::QPhongMaterial(modelEntity);
     material->setDiffuse(QColor(200, 200, 200));
 
     modelEntity->addComponent(mesh);
     modelEntity->addComponent(material);
+
+    qDebug() << "Loaded STL:" << filePath;
 }
 
 void ViewerWidget::viewFront()

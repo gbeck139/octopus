@@ -10,6 +10,7 @@
 #include <Qt3DRender/QMesh>
 #include <Qt3DExtras/QPhongMaterial>
 #include <Qt3DCore/QTransform>
+#include <Qt3DRender/QPointLight>
 
 class ViewerWidget : public QWidget
 {
@@ -33,6 +34,8 @@ private:
 
     Qt3DRender::QCamera *camera;
     Qt3DCore::QTransform *modelTransform;
+
+    Qt3DCore::QEntity *lightEntity = new Qt3DCore::QEntity(rootEntity);
 
 signals:
 };

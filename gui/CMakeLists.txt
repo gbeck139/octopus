@@ -18,6 +18,12 @@ find_package(Qt6 REQUIRED COMPONENTS
     3DExtras
     3DInput
 )
+find_package(Qt6 REQUIRED COMPONENTS
+    Widgets
+    Quick
+    QuickWidgets
+    Quick3D
+)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -31,6 +37,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
     qt_add_executable(gui
@@ -59,6 +66,7 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets)
         widgets/dialogs/loadingdialog/slicerloadingdialog.h widgets/dialogs/loadingdialog/slicerloadingdialog.cpp widgets/dialogs/loadingdialog/slicerloadingdialog.ui
         widgets/setupWizard/pages/pythonpage/pythonpage.h widgets/setupWizard/pages/pythonpage/pythonpage.cpp widgets/setupWizard/pages/pythonpage/pythonpage.ui
         tabs/prepare/ViewerWidget/viewerwidget.h tabs/prepare/ViewerWidget/viewerwidget.cpp
+        tabs/prepare/QuickViewer/quickviewer.h tabs/prepare/QuickViewer/quickviewer.cpp
 
     )
     target_include_directories(gui PRIVATE
@@ -80,6 +88,7 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets)
         widgets/dialogs/loadingdialog
         widgets/setupWizard/pages/pythonpage
         tabs/prepare/ViewerWidget
+        tabs/prepare/QuickViewer
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET gui APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -112,6 +121,13 @@ target_link_libraries(gui PRIVATE
     Qt6::3DExtras
     Qt6::3DInput
 )
+target_link_libraries(gui PRIVATE
+    Qt6::Widgets
+    Qt6::Quick
+    Qt6::QuickWidgets
+    Qt6::Quick3D
+)
+target_link_libraries(gui PRIVATE Qt6::Widgets)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
