@@ -1,0 +1,182 @@
+name: Build and Release Radial Slicer
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags like v1.0.0
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Build with PyInstaller
+        run: |
+          pyinstaller radial_slicer.spec --clean
+
+      - name: Create distribution structure
+        run: |
+          mkdir -p dist/PrusaSlicer
+          mkdir -p dist/radial_non_planar_slicer/{input_gcode,output_gcode,output_models}
+          cp -r radial_non_planar_slicer/prusa_slicer dist/radial_non_planar_slicer/
+          cp BUILD_INSTRUCTIONS.md dist/
+          cp USER_GUIDE.md dist/
+
+      - name: Download PrusaSlicer (Linux AppImage)
+        run: |
+          # Download the latest PrusaSlicer AppImage
+          # Note: Update this URL to the specific version you want
+          wget https://github.com/prusa3d/PrusaSlicer/releases/download/version_2.7.1/PrusaSlicer-2.7.1+linux-x64-GTK3-202401091509.AppImage -O dist/PrusaSlicer/PrusaSlicer.AppImage
+          chmod +x dist/PrusaSlicer/PrusaSlicer.AppImage
+
+      - name: Create archive
+        run: |
+          tar -czf radial_slicer_linux_x64.tar.gz -C dist .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: radial-slicer-linux
+          path: radial_slicer_linux_x64.tar.gz
+
+  build-windows:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Build with PyInstaller
+        run: |
+          pyinstaller radial_slicer.spec --clean
+
+      - name: Create distribution structure
+        run: |
+          New-Item -ItemType Directory -Force -Path dist/PrusaSlicer
+          New-Item -ItemType Directory -Force -Path dist/radial_non_planar_slicer/input_gcode
+          New-Item -ItemType Directory -Force -Path dist/radial_non_planar_slicer/output_gcode
+          New-Item -ItemType Directory -Force -Path dist/radial_non_planar_slicer/output_models
+          Copy-Item -Recurse radial_non_planar_slicer/prusa_slicer dist/radial_non_planar_slicer/
+          Copy-Item BUILD_INSTRUCTIONS.md dist/
+          Copy-Item USER_GUIDE.md dist/
+
+      - name: Add README for PrusaSlicer
+        run: |
+          echo "Please download PrusaSlicer from https://www.prusa3d.com/page/prusaslicer_424/" > dist/PrusaSlicer/README.txt
+          echo "Extract prusa-slicer.exe and dependencies to this folder." >> dist/PrusaSlicer/README.txt
+
+      - name: Create archive
+        run: |
+          Compress-Archive -Path dist/* -DestinationPath radial_slicer_windows_x64.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: radial-slicer-windows
+          path: radial_slicer_windows_x64.zip
+
+  build-macos:
+    runs-on: macos-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Build with PyInstaller
+        run: |
+          pyinstaller radial_slicer.spec --clean
+
+      - name: Create distribution structure
+        run: |
+          mkdir -p dist/PrusaSlicer
+          mkdir -p dist/radial_non_planar_slicer/{input_gcode,output_gcode,output_models}
+          cp -r radial_non_planar_slicer/prusa_slicer dist/radial_non_planar_slicer/
+          cp BUILD_INSTRUCTIONS.md dist/
+          cp USER_GUIDE.md dist/
+
+      - name: Add README for PrusaSlicer
+        run: |
+          echo "Please download PrusaSlicer DMG from https://www.prusa3d.com/page/prusaslicer_424/" > dist/PrusaSlicer/README.txt
+          echo "Extract the app bundle to this folder." >> dist/PrusaSlicer/README.txt
+
+      - name: Create archive
+        run: |
+          tar -czf radial_slicer_macos_x64.tar.gz -C dist .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: radial-slicer-macos
+          path: radial_slicer_macos_x64.tar.gz
+
+  create-release:
+    needs: [build-linux, build-windows, build-macos]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            radial-slicer-linux/radial_slicer_linux_x64.tar.gz
+            radial-slicer-windows/radial_slicer_windows_x64.zip
+            radial-slicer-macos/radial_slicer_macos_x64.tar.gz
+          body: |
+            ## Radial Non-Planar Slicer Release
+            
+            This release includes pre-built binaries for Linux, Windows, and macOS.
+            
+            ### Installation
+            1. Download the appropriate archive for your platform
+            2. Extract the archive
+            3. For Linux: The PrusaSlicer AppImage is included
+            4. For Windows/macOS: Follow the README in the PrusaSlicer folder to add PrusaSlicer
+            
+            ### Usage
+            See USER_GUIDE.md included in the distribution.
+            
+            **Note:** Windows and macOS builds require you to add PrusaSlicer manually due to licensing and distribution constraints.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
