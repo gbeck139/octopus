@@ -3,12 +3,19 @@ import json
 from pygcode import Line
 import pyvista as pv
 import matplotlib.pyplot as plt
+import utils
+import os
 
 def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
     
     if transform_params is None:
         try:
-             with open(f'radial_non_planar_slicer/output_models/{MODEL_NAME}_transform.json', 'r') as f:
+             json_path = utils.get_resource_path(f'output_models/{MODEL_NAME}_transform.json')
+             # Fallback
+             if not os.path.exists(json_path):
+                 json_path = utils.get_resource_path(f'radial_non_planar_slicer/output_models/{MODEL_NAME}_transform.json')
+                 
+             with open(json_path, 'r') as f:
                 transform_params = json.load(f)
         except FileNotFoundError:
             print(f"Error: Transform parameters not found for {MODEL_NAME}")
@@ -26,7 +33,12 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
     feed = 0
     gcode_points = []
     i = 0
-    with open(f'radial_non_planar_slicer/input_gcode/{MODEL_NAME}_deformed.gcode', 'r') as fh:
+    
+    gcode_path = utils.get_resource_path(f'input_gcode/{MODEL_NAME}_deformed.gcode')
+    if not os.path.exists(gcode_path):
+        gcode_path = utils.get_resource_path(f'radial_non_planar_slicer/input_gcode/{MODEL_NAME}_deformed.gcode')
+        
+    with open(gcode_path, 'r') as fh:
         for line_text in fh.readlines():            
             
             # Skip comment lines and non-standard commands

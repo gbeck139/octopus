@@ -3,10 +3,18 @@ import pyvista as pv
 import matplotlib.pyplot as plt
 import json
 import os
+import utils
 
 def load_mesh(MODEL_NAME):
     # Load the mesh
-    mesh = pv.read(f'radial_non_planar_slicer/input_models/{MODEL_NAME}.stl')
+    mesh_path = utils.get_resource_path(f'input_models/{MODEL_NAME}.stl')
+    if not os.path.exists(mesh_path):
+        # Fallback for dev mode where CWD might be parent dir
+        alt_path = utils.get_resource_path(f'radial_non_planar_slicer/input_models/{MODEL_NAME}.stl')
+        if os.path.exists(alt_path):
+            mesh_path = alt_path
+            
+    mesh = pv.read(mesh_path)
     return mesh
 
 
