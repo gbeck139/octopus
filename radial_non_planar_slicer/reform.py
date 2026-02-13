@@ -4,14 +4,14 @@ from pygcode import Line
 import pyvista as pv
 import matplotlib.pyplot as plt
 
-def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
+def load_gcode_and_undeform(transform_json_path, input_gcode_path, output_gcode_path, transform_params=None):
     
     if transform_params is None:
         try:
-             with open(f'radial_non_planar_slicer/output_models/{MODEL_NAME}_transform.json', 'r') as f:
+             with open(transform_json_path, 'r') as f:
                 transform_params = json.load(f)
         except FileNotFoundError:
-            print(f"Error: Transform parameters not found for {MODEL_NAME}")
+            print(f"Error: Transform parameters not found at {transform_json_path}")
             return
 
     max_radius = transform_params["max_radius"]
@@ -26,7 +26,7 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
     feed = 0
     gcode_points = []
     i = 0
-    with open(f'radial_non_planar_slicer/input_gcode/{MODEL_NAME}_deformed.gcode', 'r') as fh:
+    with open(input_gcode_path, 'r') as fh:
         for line_text in fh.readlines():            
             
             # Skip comment lines and non-standard commands
@@ -223,7 +223,7 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
     theta_accum = 0
 
     # save transformed gcode
-    with open(f'radial_non_planar_slicer/output_gcode/{MODEL_NAME}_reformed.gcode', 'w') as fh:
+    with open(output_gcode_path, 'w') as fh:
         # write header
         fh.write("; --- INITIALIZATION ---\n")
         fh.write("G21              ; Establish metric units (millimeters)\n")
@@ -336,4 +336,10 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
 
 if __name__ == "__main__":
     MODEL_NAME = 'dogbone_mini_flat'  # Change as needed
-    load_gcode_and_undeform(MODEL_NAME)
+    import os
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    t_path = os.path.join(current_dir, 'output_models', f'{MODEL_NAME}_transform.json')
+    i_path = os.path.join(current_dir, 'input_gcode', f'{MODEL_NAME}_deformed.gcode')
+    o_path = os.path.join(current_dir, 'output_gcode', f'{MODEL_NAME}_reformed.gcode')
+    
+    load_gcode_and_undeform(t_path, i_path, o_path)

@@ -6,11 +6,9 @@ import os
 # Configuration
 SHOW_TRAVEL_MOVES = True # Set to True to see G0 moves (travel), False for only G1 (extrusion)
 
-def visualize_gcode(model_name, nozzle_offset=43):
-    filepath = f'radial_non_planar_slicer/output_gcode/{model_name}_reformed.gcode'
-    
-    if not os.path.exists(filepath):
-        print(f"File not found: {filepath}")
+def visualize_gcode(gcode_path, nozzle_offset=43):
+    if not os.path.exists(gcode_path):
+        print(f"File not found: {gcode_path}")
         return
 
     points = []
@@ -19,9 +17,9 @@ def visualize_gcode(model_name, nozzle_offset=43):
     # Looks for X, Z, C, B followed by a number (float or int)
     # G-code example: G1 C123.45 X10.0 Z5.0 B-15.0
     
-    print(f"Reading {filepath}...")
+    print(f"Reading {gcode_path}...")
     
-    with open(filepath, 'r') as f:
+    with open(gcode_path, 'r') as f:
         for line in f:
             if not line.startswith('G0') and not line.startswith('G1'):
                 continue
@@ -117,7 +115,7 @@ def visualize_gcode(model_name, nozzle_offset=43):
     ax.set_xlabel('X (mm)')
     ax.set_ylabel('Y (mm)')
     ax.set_zlabel('Z (mm)')
-    ax.set_title(f'Reconstructed Toolpath: {model_name}')
+    ax.set_title(f'Reconstructed Toolpath: {os.path.basename(gcode_path)}')
     
     # Set equal aspect ratio for realistic view
     # Matplotlib 3D doesn't have a simple 'equal' aspect, so we fake it by setting limits
@@ -140,6 +138,9 @@ def visualize_gcode(model_name, nozzle_offset=43):
     plt.show()
 
 if __name__ == "__main__":
-    # Default model name from main.py context
-    MODEL_NAME = 'dogbone_mini_flat'  # Change as needed
-    visualize_gcode(MODEL_NAME)
+    MODEL_NAME = 'dogbone_mini_flat'
+    # Guess the path
+    import os
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    gcode_path = os.path.join(current_dir, 'output_gcode', f'{MODEL_NAME}_reformed.gcode')
+    visualize_gcode(gcode_path)

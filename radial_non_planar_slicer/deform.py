@@ -3,9 +3,9 @@ import pyvista as pv
 import matplotlib.pyplot as plt
 import json
 
-def load_mesh(MODEL_NAME):
+def load_mesh(stl_path):
     # Load the mesh
-    mesh = pv.read(f'radial_non_planar_slicer/input_models/{MODEL_NAME}.stl')
+    mesh = pv.read(stl_path)
     return mesh
 
 
@@ -75,12 +75,12 @@ def deform_mesh(mesh, scale=1.0, angle_base=15, angle_factor=30):
     return mesh, transform_params
 
 
-def save_deformed_mesh(deformed_mesh, transform_params, MODEL_NAME):
+def save_deformed_mesh(deformed_mesh, transform_params, stl_path, json_path):
     # save the mesh
-    deformed_mesh.save(f'radial_non_planar_slicer/output_models/{MODEL_NAME}_deformed.stl')
+    deformed_mesh.save(stl_path)
     
     # save transform params
-    with open(f'radial_non_planar_slicer/output_models/{MODEL_NAME}_transform.json', 'w') as f:
+    with open(json_path, 'w') as f:
         json.dump(transform_params, f, indent=4)
 
 
@@ -97,7 +97,14 @@ def plot_deformed_mesh(deformed_mesh):
 
 if __name__ == "__main__":
     MODEL_NAME = '3DBenchy'  # Change as needed
-    mesh = load_mesh(MODEL_NAME)
+    # Example usage with path relative to this script
+    import os
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    input_path = os.path.join(current_dir, 'input_models', f'{MODEL_NAME}.stl')
+    if os.path.exists(input_path):
+        mesh = load_mesh(input_path)
+    else:
+        print(f"Could not find {input_path}")
     deformed_mesh, transform_params = deform_mesh(mesh, scale=1)
     save_deformed_mesh(deformed_mesh, transform_params, MODEL_NAME)
     plot_deformed_mesh(deformed_mesh)

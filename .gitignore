@@ -9,4 +9,5 @@ venv/
 !**/input_gcode/.gitkeep
 gifs/
 __pycache__/
-**/_*
+**/_*radial_non_planar_slicer/build/
+radial_non_planar_slicer/dist/
