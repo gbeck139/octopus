@@ -10,3 +10,10 @@ venv/
 gifs/
 __pycache__/
 **/_*
+# Ignore Python exe and bundle folders
+/slicerbundle/
+*.exe
+*.pyc
+__pycache__/
+dist/
+build/
