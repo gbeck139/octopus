@@ -1,7 +1,8 @@
-numpy
-pyvista
-networkx
-pygcode
-scipy
-matplotlib
-pyinstaller
+# Pin specific versions for reproducible builds
+numpy==2.4.2
+pyvista==0.47.0
+networkx==3.6.1
+pygcode==0.2.1
+scipy==1.17.0
+matplotlib==3.10.8
+pyinstaller==6.18.0

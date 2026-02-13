@@ -9,6 +9,7 @@ import reform
 import subprocess
 import os
 import sys
+import shutil
 
 
 #TODO separate reform and deform and make command with arguments
@@ -42,12 +43,13 @@ def find_prusa_slicer():
     for path in possible_paths:
         if os.path.exists(path):
             return path
-        # Try to find in PATH
+        # Try to find in PATH using cross-platform shutil.which
         try:
-            result = subprocess.run(['which', path], capture_output=True, text=True)
-            if result.returncode == 0:
-                return result.stdout.strip()
-        except:
+            which_result = shutil.which(path)
+            if which_result:
+                return which_result
+        except (OSError, ValueError):
+            # Ignore errors from shutil.which
             pass
     
     raise FileNotFoundError("PrusaSlicer not found. Please place PrusaSlicer in the 'PrusaSlicer' folder next to the executable or install it system-wide.")
