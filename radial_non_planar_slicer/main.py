@@ -1,13 +1,24 @@
-import numpy as np
-import pyvista as pv
-import networkx as nx
-from pygcode import Line
-import time
-from scipy.spatial.transform import Rotation as R
 import deform
 import reform
 import subprocess
+import sys
 import os
+
+def resource_path(relative_path):
+    """ Finds the file whether running as a script or a bundled .exe """
+    if hasattr(sys, '_MEIPASS'):
+        # If running in PyInstaller bundle, look in the temp folder
+        return os.path.join(sys._MEIPASS, relative_path)
+    # If running normally, look in the current folder
+    return os.path.join(os.path.abspath("."), relative_path)
+
+# NOW apply it to your variables:
+slicer_path = resource_path("prusa_slicer/PrusaSlicer.AppImage")
+ini_path = resource_path("prusa_slicer/my_printer_config.ini")
+
+
+
+
 
 
 #TODO separate reform and deform and make command with arguments

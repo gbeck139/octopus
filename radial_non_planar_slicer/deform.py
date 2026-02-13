@@ -2,7 +2,6 @@ import numpy as np
 import pyvista as pv
 import matplotlib.pyplot as plt
 import json
-import os
 
 def load_mesh(MODEL_NAME):
     # Load the mesh
