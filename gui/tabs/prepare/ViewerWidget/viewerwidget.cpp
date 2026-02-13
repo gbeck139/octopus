@@ -50,6 +50,16 @@ ViewerWidget::ViewerWidget(QWidget *parent)
 
     lightEntity->addComponent(light);
     lightEntity->addComponent(lightTransform);
+
+    // auto *light2 = new Qt3DRender::QPointLight(light2Entity);
+    // light2->setColor(Qt::white);
+    // light2->setIntensity(1.0f);
+
+    // auto *light2Transform = new Qt3DCore::QTransform(light2Entity);
+    // light2Transform->setTranslation(QVector3D(-10, -10, -10));
+
+    // light2Entity->addComponent(light2);
+    // light2Entity->addComponent(light2Transform);
 }
 
 void ViewerWidget::loadSTL(const QString &filePath)

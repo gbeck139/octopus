@@ -36,6 +36,8 @@ private:
     Qt3DCore::QTransform *modelTransform;
 
     Qt3DCore::QEntity *lightEntity = new Qt3DCore::QEntity(rootEntity);
+    // Qt3DCore::QEntity *light2Entity = new Qt3DCore::QEntity(rootEntity);
+
 
 signals:
 };

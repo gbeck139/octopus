@@ -4,10 +4,28 @@ import matplotlib.pyplot as plt
 import json
 import os
 
+import os
+import sys
+
+if getattr(sys, 'frozen', False):
+    base_dir = os.path.dirname(sys.executable)
+else:
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+
+INPUT_MODELS_DIR = os.path.join(base_dir, "input_models")
+OUTPUT_MODELS_DIR = os.path.join(base_dir, "output_models")
+INPUT_GCODE_DIR = os.path.join(base_dir, "input_gcode")
+OUTPUT_GCODE_DIR = os.path.join(base_dir, "output_gcode")
+PRUSA_CONFIG_DIR = os.path.join(base_dir, "prusa_slicer")
+
+
 def load_mesh(MODEL_NAME):
     # Load the mesh
     #mesh = pv.read(f'radial_non_planar_slicer/input_models/{MODEL_NAME}.stl')
-    mesh = pv.read(f'input_models/{MODEL_NAME}.stl')
+    #mesh = pv.read(f'input_models/{MODEL_NAME}.stl')
+    mesh_path = os.path.join(INPUT_MODELS_DIR, f"{MODEL_NAME}.stl")
+    mesh = pv.read(mesh_path)
+
     return mesh
 
 
@@ -80,13 +98,22 @@ def deform_mesh(mesh, scale=1.0, angle_base=15, angle_factor=30):
 def save_deformed_mesh(deformed_mesh, transform_params, MODEL_NAME):
     # save the mesh
     #deformed_mesh.save(f'radial_non_planar_slicer/output_models/{MODEL_NAME}_deformed.stl')
-    deformed_mesh.save(f'output_models/{MODEL_NAME}_deformed.stl')
+    #deformed_mesh.save(f'output_models/{MODEL_NAME}_deformed.stl')
 
     # save transform params
     #with open(f'radial_non_planar_slicer/output_models/{MODEL_NAME}_transform.json', 'w') as f:
-    with open(f'output_models/{MODEL_NAME}_transform.json', 'w') as f:
-        json.dump(transform_params, f, indent=4)
+    #with open(f'output_models/{MODEL_NAME}_transform.json', 'w') as f:
+    #    json.dump(transform_params, f, indent=4)
 
+    os.makedirs(OUTPUT_MODELS_DIR, exist_ok=True)
+
+    stl_path = os.path.join(OUTPUT_MODELS_DIR, f"{MODEL_NAME}_deformed.stl")
+    json_path = os.path.join(OUTPUT_MODELS_DIR, f"{MODEL_NAME}_transform.json")
+
+    deformed_mesh.save(stl_path)
+
+    with open(json_path, 'w') as f:
+        json.dump(transform_params, f, indent=4)
 
 
 def plot_deformed_mesh(deformed_mesh):

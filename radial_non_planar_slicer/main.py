@@ -3,13 +3,29 @@ import pyvista as pv
 import networkx as nx
 from pygcode import Line
 import time
-from scipy.spatial.transform import Rotation as R
+#from scipy.spatial.transform import Rotation as R
 import deform
 import reform
 import subprocess
 import os
 import argparse
 
+import os
+import sys
+
+sys.stdout.reconfigure(line_buffering=True)
+sys.stderr.reconfigure(line_buffering=True)
+
+if getattr(sys, 'frozen', False):
+    base_dir = os.path.dirname(sys.executable)
+else:
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+
+INPUT_MODELS_DIR = os.path.join(base_dir, "input_models")
+OUTPUT_MODELS_DIR = os.path.join(base_dir, "output_models")
+INPUT_GCODE_DIR = os.path.join(base_dir, "input_gcode")
+OUTPUT_GCODE_DIR = os.path.join(base_dir, "output_gcode")
+PRUSA_CONFIG_DIR = os.path.join(base_dir, "prusa_slicer")
 
 #TODO separate reform and deform and make command with arguments
 
@@ -18,10 +34,12 @@ import argparse
 def run_slicer_pipeline(MODEL_NAME: str, slicer_path: str):
 
     # Save the original cwd
-    original_cwd = os.getcwd()
+    #original_cwd = os.getcwd()
 
     # Change cwd to the folder where main.py is
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    #os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+    print("\nDeforming model...\n", flush=True)
 
     # Deform
     mesh = deform.load_mesh(MODEL_NAME)
@@ -37,14 +55,21 @@ def run_slicer_pipeline(MODEL_NAME: str, slicer_path: str):
     #ini_path = r"radial_non_planar_slicer/prusa_slicer/my_printer_config.ini"
 
     #slicer_path = r"C:\Program Files\Prusa3D\PrusaSlicer\prusa-slicer-console.exe"
-    stl_path = rf"output_models/{MODEL_NAME}_deformed.stl"
-    output_gcode = rf"input_gcode/{MODEL_NAME}_deformed.gcode"
-    ini_path = r"prusa_slicer/my_printer_config.ini"
+    #stl_path = rf"output_models/{MODEL_NAME}_deformed.stl"
+    #output_gcode = rf"input_gcode/{MODEL_NAME}_deformed.gcode"
+    #ini_path = r"prusa_slicer/my_printer_config.ini"
+
+    stl_path = os.path.join(OUTPUT_MODELS_DIR, f"{MODEL_NAME}_deformed.stl")
+    output_gcode = os.path.join(INPUT_GCODE_DIR, f"{MODEL_NAME}_deformed.gcode")
+    ini_path = os.path.join(PRUSA_CONFIG_DIR, "my_printer_config.ini")
+
+    os.makedirs(INPUT_GCODE_DIR, exist_ok=True)
+
 
     # Make sure output folder exists
-    os.makedirs(os.path.dirname(output_gcode), exist_ok=True)
+    #os.makedirs(os.path.dirname(output_gcode), exist_ok=True)
 
-    print("\n***PRUSA*** planar slicer is running...\n")
+    print("\n***PRUSA*** planar slicer is running...\n", flush=True)
 
     # Run slicing
     subprocess.run([
@@ -57,16 +82,16 @@ def run_slicer_pipeline(MODEL_NAME: str, slicer_path: str):
     ], check=True)
 
 
-    print(f"G-code exported to {output_gcode}")
+    print(f"G-code exported to {output_gcode}", flush=True)
 
-    print("\n***PRUSA*** planar slicing finished\n")
+    print("\n***PRUSA*** planar slicing finished\n", flush=True)
 
     # Reform
-
+    print("\nReforming model...\n", flush=True)
     reform.load_gcode_and_undeform(MODEL_NAME, transform_params)
 
     # Restore the original cwd afterwards (optional but safe)
-    os.chdir(original_cwd)
+    #os.chdir(original_cwd)
 
 def main():
     # CLI

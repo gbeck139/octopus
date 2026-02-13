@@ -4,12 +4,29 @@ from pygcode import Line
 import pyvista as pv
 import matplotlib.pyplot as plt
 
+import os
+import sys
+
+if getattr(sys, 'frozen', False):
+    base_dir = os.path.dirname(sys.executable)
+else:
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+
+INPUT_MODELS_DIR = os.path.join(base_dir, "input_models")
+OUTPUT_MODELS_DIR = os.path.join(base_dir, "output_models")
+INPUT_GCODE_DIR = os.path.join(base_dir, "input_gcode")
+OUTPUT_GCODE_DIR = os.path.join(base_dir, "output_gcode")
+PRUSA_CONFIG_DIR = os.path.join(base_dir, "prusa_slicer")
+
+
 def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
     
     if transform_params is None:
         try:
              #with open(f'radial_non_planar_slicer/output_models/{MODEL_NAME}_transform.json', 'r') as f:
-             with open(f'output_models/{MODEL_NAME}_transform.json', 'r') as f:
+            #with open(f'output_models/{MODEL_NAME}_transform.json', 'r') as f:
+            json_path = os.path.join(OUTPUT_MODELS_DIR, f"{MODEL_NAME}_transform.json")
+            with open(json_path, 'r') as f:
                 transform_params = json.load(f)
         except FileNotFoundError:
             print(f"Error: Transform parameters not found for {MODEL_NAME}")
@@ -28,7 +45,9 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
     gcode_points = []
     i = 0
     #with open(f'radial_non_planar_slicer/input_gcode/{MODEL_NAME}_deformed.gcode', 'r') as fh:
-    with open(f'input_gcode/{MODEL_NAME}_deformed.gcode', 'r') as fh:
+    #with open(f'input_gcode/{MODEL_NAME}_deformed.gcode', 'r') as fh:
+    gcode_input_path = os.path.join(INPUT_GCODE_DIR, f"{MODEL_NAME}_deformed.gcode")
+    with open(gcode_input_path, 'r') as fh:
         for line_text in fh.readlines():            
             
             # Skip comment lines and non-standard commands
@@ -226,7 +245,10 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
 
     # save transformed gcode
     #with open(f'radial_non_planar_slicer/output_gcode/{MODEL_NAME}_reformed.gcode', 'w') as fh:
-    with open(f'output_gcode/{MODEL_NAME}_reformed.gcode', 'w') as fh:
+    #with open(f'output_gcode/{MODEL_NAME}_reformed.gcode', 'w') as fh:
+    os.makedirs(OUTPUT_GCODE_DIR, exist_ok=True)
+    gcode_output_path = os.path.join(OUTPUT_GCODE_DIR, f"{MODEL_NAME}_reformed.gcode")
+    with open(gcode_output_path, 'w') as fh:
         # write header
         fh.write("; --- INITIALIZATION ---\n")
         fh.write("G21              ; Establish metric units (millimeters)\n")
@@ -319,22 +341,22 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
 
 
     # get where z > 0
-    z = new_positions[:, 2]
-    point_cloud = pv.PolyData(new_positions[z > 0])
-    point_cloud.plot(scalars=np.arange(len(new_positions[z > 0]))%2000, point_size=3, render_points_as_spheres=True) # doesnt work in google colab? uncomment to view if not in google colab
+    #z = new_positions[:, 2]
+    #point_cloud = pv.PolyData(new_positions[z > 0])
+    #point_cloud.plot(scalars=np.arange(len(new_positions[z > 0]))%2000, point_size=3, render_points_as_spheres=True) # doesnt work in google colab? uncomment to view if not in google colab
 
     # plot in matplotlib
-    g01_points = np.array([new_positions[i] for i, point in enumerate(gcode_points) if point["command"] == "G01"])
-    original_points = np.array([point["position"] for point in gcode_points if point["command"] == "G01"])
+    # g01_points = np.array([new_positions[i] for i, point in enumerate(gcode_points) if point["command"] == "G01"])
+    # original_points = np.array([point["position"] for point in gcode_points if point["command"] == "G01"])
 
-    plt.figure(figsize=(12, 12))
-    c = original_points[:, 2][::-1] % 5 / 5
-    plt.scatter(g01_points[:, 0], g01_points[:, 2], s=1, c=c)
-    plt.gca().set_aspect('equal')
-    plt.xlabel("X")
-    plt.ylabel("Z")
-    plt.title("Scatter Plot of G-code Points")
-    plt.show()
+    # plt.figure(figsize=(12, 12))
+    # c = original_points[:, 2][::-1] % 5 / 5
+    # plt.scatter(g01_points[:, 0], g01_points[:, 2], s=1, c=c)
+    # plt.gca().set_aspect('equal')
+    # plt.xlabel("X")
+    # plt.ylabel("Z")
+    # plt.title("Scatter Plot of G-code Points")
+    # plt.show()
 
 
 if __name__ == "__main__":

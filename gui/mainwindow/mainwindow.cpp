@@ -267,28 +267,43 @@ void MainWindow::onSliceClicked()
 
             if (status == QProcess::NormalExit && exitCode == 0) {
                 qDebug() << "[MAIN] Slicing finished successfully";
-                // TODO: trigger G-code load / visualization
+                // TODO: trigger G-code load / visualization in Preview tab
             } else {
                 qWarning() << "[MAIN] Slicing failed";
                 // TODO: add or log specific ERROR message from Python
-                QMessageBox::warning(this, "SLICING ERROR", "Slicing Failed");
+                QMessageBox::warning(this, "SLICING ERROR", "iu'nno~");
+                // TODO: add image to error window: shrugMeme
             }
 
             proc->deleteLater();
         });
 
     // Hardcoded for now
-    QString python = appConfig->getPythonPath();
-    QString script = "C:/Users/canca/Documents/3d printing slicer project/octopus/radial_non_planar_slicer/main.py";
+    //QString python = appConfig->getPythonPath();
+    //QString script = ".../main.py";
     QString prusaPath = appConfig->getPrusaSlicerPath();
 
-    QStringList args;
-    args << script << "--model" << "3DBenchy" << "--prusa" << prusaPath;
+    //QStringList args;
+    //args << script << "--model" << "3DBenchy" << "--prusa" << prusaPath;
     // Later: << "--stl" << stlPath
 
     // Start slicing
-    proc->start(python, args);
+    //proc->start(python, args);
 
     //slicerRunner->runSlice("currentStlPath", params);
+    QString slicerPath =
+        QCoreApplication::applicationDirPath()
+        + "/slicerbundle/main.exe";
+
+    qDebug() << "Looking for slicer at:" << slicerPath;
+    if (!QFile::exists(slicerPath)) {
+        qWarning() << "Slicer executable not found!";
+    }
+
+    QStringList args;
+    args << "--model" << "3DBenchy"
+         << "--prusa" << prusaPath;
+
+    proc->start(slicerPath, args);
 }
 

@@ -3,6 +3,7 @@
         <file>images/blueCylinder.jpg</file>
         <file>images/redCylinder.jpg</file>
         <file>images/catLoading.jpg</file>
+        <file>images/shrugMeme.jpg</file>
     </qresource>
     <qresource prefix="/json">
         <file>json/cylinderOne.json</file>
