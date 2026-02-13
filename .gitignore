@@ -10,3 +10,15 @@ venv/
 gifs/
 __pycache__/
 **/_*
+
+# PyInstaller build artifacts
+build/
+dist/
+*.spec.orig
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/

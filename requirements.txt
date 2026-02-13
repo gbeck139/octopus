@@ -1,0 +1,7 @@
+numpy
+pyvista
+networkx
+pygcode
+scipy
+matplotlib
+pyinstaller
