@@ -31,6 +31,9 @@ private:
     SlicerRunner *slicerRunner;
     SlicerLoadingDialog *loadingDialog;
 
+    // TODO: need to put this in slicerrrunner
+    QString lastGeneratedGcodePath;
+
 private slots:
     void onImportClicked();
     void onExportClicked();

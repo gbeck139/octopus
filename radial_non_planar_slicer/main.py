@@ -12,6 +12,7 @@ import argparse
 
 import os
 import sys
+import shutil
 
 sys.stdout.reconfigure(line_buffering=True)
 sys.stderr.reconfigure(line_buffering=True)
@@ -31,7 +32,13 @@ PRUSA_CONFIG_DIR = os.path.join(base_dir, "prusa_slicer")
 
 #MODEL_NAME = '3DBenchy'
 
-def run_slicer_pipeline(MODEL_NAME: str, slicer_path: str):
+def run_slicer_pipeline(stl_path_input: str, MODEL_NAME: str, slicer_path: str):
+
+    os.makedirs(INPUT_MODELS_DIR, exist_ok=True)
+
+    local_stl_path = os.path.join(INPUT_MODELS_DIR, f"{MODEL_NAME}.stl")
+    shutil.copyfile(stl_path_input, local_stl_path)
+
 
     # Save the original cwd
     #original_cwd = os.getcwd()
@@ -90,17 +97,20 @@ def run_slicer_pipeline(MODEL_NAME: str, slicer_path: str):
     print("\nReforming model...\n", flush=True)
     reform.load_gcode_and_undeform(MODEL_NAME, transform_params)
 
+    os.makedirs(OUTPUT_GCODE_DIR, exist_ok=True)
+
     # Restore the original cwd afterwards (optional but safe)
     #os.chdir(original_cwd)
 
 def main():
     # CLI
     parser = argparse.ArgumentParser()
+    parser.add_argument("--stl", required=True)
     parser.add_argument("--model", required=True)
     parser.add_argument("--prusa", required=True)
     args = parser.parse_args()
 
-    run_slicer_pipeline(args.model, args.prusa)
+    run_slicer_pipeline(args.stl, args.model, args.prusa)
 
 
 if __name__ == "__main__":
