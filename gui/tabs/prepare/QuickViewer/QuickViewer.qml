@@ -7,7 +7,7 @@ Rectangle {
 
     Text {
         id: helloText
-        text: "Hello world!"
+        text: "3D modeller"
         y: 30
         anchors.horizontalCenter: page.horizontalCenter
         font.pointSize: 24; font.bold: true
