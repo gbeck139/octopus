@@ -143,5 +143,5 @@ def visualize_gcode(model_name, nozzle_offset=43):
 
 if __name__ == "__main__":
     # Default model name from main.py context
-    MODEL_NAME = 'pumpkin'  # Change as needed
+    MODEL_NAME = '3DBenchy'  # Change as needed
     visualize_gcode(MODEL_NAME)
