@@ -1,116 +1,97 @@
-#include "viewerwidget.h"
-
-#include <QVBoxLayout>
-#include <QUrl>
+#include "ViewerWidget.h"
+#include <Qt3DCore/QTransform>
+#include <Qt3DRender/QDirectionalLight>
 #include <Qt3DExtras/QForwardRenderer>
-#include <QDebug>
-#include <QFileInfo>
 
 ViewerWidget::ViewerWidget(QWidget *parent)
-    : QWidget{parent}
+    : QWidget(parent)
 {
-    // Qt 3D window
-    view = new Qt3DExtras::Qt3DWindow();
-    view->defaultFrameGraph()->setClearColor(QColor(30, 30, 30));
-
-    container = QWidget::createWindowContainer(view, this);
-    container->setMinimumSize(200, 200);
-
-    auto *layout = new QVBoxLayout(this);
+    // Layout for title + 3D view
+    QVBoxLayout *layout = new QVBoxLayout(this);
     layout->setContentsMargins(0,0,0,0);
+
+    // Title
+    QLabel *title = new QLabel("3D Modeller");
+    title->setAlignment(Qt::AlignHCenter);
+    title->setStyleSheet("font-size:24px; font-weight:bold;");
+    layout->addWidget(title);
+
+    // Qt3D window
+    m_view = new Qt3DExtras::Qt3DWindow();
+    QWidget *container = QWidget::createWindowContainer(m_view);
+    container->setMinimumSize(800, 500);
     layout->addWidget(container);
 
-    // Scene root
-    rootEntity = new Qt3DCore::QEntity();
-    view->setRootEntity(rootEntity);
+    // Root entity
+    m_sceneRoot = new Qt3DCore::QEntity();
 
     // Camera
-    camera = view->camera();
-    camera->lens()->setPerspectiveProjection(45.0f, 16.f/9.f, 0.1f, 1000.f);
-    camera->setPosition(QVector3D(0, 0, 10));
-    camera->setViewCenter(QVector3D(0, 0, 0));
+    m_camera = m_view->camera();
+    m_camera->lens()->setPerspectiveProjection(45.0f, float(container->width())/container->height(), 0.1f, 2000.0f);
+    m_camera->setPosition(QVector3D(0, 100, 600));
+    m_camera->setViewCenter(QVector3D(0, 50, 0));
 
-    // Mouse controls
-    auto *camController = new Qt3DExtras::QOrbitCameraController(rootEntity);
-    camController->setLinearSpeed(50.0f);
-    camController->setLookSpeed(180.0f);
-    camController->setCamera(camera);
+    // Forward renderer (needed for background color)
+    Qt3DExtras::QForwardRenderer *frameGraph = new Qt3DExtras::QForwardRenderer();
+    frameGraph->setCamera(m_camera);
+    frameGraph->setClearColor(QColor("lightgray"));
+    m_view->setActiveFrameGraph(frameGraph);
 
-    // Model entity
-    modelEntity = new Qt3DCore::QEntity(rootEntity);
-    modelTransform = new Qt3DCore::QTransform();
-    modelEntity->addComponent(modelTransform);
+    // Orbit camera controller
+    m_camController = new Qt3DExtras::QOrbitCameraController(m_sceneRoot);
+    m_camController->setCamera(m_camera);
+    m_camController->setLinearSpeed(50.0f);
+    m_camController->setLookSpeed(180.0f);
 
-    auto *light = new Qt3DRender::QPointLight(lightEntity);
+    // Directional light
+    Qt3DRender::QDirectionalLight *light = new Qt3DRender::QDirectionalLight();
+    light->setWorldDirection(QVector3D(-1, -1, -2));
     light->setColor(Qt::white);
     light->setIntensity(1.0f);
-
-    auto *lightTransform = new Qt3DCore::QTransform(lightEntity);
-    lightTransform->setTranslation(QVector3D(10, 10, 10));
-
+    Qt3DCore::QEntity *lightEntity = new Qt3DCore::QEntity(m_sceneRoot);
     lightEntity->addComponent(light);
-    lightEntity->addComponent(lightTransform);
 
-    // auto *light2 = new Qt3DRender::QPointLight(light2Entity);
-    // light2->setColor(Qt::white);
-    // light2->setIntensity(1.0f);
+    // STL Mesh entity (no path yet)
+    m_stlMesh = new Qt3DRender::QMesh();
+    m_stlMaterial = new Qt3DExtras::QPhongMaterial();
+    m_stlMaterial->setDiffuse(QColor("lightsteelblue"));
+    m_stlMaterial->setSpecular(QColor("white"));
+    m_stlMaterial->setShininess(50.0f);
 
-    // auto *light2Transform = new Qt3DCore::QTransform(light2Entity);
-    // light2Transform->setTranslation(QVector3D(-10, -10, -10));
+    Qt3DCore::QTransform *stlTransform = new Qt3DCore::QTransform();
+    stlTransform->setScale3D(QVector3D(1,1,1));
+    stlTransform->setRotation(QQuaternion::fromEulerAngles(0,0,0));
+    stlTransform->setTranslation(QVector3D(0,0,0));
 
-    // light2Entity->addComponent(light2);
-    // light2Entity->addComponent(light2Transform);
+    m_stlEntity = new Qt3DCore::QEntity(m_sceneRoot);
+    m_stlEntity->addComponent(m_stlMesh);
+    m_stlEntity->addComponent(m_stlMaterial);
+    m_stlEntity->addComponent(stlTransform);
+
+    // Ground plane
+    m_groundMesh = new Qt3DExtras::QPlaneMesh();
+    m_groundMesh->setWidth(1000);
+    m_groundMesh->setHeight(1000);
+
+    Qt3DCore::QTransform *groundTransform = new Qt3DCore::QTransform();
+    groundTransform->setTranslation(QVector3D(0,-100,0));
+    groundTransform->setRotation(QQuaternion::fromEulerAngles(-90,0,0));
+
+    m_groundMaterial = new Qt3DExtras::QPhongMaterial();
+    m_groundMaterial->setDiffuse(QColor("lightgray"));
+
+    m_groundEntity = new Qt3DCore::QEntity(m_sceneRoot);
+    m_groundEntity->addComponent(m_groundMesh);
+    m_groundEntity->addComponent(m_groundMaterial);
+    m_groundEntity->addComponent(groundTransform);
+
+    // Set root entity to Qt3D view
+    m_view->setRootEntity(m_sceneRoot);
 }
 
-void ViewerWidget::loadSTL(const QString &filePath)
+// Optional STL loader
+void ViewerWidget::loadSTL(const QString &stlPath)
 {
-    QFileInfo check_file(filePath);
-    if (!check_file.exists()) {
-        qDebug() << "File does not exist:" << filePath;
-        return;
-    }
-
-    // Clear previous model
-    for (auto *c : modelEntity->components())
-        modelEntity->removeComponent(c);
-
-    modelEntity->addComponent(modelTransform);
-    modelTransform->setScale(0.1f);
-
-    auto *mesh = new Qt3DRender::QMesh(modelEntity);
-    mesh->setSource(QUrl::fromLocalFile(filePath));
-
-    auto *material = new Qt3DExtras::QPhongMaterial(modelEntity);
-    material->setDiffuse(QColor(200, 200, 200));
-
-    modelEntity->addComponent(mesh);
-    modelEntity->addComponent(material);
-
-    qDebug() << "Loaded STL:" << filePath;
-}
-
-void ViewerWidget::viewFront()
-{
-    camera->setPosition(QVector3D(0, 0, 10));
-    camera->setViewCenter(QVector3D(0, 0, 0));
-}
-
-void ViewerWidget::viewTop()
-{
-    camera->setPosition(QVector3D(0, 10, 0));
-    camera->setUpVector(QVector3D(0, 0, -1));
-    camera->setViewCenter(QVector3D(0, 0, 0));
-}
-
-void ViewerWidget::viewSide()
-{
-    camera->setPosition(QVector3D(10, 0, 0));
-    camera->setViewCenter(QVector3D(0, 0, 0));
-}
-
-void ViewerWidget::resetView()
-{
-    camera->setPosition(QVector3D(0, 0, 10));
-    camera->setUpVector(QVector3D(0, 1, 0));
-    camera->setViewCenter(QVector3D(0, 0, 0));
+    if (!stlPath.isEmpty())
+        m_stlMesh->setSource(QUrl::fromLocalFile(stlPath));
 }

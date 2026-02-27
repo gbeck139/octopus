@@ -7,6 +7,7 @@
 #include <QMessageBox>
 
 #include <QDebug>
+#include <QLabel>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -177,6 +178,8 @@ void MainWindow::onExportClicked()
 void MainWindow::onQuitClicked()
 {
     // Provides an "Are you sure" message box if a model has been loaded in
+    //TODO: if model has been exported/saved, then it's ok?
+    //TODO: override closeEvent - just copy and paste, you can't connect together cuz quit() will make it a loop
     if (model3D->isLoaded()) {
         auto result = QMessageBox::question(this, "Quit", "Are you sure you want to quit?");
         if (result == QMessageBox::Yes) {
@@ -342,14 +345,56 @@ void MainWindow::onSliceClicked()
                     + "_reformed.gcode";
 
                 ui->exportButton->setEnabled(true);
+
+                qDebug() << "[MAIN] Visualizing Gcode";
+
+                // Show Better visualizer (test)
+                QProcess *visualProcess = new QProcess(this);
+
+                QString program2 = "slicerbundle/better_visualizer_test.exe";
+                QStringList arguments2;
+                arguments2 << "--gcode" << lastGeneratedGcodePath;
+
+                visualProcess->start(program2, arguments2);
+
+                if (!visualProcess->waitForStarted()) {
+                    qDebug() << "Failed to start visualizer.";
+                }
+
+                connect(visualProcess, &QProcess::finished, this, [](){
+                    qDebug() << "Visualizer finished.";
+                });
+
+
             } else {
                 qWarning() << "[MAIN] Slicing failed";
                 // TODO: add or log specific ERROR message from Python
 
                 ui->exportButton->setEnabled(false);
 
-                QMessageBox::warning(this, "SLICING ERROR", "iu'nno~");
-                // TODO: add image to error window: shrugMeme
+                //QMessageBox::warning(this, "SLICING ERROR", "iu'nno~");
+                QMessageBox msgBox(this);
+                msgBox.setWindowTitle("SLICING ERROR");
+                msgBox.setText("iu'nno~");
+                msgBox.setStandardButtons(QMessageBox::Ok);
+
+                // Remove default icon spacing
+                msgBox.setIcon(QMessageBox::NoIcon);
+
+                // Create image label
+                QLabel *imageLabel = new QLabel(&msgBox);
+                QPixmap pix(":/images/images/shrugMeme.jpg");
+
+                // Resize image
+                pix = pix.scaled(300, 300, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+                imageLabel->setPixmap(pix);
+                imageLabel->setAlignment(Qt::AlignCenter);
+
+                // Insert image into layout (top, full width)
+                QGridLayout *layout = qobject_cast<QGridLayout*>(msgBox.layout());
+                layout->addWidget(imageLabel, 0, 0, 1, layout->columnCount(), Qt::AlignCenter);
+
+                msgBox.exec();
             }
 
             proc->deleteLater();

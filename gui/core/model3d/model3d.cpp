@@ -23,8 +23,8 @@ bool Model3D::loadModel(const QString &filePath)
     qDebug() << "Finished clearing current model";
 
     // Detect ASCII vs Binary
-    QByteArray header = file.peek(80);
-    bool isAscii = header.startsWith("solid");
+    QByteArray start = file.peek(256);
+    bool isAscii = start.startsWith("solid") && start.contains("facet");
     qDebug() << "Loading STL file:" << "ASCII?" << isAscii << ". BINARY?" << !isAscii;
 
     bool success = false;

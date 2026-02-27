@@ -1,45 +1,33 @@
-#ifndef VIEWERWIDGET_H
-#define VIEWERWIDGET_H
+#pragma once
 
 #include <QWidget>
-
 #include <Qt3DExtras/Qt3DWindow>
 #include <Qt3DCore/QEntity>
 #include <Qt3DRender/QCamera>
 #include <Qt3DExtras/QOrbitCameraController>
 #include <Qt3DRender/QMesh>
 #include <Qt3DExtras/QPhongMaterial>
-#include <Qt3DCore/QTransform>
-#include <Qt3DRender/QPointLight>
+#include <Qt3DExtras/QPlaneMesh>
+#include <Qt3DRender/QDirectionalLight>
+#include <QVBoxLayout>
+#include <QLabel>
 
 class ViewerWidget : public QWidget
 {
     Q_OBJECT
 public:
     explicit ViewerWidget(QWidget *parent = nullptr);
-    void loadSTL(const QString &filePath);
-
-    // view helpers
-    void viewFront();
-    void viewTop();
-    void viewSide();
-    void resetView();
+    void loadSTL(const QString &stlPath);
 
 private:
-    Qt3DExtras::Qt3DWindow *view;
-    QWidget *container;
-
-    Qt3DCore::QEntity *rootEntity;
-    Qt3DCore::QEntity *modelEntity;
-
-    Qt3DRender::QCamera *camera;
-    Qt3DCore::QTransform *modelTransform;
-
-    Qt3DCore::QEntity *lightEntity = new Qt3DCore::QEntity(rootEntity);
-    // Qt3DCore::QEntity *light2Entity = new Qt3DCore::QEntity(rootEntity);
-
-
-signals:
+    Qt3DExtras::Qt3DWindow *m_view;
+    Qt3DCore::QEntity *m_sceneRoot;
+    Qt3DRender::QCamera *m_camera;
+    Qt3DExtras::QOrbitCameraController *m_camController;
+    Qt3DCore::QEntity *m_stlEntity;
+    Qt3DRender::QMesh *m_stlMesh;
+    Qt3DExtras::QPhongMaterial *m_stlMaterial;
+    Qt3DCore::QEntity *m_groundEntity;
+    Qt3DExtras::QPlaneMesh *m_groundMesh;
+    Qt3DExtras::QPhongMaterial *m_groundMaterial;
 };
-
-#endif // VIEWERWIDGET_H
