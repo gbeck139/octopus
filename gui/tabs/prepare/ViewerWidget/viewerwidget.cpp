@@ -2,96 +2,142 @@
 #include <Qt3DCore/QTransform>
 #include <Qt3DRender/QDirectionalLight>
 #include <Qt3DExtras/QForwardRenderer>
+#include <Qt3DExtras/Qt3DWindow>
+#include <Qt3DExtras/QOrbitCameraController>
+#include <Qt3DExtras/QCylinderMesh>
+#include <Qt3DExtras/QPhongMaterial>
+#include <Qt3DCore/QEntity>
+#include <Qt3DCore/QTransform>
+#include <QQuaternion>
+#include <QVBoxLayout>
+#include <Qt3DRender/QCamera>
 
 ViewerWidget::ViewerWidget(QWidget *parent)
     : QWidget(parent)
 {
-    // Layout for title + 3D view
+    // Create Qt3D window
+    Qt3DExtras::Qt3DWindow *view = new Qt3DExtras::Qt3DWindow();
+    QWidget *container = QWidget::createWindowContainer(view);
+    container->setMinimumSize(QSize(400, 400));
+
     QVBoxLayout *layout = new QVBoxLayout(this);
-    layout->setContentsMargins(0,0,0,0);
-
-    // Title
-    QLabel *title = new QLabel("3D Modeller");
-    title->setAlignment(Qt::AlignHCenter);
-    title->setStyleSheet("font-size:24px; font-weight:bold;");
-    layout->addWidget(title);
-
-    // Qt3D window
-    m_view = new Qt3DExtras::Qt3DWindow();
-    QWidget *container = QWidget::createWindowContainer(m_view);
-    container->setMinimumSize(800, 500);
     layout->addWidget(container);
+    setLayout(layout);
 
     // Root entity
-    m_sceneRoot = new Qt3DCore::QEntity();
+    rootEntity = new Qt3DCore::QEntity();
+
+    view->setRootEntity(rootEntity);
 
     // Camera
-    m_camera = m_view->camera();
-    m_camera->lens()->setPerspectiveProjection(45.0f, float(container->width())/container->height(), 0.1f, 2000.0f);
-    m_camera->setPosition(QVector3D(0, 100, 600));
-    m_camera->setViewCenter(QVector3D(0, 50, 0));
+    Qt3DRender::QCamera *camera = view->camera();
+    camera->lens()->setPerspectiveProjection(45.0f, 16.0f/9.0f, 0.1f, 1000.0f);
+    camera->setPosition(QVector3D(0, 0, 20));
+    camera->setViewCenter(QVector3D(0, 0, 0));
 
-    // Forward renderer (needed for background color)
-    Qt3DExtras::QForwardRenderer *frameGraph = new Qt3DExtras::QForwardRenderer();
-    frameGraph->setCamera(m_camera);
-    frameGraph->setClearColor(QColor("lightgray"));
-    m_view->setActiveFrameGraph(frameGraph);
+    //Qt3DExtras::QForwardRenderer *renderer = new Qt3DExtras::QForwardRenderer();
+    //renderer->setCamera(view->camera());
+    //renderer->setClearColor(QColor(53, 53, 53)); // optional background
+    //view->setActiveFrameGraph(renderer);
 
-    // Orbit camera controller
-    m_camController = new Qt3DExtras::QOrbitCameraController(m_sceneRoot);
-    m_camController->setCamera(m_camera);
-    m_camController->setLinearSpeed(50.0f);
-    m_camController->setLookSpeed(180.0f);
+    // Orbit controller (lets you drag rotate camera)
+    Qt3DExtras::QOrbitCameraController *camController =
+        new Qt3DExtras::QOrbitCameraController(rootEntity);
+    camController->setCamera(camera);
 
-    // Directional light
-    Qt3DRender::QDirectionalLight *light = new Qt3DRender::QDirectionalLight();
-    light->setWorldDirection(QVector3D(-1, -1, -2));
-    light->setColor(Qt::white);
-    light->setIntensity(1.0f);
-    Qt3DCore::QEntity *lightEntity = new Qt3DCore::QEntity(m_sceneRoot);
-    lightEntity->addComponent(light);
+    // Create cylinder (initially hidden)
+    cylinderEntity = new Qt3DCore::QEntity(rootEntity);
 
-    // STL Mesh entity (no path yet)
-    m_stlMesh = new Qt3DRender::QMesh();
-    m_stlMaterial = new Qt3DExtras::QPhongMaterial();
-    m_stlMaterial->setDiffuse(QColor("lightsteelblue"));
-    m_stlMaterial->setSpecular(QColor("white"));
-    m_stlMaterial->setShininess(50.0f);
+    auto *mesh = new Qt3DExtras::QCylinderMesh();
+    mesh->setRadius(3);
+    mesh->setLength(8);
+    mesh->setRings(50);
+    mesh->setSlices(20);
 
-    Qt3DCore::QTransform *stlTransform = new Qt3DCore::QTransform();
-    stlTransform->setScale3D(QVector3D(1,1,1));
-    stlTransform->setRotation(QQuaternion::fromEulerAngles(0,0,0));
-    stlTransform->setTranslation(QVector3D(0,0,0));
+    auto *material = new Qt3DExtras::QPhongMaterial();
+    QColor color(100, 200, 255, 150);
+    material->setDiffuse(color);
+    material->setAmbient(color);
+    //material->setShininess(50);
 
-    m_stlEntity = new Qt3DCore::QEntity(m_sceneRoot);
-    m_stlEntity->addComponent(m_stlMesh);
-    m_stlEntity->addComponent(m_stlMaterial);
-    m_stlEntity->addComponent(stlTransform);
+    cylinderTransform = new Qt3DCore::QTransform();
+    cylinderTransform->setTranslation(QVector3D(0,0,0));
+    cylinderTransform->setTranslation(QVector3D(0, 0, 0)); // Y-axis up
 
-    // Ground plane
-    m_groundMesh = new Qt3DExtras::QPlaneMesh();
-    m_groundMesh->setWidth(1000);
-    m_groundMesh->setHeight(1000);
+    cylinderEntity->addComponent(mesh);
+    cylinderEntity->addComponent(material);
+    cylinderEntity->addComponent(cylinderTransform);
 
-    Qt3DCore::QTransform *groundTransform = new Qt3DCore::QTransform();
-    groundTransform->setTranslation(QVector3D(0,-100,0));
-    groundTransform->setRotation(QQuaternion::fromEulerAngles(-90,0,0));
+    cylinderEntity->setEnabled(false); // hidden until STL loaded
 
-    m_groundMaterial = new Qt3DExtras::QPhongMaterial();
-    m_groundMaterial->setDiffuse(QColor("lightgray"));
-
-    m_groundEntity = new Qt3DCore::QEntity(m_sceneRoot);
-    m_groundEntity->addComponent(m_groundMesh);
-    m_groundEntity->addComponent(m_groundMaterial);
-    m_groundEntity->addComponent(groundTransform);
-
-    // Set root entity to Qt3D view
-    m_view->setRootEntity(m_sceneRoot);
+    createAxes();
 }
 
-// Optional STL loader
-void ViewerWidget::loadSTL(const QString &stlPath)
+void ViewerWidget::setModelVisible(bool visible)
 {
-    if (!stlPath.isEmpty())
-        m_stlMesh->setSource(QUrl::fromLocalFile(stlPath));
+    cylinderEntity->setEnabled(visible);
+}
+
+void ViewerWidget::setRotation(int x, int y, int z)
+{
+    QQuaternion q = QQuaternion::fromEulerAngles(x, y, z);
+    cylinderTransform->setRotation(q);
+}
+
+void ViewerWidget::createAxes()
+{
+    float axisLength = 10.0f;
+    float axisRadius = 0.1f;
+
+    // -------- X Axis (Red) --------
+    auto *xEntity = new Qt3DCore::QEntity(rootEntity);
+    auto *xMesh = new Qt3DExtras::QCylinderMesh();
+    xMesh->setRadius(axisRadius);
+    xMesh->setLength(axisLength);
+
+    auto *xMaterial = new Qt3DExtras::QPhongMaterial();
+    xMaterial->setDiffuse(Qt::red);
+
+    auto *xTransform = new Qt3DCore::QTransform();
+    xTransform->setRotation(QQuaternion::fromEulerAngles(0, 0, 90));
+    xTransform->setTranslation(QVector3D(axisLength/2, 0, 0));
+
+    xEntity->addComponent(xMesh);
+    xEntity->addComponent(xMaterial);
+    xEntity->addComponent(xTransform);
+
+
+    // -------- Y Axis (Green) --------
+    auto *yEntity = new Qt3DCore::QEntity(rootEntity);
+    auto *yMesh = new Qt3DExtras::QCylinderMesh();
+    yMesh->setRadius(axisRadius);
+    yMesh->setLength(axisLength);
+
+    auto *yMaterial = new Qt3DExtras::QPhongMaterial();
+    yMaterial->setDiffuse(Qt::green);
+
+    auto *yTransform = new Qt3DCore::QTransform();
+    yTransform->setTranslation(QVector3D(0, axisLength/2, 0));
+
+    yEntity->addComponent(yMesh);
+    yEntity->addComponent(yMaterial);
+    yEntity->addComponent(yTransform);
+
+
+    // -------- Z Axis (Blue) --------
+    auto *zEntity = new Qt3DCore::QEntity(rootEntity);
+    auto *zMesh = new Qt3DExtras::QCylinderMesh();
+    zMesh->setRadius(axisRadius);
+    zMesh->setLength(axisLength);
+
+    auto *zMaterial = new Qt3DExtras::QPhongMaterial();
+    zMaterial->setDiffuse(Qt::blue);
+
+    auto *zTransform = new Qt3DCore::QTransform();
+    zTransform->setRotation(QQuaternion::fromEulerAngles(90, 0, 0));
+    zTransform->setTranslation(QVector3D(0, 0, axisLength/2));
+
+    zEntity->addComponent(zMesh);
+    zEntity->addComponent(zMaterial);
+    zEntity->addComponent(zTransform);
 }
