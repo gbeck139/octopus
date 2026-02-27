@@ -15,9 +15,8 @@ public:
 
 private:
     Qt3DCore::QEntity *rootEntity;
-    Qt3DCore::QEntity *cylinderEntity;
+    Qt3DCore::QEntity *prismEntity;
     Qt3DCore::QTransform *cylinderTransform;
-
 private:
     void createAxes();
 };

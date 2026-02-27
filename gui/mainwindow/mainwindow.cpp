@@ -9,6 +9,14 @@
 #include <QDebug>
 #include <QLabel>
 
+//TODO: move this to model3d model
+struct ModelRotation {
+    int x = 0;
+    int y = 0;
+    int z = 0;
+};
+ModelRotation currentRotation;
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -97,6 +105,10 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     qDebug() << "[GUI] Current PrusaSlicer Path: " + appConfig->getPrusaSlicerPath();
+
+    connect(ui->rotateXButton, &QPushButton::clicked, this, &MainWindow::onRotateXClicked);
+    connect(ui->rotateYButton, &QPushButton::clicked, this, &MainWindow::onRotateYClicked);
+    connect(ui->rotateZButton, &QPushButton::clicked, this, &MainWindow::onRotateZClicked);
 }
 
 MainWindow::~MainWindow()
@@ -426,5 +438,20 @@ void MainWindow::onSliceClicked()
          << "--prusa" << prusaPath;
 
     proc->start(slicerPath, args);
+}
+
+void MainWindow::onRotateXClicked()
+{
+
+}
+
+void MainWindow::onRotateYClicked()
+{
+
+}
+
+void MainWindow::onRotateZClicked()
+{
+
 }
 

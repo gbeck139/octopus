@@ -51,6 +51,9 @@ private slots:
     void connectWizard(SetupWizard* wizard);
     void onSettingsMenuEditPrinterClicked();
     void onSliceClicked();
+    void onRotateXClicked();
+    void onRotateYClicked();
+    void onRotateZClicked();
 
 };
 #endif // MAINWINDOW_H
