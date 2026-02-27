@@ -3,6 +3,8 @@
 
 #include <QWizardPage>
 
+// TODO: THIS WIDGET IS NO LONGER USED
+
 namespace Ui {
 class PythonPage;
 }

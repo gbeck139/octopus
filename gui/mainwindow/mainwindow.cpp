@@ -97,7 +97,6 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     qDebug() << "[GUI] Current PrusaSlicer Path: " + appConfig->getPrusaSlicerPath();
-    qDebug() << "[GUI] Current Python Path: " + appConfig->getPythonPath();
 }
 
 MainWindow::~MainWindow()
@@ -257,7 +256,6 @@ void MainWindow::connectWizard(SetupWizard *wizard)
     connect(wizard, &SetupWizard::printerTypeSelected, appConfig, &AppConfig::setActivePrinterId);
     connect(wizard, &SetupWizard::printerTypeSelected, profileManager, &ProfileManager::setActivePrinter);
     connect(wizard, &SetupWizard::prusaSlicerPathSelected, appConfig, &AppConfig::setPrusaSlicerPath);
-    connect(wizard, &SetupWizard::pythonPathSelected, appConfig, &AppConfig::setPythonPath);
     connect(wizard, &SetupWizard::setupCompleted, this, &MainWindow::onSetupCompleted);
 }
 

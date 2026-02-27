@@ -31,10 +31,6 @@ public:
     QString getPrusaSlicerPath() const; //////
     void setPrusaSlicerPath(const QString& prusaSlicerPath); //////
 
-    // Python Path
-    QString getPythonPath() const; /////
-    void setPythonPath(const QString& pythonPath); /////
-
     // TODO: Add more User Preferences here
 
 signals:

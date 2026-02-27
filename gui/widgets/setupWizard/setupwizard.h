@@ -4,7 +4,6 @@
 #include <QWizard>
 #include "profilepage.h"
 #include "prusaslicerpage.h"
-#include "pythonpage.h"
 
 class SetupWizard : public QWizard
 {
@@ -21,12 +20,10 @@ protected:
 signals:
     void printerTypeSelected(QString printerId);
     void prusaSlicerPathSelected(QString prusaSlicerPath);
-    void pythonPathSelected(QString pythonPath);
     void setupCompleted();
 private:
     ProfilePage *profilePage;
     PrusaSlicerPage *prusaSlicerPage;
-    PythonPage *pythonPage;
     bool isFirstRun = false;
 };
 
