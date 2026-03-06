@@ -27,7 +27,7 @@ public:
     explicit Model3D(QObject *parent = nullptr);
 
     // Load and Clear
-    bool loadModel(const QString& filPath);
+    bool loadModel(const QString& filePath);
     void clearModel();
 
     // Model info

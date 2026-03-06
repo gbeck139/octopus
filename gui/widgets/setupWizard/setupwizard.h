@@ -3,6 +3,7 @@
 
 #include <QWizard>
 #include "profilepage.h"
+#include "prusaslicerpage.h"
 
 class SetupWizard : public QWizard
 {
@@ -18,9 +19,11 @@ protected:
     void accept() override;
 signals:
     void printerTypeSelected(QString printerId);
+    void prusaSlicerPathSelected(QString prusaSlicerPath);
     void setupCompleted();
 private:
     ProfilePage *profilePage;
+    PrusaSlicerPage *prusaSlicerPage;
     bool isFirstRun = false;
 };
 

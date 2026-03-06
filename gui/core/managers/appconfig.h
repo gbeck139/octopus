@@ -27,9 +27,15 @@ public:
     void setActiveMaterialId(const QString& materialId);
     void setActiveProcessId(const QString& processId);
 
+    // PrusaSlicer Path
+    QString getPrusaSlicerPath() const; //////
+    void setPrusaSlicerPath(const QString& prusaSlicerPath); //////
+
     // TODO: Add more User Preferences here
 
 signals:
+    //void prusaSlicerPathChanged(const QString& prusaSlicerPath); /// this prob just used for if I want the path label to show current path
+
     void activePrinterChanged(const QString& printerId);
     void activeMaterialChanged(const QString& materialId); /////////////////////
     void activeProcessChanged(const QString& processId); /////////////////////

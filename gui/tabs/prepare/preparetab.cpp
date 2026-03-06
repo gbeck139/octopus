@@ -6,6 +6,9 @@ PrepareTab::PrepareTab(QWidget *parent)
     , ui(new Ui::PrepareTab)
 {
     ui->setupUi(this);
+
+    //ui->visual3DWidget->loadSTL("C:/Users/canca/Downloads/pumpkin.stl");
+    ui->visual3DWidget->setModelVisible(true);
 }
 
 PrepareTab::~PrepareTab()

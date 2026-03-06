@@ -7,6 +7,7 @@
 #include "setupwizard.h"
 #include "profilemanager.h"
 #include "slicerrunner.h"
+#include "slicerloadingdialog.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -28,6 +29,10 @@ private:
     Model3D *model3D;
     ProfileManager *profileManager;
     SlicerRunner *slicerRunner;
+    SlicerLoadingDialog *loadingDialog;
+
+    // TODO: need to put this in slicerrrunner
+    QString lastGeneratedGcodePath;
 
 private slots:
     void onImportClicked();
@@ -46,6 +51,9 @@ private slots:
     void connectWizard(SetupWizard* wizard);
     void onSettingsMenuEditPrinterClicked();
     void onSliceClicked();
+    void onRotateXClicked();
+    void onRotateYClicked();
+    void onRotateZClicked();
 
 };
 #endif // MAINWINDOW_H

@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>599</width>
-    <height>428</height>
+    <width>1200</width>
+    <height>800</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>1200</width>
+    <height>800</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
@@ -47,19 +53,74 @@
          <widget class="QWidget" name="slicePrintHWidget" native="true">
           <layout class="QHBoxLayout" name="horizontalLayout_2">
            <item>
+            <widget class="QFrame" name="frame">
+             <property name="frameShape">
+              <enum>QFrame::Shape::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Shadow::Raised</enum>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_2">
+              <item>
+               <widget class="QPushButton" name="rotateXButton">
+                <property name="text">
+                 <string>Rotate X</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="rotateYButton">
+                <property name="text">
+                 <string>Rotate Y</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="rotateZButton">
+                <property name="text">
+                 <string>Rotate Z</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
             <widget class="QPushButton" name="sliceButton">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>50</height>
+              </size>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>13</pointsize>
+              </font>
+             </property>
              <property name="text">
               <string>Slice</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="printButton">
+            <widget class="QPushButton" name="exportButton">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>50</height>
+              </size>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>13</pointsize>
+              </font>
              </property>
              <property name="text">
-              <string>Print</string>
+              <string>Export</string>
              </property>
             </widget>
            </item>
@@ -87,7 +148,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>599</width>
+     <width>1200</width>
      <height>22</height>
     </rect>
    </property>
