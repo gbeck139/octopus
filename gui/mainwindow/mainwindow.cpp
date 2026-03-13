@@ -333,6 +333,16 @@ void MainWindow::onSliceClicked()
         qWarning().noquote() << proc->readAllStandardError();
     });
 
+    connect(proc, &QProcess::errorOccurred, this, [this](QProcess::ProcessError error) {
+        loadingDialog->hide();
+
+        QMessageBox::critical(
+            this,
+            "Process Error",
+            "Failed to start the slicing process."
+            );
+    });
+
     // When slicing finishes: hide loading dialog
     connect(proc,
             QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
@@ -430,6 +440,17 @@ void MainWindow::onSliceClicked()
     qDebug() << "Looking for slicer at:" << slicerPath;
     if (!QFile::exists(slicerPath)) {
         qWarning() << "Slicer executable not found!";
+
+        loadingDialog->hide();
+
+        QMessageBox::critical(
+            this,
+            "Slicer Missing",
+            "The slicer executable could not be found.\n\n"
+            "Expected location:\n" + slicerPath
+            );
+
+        return;
     }
 
     QStringList args;
