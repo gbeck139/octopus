@@ -2,6 +2,7 @@ import numpy as np
 import pyvista as pv
 import re
 import os
+import argparse
 
 class GCodeVisualizer:
     def __init__(self, filename, nozzle_offset=43):
@@ -271,7 +272,14 @@ class GCodeVisualizer:
 
         self.plotter.show()
 
-if __name__ == "__main__":
-    FILENAME = "radial_non_planar_slicer/output_gcode/3DBenchy_reformed.gcode"
-    viz = GCodeVisualizer(FILENAME)
+def main():
+    # CLI
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--gcode", required=True)
+    args = parser.parse_args()
+
+    viz = GCodeVisualizer(args.gcode)
     viz.visualize()
+
+if __name__ == "__main__":
+    main()
