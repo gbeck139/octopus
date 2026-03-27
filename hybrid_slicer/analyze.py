@@ -2,9 +2,10 @@ import numpy as np
 import pyvista as pv
 
 # --- Parameters ---
-MAX_OVERHANG = 45.0          # degrees: below this, rotation = 0 (cartesian)
+MAX_OVERHANG = 25.0          # degrees: overhangs past this (from vertical) get rotation
 ROTATION_MULTIPLIER = 1.5    # scale factor for computed rotations
-SMOOTHING_ITERATIONS = 30    # Laplacian smoothing passes
+SMOOTHING_ITERATIONS = 30    # Laplacian smoothing passes (legacy, see COLUMN_SMOOTH_SIGMA)
+COLUMN_SMOOTH_SIGMA = 5.0    # Gaussian sigma (mm) for smoothing the per-column rotation map
 MAX_POS_ROTATION = 45.0      # degrees: max positive tilt
 MAX_NEG_ROTATION = -45.0     # degrees: max negative tilt
 CENTER_DEAD_ZONE = 1.0       # mm: force rotation=0 within this radius
@@ -107,36 +108,39 @@ def compute_rotation_field(mesh,
                            smoothing_iterations=SMOOTHING_ITERATIONS,
                            max_pos_rotation=MAX_POS_ROTATION,
                            max_neg_rotation=MAX_NEG_ROTATION,
-                           center_dead_zone=CENTER_DEAD_ZONE):
+                           center_dead_zone=CENTER_DEAD_ZONE,
+                           column_smooth_sigma=COLUMN_SMOOTH_SIGMA):
     """
     Compute a per-vertex rotation field from mesh geometry.
 
-    Flat surfaces (overhang < max_overhang) get rotation = 0 (cartesian).
-    Overhang surfaces get nonzero rotation proportional to overhang severity.
+    The rotation is computed per XY column (consistent across Z heights)
+    so that PrusaSlicer generates clean horizontal layers. The magnitude
+    at each XY is determined by the worst overhang in that column.
 
     Returns:
         rotation_field: numpy array of shape (n_vertices,) with rotation in radians
     """
-    max_overhang_rad = np.deg2rad(max_overhang)
+    from scipy.ndimage import gaussian_filter
+
     max_pos_rad = np.deg2rad(max_pos_rotation)
     max_neg_rad = np.deg2rad(max_neg_rotation)
+
+    xy = mesh.points[:, :2]
+    z_vals = mesh.points[:, 2]
+    distances = np.linalg.norm(xy, axis=1)
 
     # Step 1: Compute per-vertex normals
     vertex_normals = compute_vertex_normals(mesh)
 
-    # Step 2: Compute overhang angle per vertex
-    # overhang_angle = angle between vertex normal and [0,0,1]
+    # Step 2: Compute overhang angle per vertex (0 = up, pi = down)
     up = np.array([0.0, 0.0, 1.0])
     cos_angles = np.clip(np.dot(vertex_normals, up), -1.0, 1.0)
-    overhang_angles = np.arccos(cos_angles)  # 0 = facing up, pi = facing down
+    overhang_angles = np.arccos(cos_angles)
 
-    # Step 3: Compute rotation magnitude
-    # Faces with normal angle < 90+max_overhang from vertical are safe
-    # (normal at 90deg = vertical wall, at 90+45=135deg = 45deg overhang)
+    # Step 3: Compute rotation magnitude per vertex
+    # Normal at 90° = vertical wall, at (90+max_overhang)° = threshold
     overhang_threshold = np.deg2rad(90.0 + max_overhang)
     needs_rotation = overhang_angles > overhang_threshold
-
-    # Rotation magnitude = how far past the threshold
     rotation_magnitude = np.zeros(mesh.n_points)
     rotation_magnitude[needs_rotation] = (
         overhang_angles[needs_rotation] - overhang_threshold
@@ -144,53 +148,65 @@ def compute_rotation_field(mesh,
 
     # Step 4: Determine sign from radial direction
     sign = compute_rotation_direction(mesh)
+    per_vertex_rotation = rotation_magnitude * sign
 
-    # Apply sign
-    rotation_field = rotation_magnitude * sign
+    # Step 5: Project to per-XY column.
+    # For each XY position, use the vertex with the largest |rotation|.
+    # This ensures consistent rotation within vertical columns, giving
+    # PrusaSlicer clean horizontal layers (like the radial slicer).
+    COLUMN_GRID_RES = 1.0  # mm
+    x_min, y_min = xy.min(axis=0) - COLUMN_GRID_RES * 2
+    x_max, y_max = xy.max(axis=0) + COLUMN_GRID_RES * 2
+    col_nx = int(np.ceil((x_max - x_min) / COLUMN_GRID_RES)) + 1
+    col_ny = int(np.ceil((y_max - y_min) / COLUMN_GRID_RES)) + 1
 
-    # Step 5: Force rotation = 0 near center (avoid singularity)
-    distances = np.linalg.norm(mesh.points[:, :2], axis=1)
+    ix = np.clip(np.round((xy[:, 0] - x_min) / (x_max - x_min) * (col_nx - 1)).astype(int), 0, col_nx - 1)
+    iy = np.clip(np.round((xy[:, 1] - y_min) / (y_max - y_min) * (col_ny - 1)).astype(int), 0, col_ny - 1)
+    cell_idx = iy * col_nx + ix
+
+    # Find the dominant signed rotation per column (vertex with max |rotation|)
+    order = np.argsort(-np.abs(per_vertex_rotation))
+    sorted_cells = cell_idx[order]
+    sorted_rotations = per_vertex_rotation[order]
+    _, first_idx = np.unique(sorted_cells, return_index=True)
+
+    column_rotation = np.zeros(col_ny * col_nx)
+    column_rotation[sorted_cells[first_idx]] = sorted_rotations[first_idx]
+    column_grid = column_rotation.reshape(col_ny, col_nx)
+
+    # Step 6: Gaussian smooth the 2D column map for gradual transitions.
+    # This spreads overhang rotation to nearby columns, similar to how
+    # the radial slicer applies rotation to the entire radius.
+    if column_smooth_sigma > 0:
+        column_grid = gaussian_filter(column_grid, sigma=column_smooth_sigma)
+
+    # Step 7: Expand back to per-vertex with Z-dependent blend
+    base_rotation = column_grid.ravel()[cell_idx]
+
+    BOTTOM_ZONE_HEIGHT = 2.0  # mm: fully cartesian
+    BLEND_ZONE_HEIGHT = 5.0   # mm: linear ramp from 0 to full rotation
+    z_min = z_vals.min()
+    bottom_threshold = z_min + BOTTOM_ZONE_HEIGHT
+    blend_top = bottom_threshold + BLEND_ZONE_HEIGHT
+
+    blend = np.ones(mesh.n_points)
+    blend[z_vals < bottom_threshold] = 0.0
+    blend_mask = (z_vals >= bottom_threshold) & (z_vals < blend_top)
+    blend[blend_mask] = (z_vals[blend_mask] - bottom_threshold) / BLEND_ZONE_HEIGHT
+
+    rotation_field = base_rotation * blend
+
+    # Step 8: Force zero near center (avoid singularity)
     center_mask = distances < center_dead_zone
     rotation_field[center_mask] = 0.0
 
-    # Step 6: Force rotation = 0 for bottom vertices (bed contact)
-    # Use a generous zone so the first few layers are fully cartesian,
-    # giving PrusaSlicer a solid first layer.
-    BOTTOM_ZONE_HEIGHT = 2.0  # mm
-    z_vals = mesh.points[:, 2]
-    bottom_threshold = z_vals.min() + BOTTOM_ZONE_HEIGHT
-    bottom_mask = z_vals < bottom_threshold
-    rotation_field[bottom_mask] = 0.0
-
-    # Step 6b: Add a blend zone above the bottom to ramp rotation gradually.
-    # Without this, vertices just above the bottom zone can have large rotation
-    # and get pushed below z=0 during deformation (tan(rot)*r > z).
-    BLEND_ZONE_HEIGHT = 5.0  # mm above bottom zone
-    blend_top = bottom_threshold + BLEND_ZONE_HEIGHT
-    blend_mask = (z_vals >= bottom_threshold) & (z_vals < blend_top)
-    blend_factor = (z_vals[blend_mask] - bottom_threshold) / BLEND_ZONE_HEIGHT
-    rotation_field[blend_mask] *= blend_factor
-
-    # Step 7: Laplacian smoothing
-    if smoothing_iterations > 0:
-        rotation_field = laplacian_smooth(mesh, rotation_field, smoothing_iterations)
-
-    # Step 8: Re-zero bottom after smoothing (smoothing bleeds nonzero values back in)
-    rotation_field[bottom_mask] = 0.0
-
-    # Step 9: Physical constraint -- ensure no vertex deforms below z=0.
-    # Deformed z = z/cos(rot) + tan(rot)*r. For this to be >= 0:
-    # rot must satisfy: z/cos(rot) + tan(rot)*r >= 0
-    # For negative rotation (tilting inward), tan(rot) is negative, so
-    # z/cos(rot) - |tan(rot)|*r >= 0 => |tan(rot)| <= z/(r*cos(rot))
-    # Simpler conservative bound: |rot| <= arctan(z / r) for negative rot
-    for _ in range(3):  # iterate since clamping changes the field
+    # Step 9: Physical constraint — no vertex deforms below z=0
+    for _ in range(3):
         deformed_z = z_vals / np.maximum(np.cos(rotation_field), 0.1) + \
                      np.tan(rotation_field) * distances
         violators = deformed_z < 0
         if not np.any(violators):
             break
-        # Scale down violating rotations
         rotation_field[violators] *= 0.5
 
     # Step 10: Clamp to limits
