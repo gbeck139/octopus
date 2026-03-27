@@ -18,53 +18,54 @@ OUTPUT_GCODE_DIR = os.path.join(base_dir, "output_gcode")
 PRUSA_CONFIG_DIR = os.path.join(base_dir, "prusa_slicer")
 
 
-def lookup_rotation_from_grid(grid_data, xy_positions):
+def lookup_rotation_from_3d_grid(grid_data, positions):
     """
-    Bilinear interpolation of rotation values from a 2D grid at given XY positions.
+    Trilinear interpolation of rotation values from a 3D grid.
 
     Args:
-        grid_data: dict with 'x_min', 'y_min', 'nx', 'ny', 'resolution', 'values'
-        xy_positions: (N, 2) array of XY positions
+        grid_data: dict with x/y/z_min, x/y/z_max, nx, ny, nz, values
+        positions: (N, 3) array of XYZ positions in deformed coordinates
 
     Returns:
         rotations: (N,) array of interpolated rotation values in radians
     """
-    values = np.array(grid_data["values"])  # (ny, nx)
-    x_min = grid_data["x_min"]
-    y_min = grid_data["y_min"]
-    x_max = grid_data["x_max"]
-    y_max = grid_data["y_max"]
-    nx = grid_data["nx"]
-    ny = grid_data["ny"]
+    values = np.array(grid_data["values"])  # (nx, ny, nz)
+    x_min, x_max = grid_data["x_min"], grid_data["x_max"]
+    y_min, y_max = grid_data["y_min"], grid_data["y_max"]
+    z_min, z_max = grid_data["z_min"], grid_data["z_max"]
+    nx, ny, nz = grid_data["nx"], grid_data["ny"], grid_data["nz"]
 
     # Compute fractional grid indices
-    fx = (xy_positions[:, 0] - x_min) / (x_max - x_min) * (nx - 1)
-    fy = (xy_positions[:, 1] - y_min) / (y_max - y_min) * (ny - 1)
+    fx = (positions[:, 0] - x_min) / (x_max - x_min) * (nx - 1)
+    fy = (positions[:, 1] - y_min) / (y_max - y_min) * (ny - 1)
+    fz = (positions[:, 2] - z_min) / (z_max - z_min) * (nz - 1)
 
-    # Clamp to valid range
     fx = np.clip(fx, 0, nx - 1.001)
     fy = np.clip(fy, 0, ny - 1.001)
+    fz = np.clip(fz, 0, nz - 1.001)
 
-    # Integer indices
     ix0 = np.floor(fx).astype(int)
     iy0 = np.floor(fy).astype(int)
+    iz0 = np.floor(fz).astype(int)
     ix1 = np.minimum(ix0 + 1, nx - 1)
     iy1 = np.minimum(iy0 + 1, ny - 1)
+    iz1 = np.minimum(iz0 + 1, nz - 1)
 
-    # Fractional parts
     sx = fx - ix0
     sy = fy - iy0
+    sz = fz - iz0
 
-    # Bilinear interpolation
-    v00 = values[iy0, ix0]
-    v10 = values[iy0, ix1]
-    v01 = values[iy1, ix0]
-    v11 = values[iy1, ix1]
-
-    result = (v00 * (1 - sx) * (1 - sy) +
-              v10 * sx * (1 - sy) +
-              v01 * (1 - sx) * sy +
-              v11 * sx * sy)
+    # Trilinear interpolation (8 corners)
+    result = (
+        values[ix0, iy0, iz0] * (1-sx)*(1-sy)*(1-sz) +
+        values[ix1, iy0, iz0] * sx*(1-sy)*(1-sz) +
+        values[ix0, iy1, iz0] * (1-sx)*sy*(1-sz) +
+        values[ix1, iy1, iz0] * sx*sy*(1-sz) +
+        values[ix0, iy0, iz1] * (1-sx)*(1-sy)*sz +
+        values[ix1, iy0, iz1] * sx*(1-sy)*sz +
+        values[ix0, iy1, iz1] * (1-sx)*sy*sz +
+        values[ix1, iy1, iz1] * sx*sy*sz
+    )
 
     return result
 
@@ -87,7 +88,6 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
     # Set up rotation lookup based on mode
     if mode == "hybrid":
         rotation_grid = transform_params["rotation_grid"]
-        cartesian_z_ceiling = transform_params.get("cartesian_z_ceiling", 2.0)
         use_grid = True
     else:
         # Legacy radial mode
@@ -199,17 +199,21 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
     distances_to_center = np.linalg.norm(positions[:, :2], axis=1)
 
     if use_grid:
-        # --- Hybrid mode: look up rotations from the 2D grid ---
-        effective_rotations = lookup_rotation_from_grid(rotation_grid, positions[:, :2])
+        # --- Hybrid mode: look up rotations from the 3D grid ---
+        # The 3D grid maps (x, y, z_deformed) -> rotation, so we get the
+        # correct rotation at every point regardless of Z height.
+        # No iterative Z recovery or blend needed.
+        effective_rotations = lookup_rotation_from_3d_grid(rotation_grid, positions)
 
-        # Force rotation=0 for G-code points in the cartesian zone.
-        # These are first-layer / bottom points where the deformed mesh was shifted
-        # up but originally had rotation=0. Without this, reform would compute
-        # hugely negative Z values for points at the edge of the bottom.
-        cartesian_mask = positions[:, 2] < cartesian_z_ceiling
-        effective_rotations[cartesian_mask] = 0.0
-        print(f"Cartesian zone (deformed z < {cartesian_z_ceiling:.1f}mm): "
-              f"{np.sum(cartesian_mask)} / {len(cartesian_mask)} points forced to rotation=0")
+        # Force rotation=0 for points far from the model (skirt/purge lines).
+        # These are outside the mesh footprint and should not be rotated.
+        far_mask = distances_to_center > max_radius * 1.5
+        effective_rotations[far_mask] = 0.0
+
+        print(f"Hybrid 3D grid lookup: {np.sum(effective_rotations == 0)} zero, "
+              f"{np.sum(effective_rotations != 0)} nonzero, "
+              f"range [{np.rad2deg(effective_rotations.min()):.1f}, "
+              f"{np.rad2deg(effective_rotations.max()):.1f}] deg")
     else:
         # --- Legacy radial mode ---
         full_rotations = ROTATION(distances_to_center)
@@ -274,7 +278,7 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
 
     print(f"Safety Filter: Removed {len(valid_mask) - sum(valid_mask)} unsafe points.")
 
-    # Cap travel move height
+    # Cap travel move height to just above the part
     max_z = 0
     for i, point in enumerate(gcode_points):
         if point["command"] == "G01":
@@ -282,7 +286,7 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
     for i, point in enumerate(gcode_points):
         if point["command"] == "G00":
             if new_positions[i][2] > max_z:
-                new_positions[i] = None
+                new_positions[i][2] = max_z + 2.0
 
     # Rescale extrusion by change in move_length
     prev_pos = np.array([0., 0., 0.])

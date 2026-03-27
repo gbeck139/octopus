@@ -129,8 +129,8 @@ def main():
     parser.add_argument("--stl", required=True, help="Path to input STL file")
     parser.add_argument("--model", required=True, help="Model name (used for output filenames)")
     parser.add_argument("--prusa", required=True, help="Path to PrusaSlicer executable")
-    parser.add_argument("--max-overhang", type=float, default=45.0,
-                        help="Overhang angle threshold in degrees (default: 45)")
+    parser.add_argument("--max-overhang", type=float, default=25.0,
+                        help="Overhang angle threshold in degrees (default: 25)")
     parser.add_argument("--rotation-multiplier", type=float, default=1.5,
                         help="Scale factor for computed rotations (default: 1.5)")
     parser.add_argument("--smoothing-iterations", type=int, default=30,

@@ -26,50 +26,46 @@ def load_mesh(MODEL_NAME):
     return mesh
 
 
-def sample_rotation_to_grid(mesh_points, rotation_field, grid_resolution=GRID_RESOLUTION):
+def sample_rotation_to_3d_grid(deformed_points, rotation_field, grid_resolution=GRID_RESOLUTION):
     """
-    Sample a per-vertex rotation field onto a regular 2D XY grid using
-    nearest-neighbor interpolation. This grid is saved in the transform JSON
-    so reform.py can look up rotations at arbitrary G-code XY positions.
+    Sample per-vertex rotation field onto a 3D grid using the DEFORMED mesh
+    coordinates. This is sampled after deformation so the grid maps
+    (x, y, z_deformed) -> rotation, allowing reform to look up the exact
+    rotation at any G-code point position.
 
-    Returns:
-        grid_data: dict with keys 'x_min', 'y_min', 'x_max', 'y_max',
-                   'resolution', 'nx', 'ny', 'values' (flattened row-major list)
+    Using a 3D grid (instead of 2D) correctly handles cases where different
+    Z heights at the same XY have different rotations (e.g. hull side = 0°
+    vs stern overhang = 45° above it).
     """
-    xy = mesh_points[:, :2]
-    x_min, y_min = xy.min(axis=0)
-    x_max, y_max = xy.max(axis=0)
-
-    # Add a small margin
-    margin = grid_resolution * 2
-    x_min -= margin
-    y_min -= margin
-    x_max += margin
-    y_max += margin
-
-    nx = int(np.ceil((x_max - x_min) / grid_resolution)) + 1
-    ny = int(np.ceil((y_max - y_min) / grid_resolution)) + 1
-
-    # Create grid coordinates
-    gx = np.linspace(x_min, x_max, nx)
-    gy = np.linspace(y_min, y_max, ny)
-    grid_xx, grid_yy = np.meshgrid(gx, gy)  # shape (ny, nx)
-    grid_points = np.column_stack([grid_xx.ravel(), grid_yy.ravel()])
-
-    # Nearest-neighbor: for each grid point, find closest mesh vertex
     from scipy.spatial import cKDTree
-    tree = cKDTree(xy)
+
+    mins = deformed_points.min(axis=0)
+    maxs = deformed_points.max(axis=0)
+
+    margin = grid_resolution * 2
+    mins = mins - margin
+    maxs = maxs + margin
+
+    nx = int(np.ceil((maxs[0] - mins[0]) / grid_resolution)) + 1
+    ny = int(np.ceil((maxs[1] - mins[1]) / grid_resolution)) + 1
+    nz = int(np.ceil((maxs[2] - mins[2]) / grid_resolution)) + 1
+
+    gx = np.linspace(mins[0], maxs[0], nx)
+    gy = np.linspace(mins[1], maxs[1], ny)
+    gz = np.linspace(mins[2], maxs[2], nz)
+    grid_xx, grid_yy, grid_zz = np.meshgrid(gx, gy, gz, indexing='ij')
+    grid_points = np.column_stack([grid_xx.ravel(), grid_yy.ravel(), grid_zz.ravel()])
+
+    # For each 3D grid cell, find the nearest deformed mesh vertex
+    tree = cKDTree(deformed_points)
     _, indices = tree.query(grid_points)
-    grid_values = rotation_field[indices].reshape(ny, nx)
+    grid_values = rotation_field[indices].reshape(nx, ny, nz)
 
     return {
-        "x_min": float(x_min),
-        "y_min": float(y_min),
-        "x_max": float(x_max),
-        "y_max": float(y_max),
+        "x_min": float(mins[0]), "y_min": float(mins[1]), "z_min": float(mins[2]),
+        "x_max": float(maxs[0]), "y_max": float(maxs[1]), "z_max": float(maxs[2]),
         "resolution": float(grid_resolution),
-        "nx": int(nx),
-        "ny": int(ny),
+        "nx": int(nx), "ny": int(ny), "nz": int(nz),
         "values": grid_values.tolist()
     }
 
@@ -115,11 +111,7 @@ def deform_mesh(mesh, scale=1.0, rotation_field=None,
     if rotation_field is not None:
         # --- Hybrid mode: use the provided per-vertex rotation field ---
         effective_rotations = rotation_field
-
-        # Sample rotation field to a 2D grid for reform.py
-        rotation_grid = sample_rotation_to_grid(
-            mesh.points, rotation_field, grid_resolution
-        )
+        # Grid will be sampled after deformation (needs deformed coordinates)
     else:
         # --- Legacy radial mode ---
         ROTATION = lambda radius: np.deg2rad(angle_base + angle_factor * (radius / max_radius))
@@ -133,8 +125,6 @@ def deform_mesh(mesh, scale=1.0, rotation_field=None,
             blend = np.where(original_z >= transition_z, 1.0, 0.0)
         effective_rotations = rotations * blend
 
-        rotation_grid = None
-
     # Scale Z to preserve thickness perpendicular to the surface
     cos_rotations = np.cos(effective_rotations)
     cos_rotations = np.maximum(cos_rotations, 0.1)
@@ -146,6 +136,18 @@ def deform_mesh(mesh, scale=1.0, rotation_field=None,
         (np.tan(effective_rotations) * distances_to_center).reshape(-1, 1)
     ])
     mesh.points = mesh.points + translate_upwards
+
+    # Sample 3D grid AFTER deformation, BEFORE re-centering.
+    # The grid maps (x, y, z_deformed) -> rotation, so reform can look up
+    # the correct rotation at any G-code point in deformed space.
+    if rotation_field is not None:
+        print(f"Sampling 3D rotation grid...", flush=True)
+        rotation_grid = sample_rotation_to_3d_grid(
+            mesh.points, rotation_field, grid_resolution
+        )
+        print(f"  Grid shape: {rotation_grid['nx']}x{rotation_grid['ny']}x{rotation_grid['nz']}", flush=True)
+    else:
+        rotation_grid = None
 
     # Ensure bottom is at z=0 after deformation
     xmin, xmax, ymin, ymax, zmin, zmax = mesh.bounds
@@ -168,11 +170,7 @@ def deform_mesh(mesh, scale=1.0, rotation_field=None,
     }
 
     if rotation_grid is not None:
-        # The cartesian zone ceiling: G-code points below this deformed Z
-        # should use rotation=0 (they're in the flat bottom region).
-        # 2mm bottom zone + 1mm margin for safety.
         transform_params["rotation_grid"] = rotation_grid
-        transform_params["cartesian_z_ceiling"] = 3.0
     else:
         # Legacy radial params
         transform_params["angle_base"] = float(angle_base)
