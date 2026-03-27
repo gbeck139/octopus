@@ -8,14 +8,46 @@ import open3d as o3d
 import time
 import pickle
 import base64
-import os # Make sure os is imported
+import os
+import argparse
+import shutil
+import subprocess
+import sys
 
 pv.global_theme.notebook = True
 
+if getattr(sys, 'frozen', False):
+    base_dir = os.path.dirname(sys.executable)
+else:
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+
+os.chdir(base_dir)
+
+INPUT_MODELS_DIR = os.path.join(base_dir, "input_models")
+OUTPUT_MODELS_DIR = os.path.join(base_dir, "output_models")
+INPUT_GCODE_DIR = os.path.join(base_dir, "input_gcode")
+OUTPUT_GCODE_DIR = os.path.join(base_dir, "output_gcode")
+PICKLE_DIR = os.path.join(base_dir, "pickle_files")
+GIF_DIR = os.path.join(base_dir, "gifs")
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--model", default="propeller")
+parser.add_argument("--stl")
+parser.add_argument("--slicer")
+parser.add_argument("--slicer-config")
+parser.add_argument("--visualize", action="store_true")
+args = parser.parse_args()
+
+model_name = args.model
+visualize = args.visualize
+
+if args.stl:
+    os.makedirs(INPUT_MODELS_DIR, exist_ok=True)
+    shutil.copyfile(args.stl, os.path.join(INPUT_MODELS_DIR, f"{model_name}.stl"))
+
 # Create necessary directories so script doesn't error
-for folder in ['gifs', 'output_models', 'pickle_files', 'input_gcode', 'output_gcode']:
-    if not os.path.exists(folder):
-        os.makedirs(folder)
+for folder in [GIF_DIR, OUTPUT_MODELS_DIR, PICKLE_DIR, INPUT_GCODE_DIR, OUTPUT_GCODE_DIR]:
+    os.makedirs(folder, exist_ok=True)
 
 def encode_object(obj):
     return base64.b64encode(pickle.dumps(obj)).decode('utf-8')
@@ -26,8 +58,7 @@ def decode_object(encoded_str):
 up_vector = np.array([0, 0, 1])
 
 # Load mesh
-model_name = "propeller"
-mesh = o3d.io.read_triangle_mesh(f'input_models/{model_name}.stl')
+mesh = o3d.io.read_triangle_mesh(os.path.join(INPUT_MODELS_DIR, f"{model_name}.stl"))
 
 mesh.remove_duplicated_vertices()
 mesh.remove_duplicated_triangles()
@@ -524,7 +555,7 @@ def optimize_rotations(tet, NEIGHBOUR_LOSS_WEIGHT, MAX_OVERHANG, ROTATION_MULTIP
     imgs = []
     plotter = pv.Plotter(off_screen=True)
     if SAVE_GIF:
-        plotter.open_gif(f'gifs/{model_name}_optimize_rotations.gif')
+        plotter.open_gif(os.path.join(GIF_DIR, f"{model_name}_optimize_rotations.gif"))
 
     initial_rotation_field = calculate_initial_rotation_field(tet, MAX_OVERHANG, ROTATION_MULTIPLIER, STEEP_OVERHANG_COMPENSATION, INITIAL_ROTATION_FIELD_SMOOTHING, SET_INITIAL_ROTATION_TO_ZERO, MAX_POS_ROTATION, MAX_NEG_ROTATION)
     num_cells_with_initial_rotation = np.sum(~np.isnan(initial_rotation_field))
@@ -650,7 +681,8 @@ rotation_field = optimize_rotations(
 undeformed_tet_with_rotated_tetrahedrons = apply_rotation_field_unique_vertices(undeformed_tet, rotation_field)
 undeformed_tet_with_rotated_tetrahedrons.cell_data["rotation_field"] = rotation_field
 # new_tet.extract_cells(np.where(rotation_field != 0)[0]).plot()
-undeformed_tet_with_rotated_tetrahedrons.plot(scalars="rotation_field")
+if visualize:
+    undeformed_tet_with_rotated_tetrahedrons.plot(scalars="rotation_field")
 
 
 # default
@@ -698,7 +730,8 @@ undeformed_tet_with_rotated_tetrahedrons.plot(scalars="rotation_field")
 # tet.cell_data['overhang_angle'] > np.deg2rad(90 + MAX_OVERHANG)
 # undeformed_tet.plot(scalars="initial_rotation_field")
 # undeformed_tet.plot(scalars="in_air")
-undeformed_tet.plot(scalars="cell_distance_to_bottom", cpos=[-0.5, -1, -1])
+if visualize:
+    undeformed_tet.plot(scalars="cell_distance_to_bottom", cpos=[-0.5, -1, -1])
 # undeformed_tet.plot(scalars="overhang_angle")
 # undeformed_tet.plot(scalars="path_length_to_base_gradient")
 # undeformed_tet.plot(scalars=new_tet1.cell_data['rotation_field'])
@@ -781,7 +814,7 @@ def show_dijkstras(tet, cell_index):
     plotter.camera_position = "xz"
 
     # run dijkstra's algorithm and visualize
-    plotter.open_gif(f'gifs/{model_name}_dijkstra.gif')
+    plotter.open_gif(os.path.join(GIF_DIR, f"{model_name}_dijkstra.gif"))
     distances, paths = nx.single_source_dijkstra(cell_neighbour_graph, cell_index)
     dijkstra_actors = []
     for i in np.arange(0, tet.cell_data['cell_distance_to_bottom'][cell_index], 0.2):
@@ -847,7 +880,7 @@ def calculate_deformation(tet, rotation_field, ITERATIONS, SAVE_GIF):
     plotter = pv.Plotter(off_screen=True)
 
     if SAVE_GIF:
-        plotter.open_gif(f'gifs/{model_name}_calculate_deformation.gif')
+        plotter.open_gif(os.path.join(GIF_DIR, f"{model_name}_calculate_deformation.gif"))
 
     def save_gif(new_vertices):
         global save_gif_i
@@ -940,7 +973,8 @@ ITERATIONS = 1000
 SAVE_GIF = True
 new_vertices = calculate_deformation(undeformed_tet, rotation_field, ITERATIONS, SAVE_GIF)
 deformed_tet = pv.UnstructuredGrid(undeformed_tet.cells, np.full(undeformed_tet.number_of_cells, pv.CellType.TETRA), new_vertices)
-deformed_tet.plot()
+if visualize:
+    deformed_tet.plot()
 
 for key in undeformed_tet.field_data.keys():
     deformed_tet.field_data[key] = undeformed_tet.field_data[key]
@@ -967,24 +1001,43 @@ x_min, x_max, y_min, y_max, z_min, z_max = deformed_tet.bounds
 offsets_applied = np.array([(x_min + x_max) / 2, (y_min + y_max) / 2, z_min])
 deformed_tet.points -= offsets_applied
 
-deformed_tet.extract_surface().save(f'output_models/{model_name}_deformed_tet.stl')
+deformed_stl_path = os.path.join(OUTPUT_MODELS_DIR, f"{model_name}_deformed_tet.stl")
+deformed_tet.extract_surface().save(deformed_stl_path)
 
 
 # In[15]:
 
 
 # save to pickle
-with open(f'pickle_files/deformed_{model_name}.pkl', 'wb') as f:
+deformed_pickle_path = os.path.join(PICKLE_DIR, f"deformed_{model_name}.pkl")
+with open(deformed_pickle_path, 'wb') as f:
     pickle.dump(deformed_tet, f)
 
-print(f"\n[STEP 1 COMPLETE] Deformed mesh saved to: output_models/{model_name}_deformed_tet.stl")
-print("----------------------------------------------------------------")
-print("ACTION REQUIRED:")
-print("1. Open output_models/{}_deformed_tet.stl in Cura".format(model_name))
-print("2. Slice the model (Settings: Center on buildplate, no Z-hop)")
-print(f"3. Save the G-code to this exact path: input_gcode/{model_name}_deformed_tet.gcode")
-print("----------------------------------------------------------------")
-input(">>> Press ENTER to continue once you have saved the G-code file...")
+deformed_gcode_path = os.path.join(INPUT_GCODE_DIR, f"{model_name}_deformed_tet.gcode")
+
+print(f"\n[STEP 1 COMPLETE] Deformed mesh saved to: {deformed_stl_path}")
+if args.slicer:
+    slicer_command = [args.slicer]
+    if args.slicer_config:
+        slicer_command.extend(["--load", args.slicer_config])
+    slicer_command.extend([
+        "--ensure-on-bed",
+        "--export-gcode",
+        deformed_stl_path,
+        "--output",
+        deformed_gcode_path,
+    ])
+    print("\nAutomated slicing started...\n")
+    subprocess.run(slicer_command, check=True)
+    print(f"Sliced G-code saved to: {deformed_gcode_path}")
+else:
+    print("----------------------------------------------------------------")
+    print("ACTION REQUIRED:")
+    print(f"1. Open {deformed_stl_path} in your planar slicer")
+    print("2. Slice the model (Settings: Center on buildplate, no Z-hop)")
+    print(f"3. Save the G-code to this exact path: {deformed_gcode_path}")
+    print("----------------------------------------------------------------")
+    input(">>> Press ENTER to continue once you have saved the G-code file...")
 
 
 # # Now, go and slice the stl file in Cura!
@@ -997,7 +1050,7 @@ input(">>> Press ENTER to continue once you have saved the G-code file...")
 # In[16]:
 
 
-deformed_tet = pickle.load(open(f'pickle_files/deformed_{model_name}.pkl', 'rb'))
+deformed_tet = pickle.load(open(deformed_pickle_path, 'rb'))
 
 
 # In[17]:
@@ -1065,11 +1118,11 @@ NOZZLE_OFFSET = 42 # mm actuallt 41.5
 vertex_transformations = deformed_tet.points - input_tet.points
 
 # calculate tangential vectors (axis of rotation) for each cell
-tangential_vectors = np.cross( np.array([0, 0, 1]), input_tet.cell_data["cell_center"][:, :2])
-# normalize
-tangential_vectors /= np.linalg.norm(tangential_vectors, axis=1)[:, None]
-# replace nan with [1,0,0]
-tangential_vectors[np.isnan(tangential_vectors).any(axis=1)] = [1, 0, 0]
+tangential_vectors = np.cross(np.array([0, 0, 1]), input_tet.cell_data["cell_center"][:, :2])
+# normalize, falling back for cells centered on the rotation axis
+tangential_norms = np.linalg.norm(tangential_vectors, axis=1)
+tangential_vectors[tangential_norms > 1e-12] /= tangential_norms[tangential_norms > 1e-12][:, None]
+tangential_vectors[tangential_norms <= 1e-12] = [1, 0, 0]
 
 # calculate rotation for each vertex and cell
 num_cells_per_vertex = np.zeros((input_tet.number_of_points))
@@ -1088,8 +1141,12 @@ for cell_index, cell in enumerate(deformed_tet.field_data["cells"]):
     old_vertices -= old_cell_center
 
     # project on to radial plane
-    plane_x_vector = old_cell_center[:2] / np.linalg.norm(old_cell_center[:2])
-    plane_x_vector = np.array([plane_x_vector[0], plane_x_vector[1], 0])
+    radial_norm = np.linalg.norm(old_cell_center[:2])
+    if radial_norm <= 1e-12:
+        plane_x_vector = np.array([1.0, 0.0, 0.0])
+    else:
+        plane_x_vector = old_cell_center[:2] / radial_norm
+        plane_x_vector = np.array([plane_x_vector[0], plane_x_vector[1], 0.0])
     plane_y_vector = np.array([0,0,1])
 
     new_vertices_projected = project_point_onto_plane(plane_x_vector, plane_y_vector, new_vertices)
@@ -1132,7 +1189,7 @@ for cell_index, cell in enumerate(deformed_tet.field_data["cells"]):
 pos = np.array([0., 0., 20.])
 feed = 5000
 gcode_points = []
-with open(f'input_gcode/{model_name}_deformed_tet.gcode', 'r') as fh:
+with open(deformed_gcode_path, 'r') as fh:
     for line_text in fh.readlines():
         line = Line(line_text)
 
@@ -1221,6 +1278,30 @@ with open(f'input_gcode/{model_name}_deformed_tet.gcode', 'r') as fh:
                 #     })
 
 # calculate containging cell for each gcode point
+# PrusaSlicer places the deformed STL on the physical bed, while our tetrahedral
+# mesh remains centered near the origin. Recenter the sliced XY toolpath back
+# into the deformed mesh frame before containment queries.
+if gcode_points:
+    printable_positions = np.array([
+        point["position"]
+        for point in gcode_points
+        if point["extrusion"] is not None and point["extrusion"] > 0
+    ])
+    gcode_positions = printable_positions if len(printable_positions) else np.array([point["position"] for point in gcode_points])
+    gcode_xy_center = np.array([
+        (np.min(gcode_positions[:, 0]) + np.max(gcode_positions[:, 0])) / 2,
+        (np.min(gcode_positions[:, 1]) + np.max(gcode_positions[:, 1])) / 2,
+        0.0,
+    ])
+    deformed_xy_center = np.array([
+        (deformed_tet.bounds[0] + deformed_tet.bounds[1]) / 2,
+        (deformed_tet.bounds[2] + deformed_tet.bounds[3]) / 2,
+        0.0,
+    ])
+    xy_translation = gcode_xy_center - deformed_xy_center
+    for point in gcode_points:
+        point["position"] = point["position"] - xy_translation
+
 gcode_points_containing_cells = deformed_tet.find_containing_cell([point["position"] for point in gcode_points])
 
 # for cells with no containing cell, find the closest cell
@@ -1363,7 +1444,8 @@ prev_z = 20
 theta_accum = 0
 
 # save transformed gcode
-with open(f'output_gcode/{model_name}.gcode', 'w') as fh:
+output_gcode_path = os.path.join(OUTPUT_GCODE_DIR, f"{model_name}.gcode")
+with open(output_gcode_path, 'w') as fh:
     # write header
     fh.write("G94 ; mm/min feed  \n")
     fh.write("G28 ; home \n")
@@ -1446,7 +1528,8 @@ temp.cell_data["original_z"] = np.array([point["original_position"][2] for point
 temp.cell_data["original_z_bands"] = temp.cell_data["original_z"] % 1
 temp.cell_data["extrusion_multiplier"] = np.array([min(point["extrusion_multiplier"], 15) if point["extrusion_multiplier"] is not None else np.nan for point in new_gcode_points])
 
-temp.extract_cells(np.array([point["command"] for point in new_gcode_points]) == "G01").plot(scalars="original_z_bands", cpos=[-0.5, -1, 0.5], point_size=10)
+if visualize:
+    temp.extract_cells(np.array([point["command"] for point in new_gcode_points]) == "G01").plot(scalars="original_z_bands", cpos=[-0.5, -1, 0.5], point_size=10)
 # .extract_cells(np.array([point["command"] for point in new_gcode_points]) == "G01")
 
 
@@ -1454,26 +1537,30 @@ temp.extract_cells(np.array([point["command"] for point in new_gcode_points]) ==
 
 
 import matplotlib.pyplot as plt
-get_ipython().run_line_magic('matplotlib', 'inline')
+if visualize:
+    ipython = globals().get("get_ipython")
+    if ipython is not None:
+        ipython().run_line_magic('matplotlib', 'inline')
 
-# plot the gcode
-fig = plt.figure(figsize=(10, 10))
-ax = fig.add_subplot(111, projection='3d')
-cmap = plt.get_cmap('viridis')
-rotation_normalized = temp.cell_data["rotation"] / np.max(np.abs(temp.cell_data["rotation"]),axis=0)
-colors = cmap(rotation_normalized)
-# for i in np.arange(len(temp.points)-1):
-#     ax.plot(
-#         [temp.points[i,0],temp.points[i+1,0]],
-#         [temp.points[i,1],temp.points[i+1,1]],
-#         [temp.points[i,2],temp.points[i+1,2]],
-#         c=colors[i],
-#         markersize=0.8, linewidth=0.9, marker='.', alpha=0.5)
-# plot G00 moves in different color
-g00_indices = np.where(temp.cell_data["command"] == "G00")[0]
-g01_indices = np.where(temp.cell_data["command"] == "G01")[0]
-ax.plot(temp.points[g00_indices,0], temp.points[g00_indices,1], temp.points[g00_indices,2], markersize=0.4, linewidth=0.3, marker=".", alpha=0.5, color="red")
-ax.plot(temp.points[g01_indices,0], temp.points[g01_indices,1], temp.points[g01_indices,2], markersize=0.4, linewidth=0.3, marker=".", alpha=0.5, color="blue")
-ax.set_box_aspect((np.ptp(temp.points[:,0]), np.ptp(temp.points[:,1]), np.ptp(temp.points[:,2])))
-plt.show()
+    # plot the gcode
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(111, projection='3d')
+    cmap = plt.get_cmap('viridis')
+    rotation_normalized = temp.cell_data["rotation"] / np.max(np.abs(temp.cell_data["rotation"]),axis=0)
+    colors = cmap(rotation_normalized)
+    # for i in np.arange(len(temp.points)-1):
+    #     ax.plot(
+    #         [temp.points[i,0],temp.points[i+1,0]],
+    #         [temp.points[i,1],temp.points[i+1,1]],
+    #         [temp.points[i,2],temp.points[i+1,2]],
+    #         c=colors[i],
+    #         markersize=0.8, linewidth=0.9, marker='.', alpha=0.5)
+    # plot G00 moves in different color
+    g00_indices = np.where(temp.cell_data["command"] == "G00")[0]
+    g01_indices = np.where(temp.cell_data["command"] == "G01")[0]
+    ax.plot(temp.points[g00_indices,0], temp.points[g00_indices,1], temp.points[g00_indices,2], markersize=0.4, linewidth=0.3, marker=".", alpha=0.5, color="red")
+    ax.plot(temp.points[g01_indices,0], temp.points[g01_indices,1], temp.points[g01_indices,2], markersize=0.4, linewidth=0.3, marker=".", alpha=0.5, color="blue")
+    ax.set_box_aspect((np.ptp(temp.points[:,0]), np.ptp(temp.points[:,1]), np.ptp(temp.points[:,2])))
+    plt.show()
 
+print(f"\n[STEP 2 COMPLETE] Reformed G-code saved to: {output_gcode_path}")
