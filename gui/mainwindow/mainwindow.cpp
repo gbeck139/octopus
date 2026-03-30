@@ -8,6 +8,7 @@
 
 #include <QDebug>
 #include <QLabel>
+#include <QWindow>
 
 //TODO: move this to model3d model
 struct ModelRotation {
@@ -285,7 +286,6 @@ void MainWindow::onSettingsMenuEditPrinterClicked()
 
 void MainWindow::onSliceClicked()
 {
-
     // Check model is loaded
     if (!model3D || !model3D->isLoaded()) {
         QMessageBox::warning(this, "No Model", "Please load a 3D model before slicing.");
@@ -293,38 +293,19 @@ void MainWindow::onSliceClicked()
     }
 
     QString stlPath = model3D->getSourceFilePath();
-
-    // Paramaters (Commented out for Hardcoding purposes)
-    //auto* printer = profileManager->getActivePrinterDataForView()
-    //auto* material = profileManager->getActiveMaterialProfile();
-    //auto* process = profileManager->getActiveProcessProfile();
-
-    // if (!printer || !material || !process) {
-    //     qDebug() << "[MAIN] Missing profile, cannot slice";
-    //     return;
-    // }
-
-    //SliceParameters params;
-    // params.layerHeight = process->getLayerHeight();
-    // params.wallLoops = process->getWallLoops();
-    // params.infillDensity = process->getInfillDensity();
-    // params.supportsEnabled = process->supportsEnabled();
-    // params.nozzleTemp = material->getNozzleTemp();
-    // params.bedTemp = material->getBedTemp();
-
-    QString modelName =
-        QFileInfo(model3D->getSourceFilePath()).completeBaseName();
+    QString modelName = QFileInfo(stlPath).completeBaseName();
 
     qDebug() << "[MAIN] Triggering slice";
 
-    // Show Loading Dialog for Slicer
+    // Show loading dialog
     loadingDialog->setWindowModality(Qt::ApplicationModal);
     loadingDialog->setWindowFlags(loadingDialog->windowFlags() & ~Qt::WindowCloseButtonHint);
     loadingDialog->show();
 
+    // ---- Run slicer process ----
     QProcess *proc = new QProcess(this);
+    proc->setProcessChannelMode(QProcess::MergedChannels);
 
-    // TODO: Open a Log dialog here?
     connect(proc, &QProcess::readyReadStandardOutput, this, [proc]() {
         qDebug().noquote() << proc->readAllStandardOutput();
     });
@@ -335,130 +316,122 @@ void MainWindow::onSliceClicked()
 
     connect(proc, &QProcess::errorOccurred, this, [this](QProcess::ProcessError error) {
         loadingDialog->hide();
-
-        QMessageBox::critical(
-            this,
-            "Process Error",
-            "Failed to start the slicing process."
-            );
+        QMessageBox::critical(this, "Process Error", "Failed to start the slicing process.");
     });
 
-    // When slicing finishes: hide loading dialog
-    connect(proc,
-            QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            this,
-            [this, proc](int exitCode, QProcess::ExitStatus status)
-        {
-            loadingDialog->hide();
+    connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            this, [=](int exitCode, QProcess::ExitStatus status) {
+                loadingDialog->hide();
 
-            if (status == QProcess::NormalExit && exitCode == 0) {
+                if (status != QProcess::NormalExit || exitCode != 0) {
+                    ui->exportButton->setEnabled(false);
+                    QMessageBox::critical(this, "Slicing Failed", "Slicing process failed.");
+                    proc->deleteLater();
+                    return;
+                }
+
                 qDebug() << "[MAIN] Slicing finished successfully";
-                // TODO: trigger G-code load / visualization in Preview tab
-
-                QString modelName =
-                    QFileInfo(model3D->getSourceFilePath()).completeBaseName();
-
-                lastGeneratedGcodePath =
-                    QCoreApplication::applicationDirPath()
-                    + "/slicerbundle/output_gcode/"
-                    + modelName
-                    + "_reformed.gcode";
 
                 ui->exportButton->setEnabled(true);
 
-                qDebug() << "[MAIN] Visualizing Gcode";
+                // Path to generated G-code
+                lastGeneratedGcodePath = QCoreApplication::applicationDirPath()
+                                         + "/slicerbundle/output_gcode/" + modelName + "_reformed.gcode";
 
-                // Show Better visualizer (test)
+                // ---- Launch Python visualizer ----
                 QProcess *visualProcess = new QProcess(this);
+                //visualProcess->setProcessChannelMode(QProcess::MergedChannels);
 
-                QString program2 = "slicerbundle/better_visualizer_test.exe";
-                QStringList arguments2;
-                arguments2 << "--gcode" << lastGeneratedGcodePath;
+                QString visualPath = QCoreApplication::applicationDirPath()
+                                     + "/slicerbundle/visualizer_v3.exe";
 
-                visualProcess->start(program2, arguments2);
-
-                if (!visualProcess->waitForStarted()) {
-                    qDebug() << "Failed to start visualizer.";
+                if (!QFile::exists(visualPath)) {
+                    qDebug() << "Visualizer executable not found at:" << visualPath;
+                    proc->deleteLater();
+                    return;
                 }
 
-                connect(visualProcess, &QProcess::finished, this, [](){
-                    qDebug() << "Visualizer finished.";
+                QStringList args;
+                args << "--gcode" << lastGeneratedGcodePath;
+
+                visualProcess->start(visualPath, args);
+
+                if (!visualProcess->waitForStarted(3000)) { // 3s timeout
+                    qDebug() << "Failed to start visualizer process.";
+                    proc->deleteLater();
+                    return;
+                }
+
+                // Capture the first line of stdout (winId)
+                connect(visualProcess, &QProcess::readyReadStandardOutput, this, [=]() {
+                    QString line = visualProcess->readLine().trimmed();
+                    if (line.isEmpty()) return;
+
+                    bool ok = false;
+                    WId wid = line.toULongLong(&ok);
+                    if (!ok) {
+                        qDebug() << "Visualizer output not a valid WId:" << line;
+                        return;
+                    }
+
+                    // Create container
+                    QWindow *foreignWindow = QWindow::fromWinId(wid);
+                    QWidget *container = QWidget::createWindowContainer(foreignWindow, this);
+                    container->setFocusPolicy(Qt::StrongFocus);
+                    container->setMinimumSize(800, 600);
+
+                    // Clear previous visualizers
+                    QLayoutItem *child;
+                    while ((child = ui->previewTabLayout->takeAt(0)) != nullptr) {
+                        delete child->widget();
+                        delete child;
+                    }
+
+                    // Add new container
+                    container->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+                    ui->previewTabLayout->addWidget(container);
+
+                    // Switch to Preview tab
+                    ui->tabWidget->setCurrentIndex(ui->tabWidget->indexOf(ui->previewTab));
+
+                    // Disconnect this slot so it runs only once
+                    disconnect(visualProcess, &QProcess::readyReadStandardOutput, nullptr, nullptr);
                 });
 
+                // Cleanup container if Python exits
+                connect(visualProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+                        this, [=](int, QProcess::ExitStatus) {
+                            QLayoutItem *child;
+                            while ((child = ui->previewTabLayout->takeAt(0)) != nullptr) {
+                                delete child->widget();
+                                delete child;
+                            }
+                            qDebug() << "Visualizer process finished, container removed.";
+                            visualProcess->deleteLater();
+                        });
 
-            } else {
-                qWarning() << "[MAIN] Slicing failed";
-                // TODO: add or log specific ERROR message from Python
+                proc->deleteLater();
+            });
 
-                ui->exportButton->setEnabled(false);
+    // ---- Start slicer process ----
+    QString slicerPath = QCoreApplication::applicationDirPath()
+                         + "/slicerbundle/slicer_pipeline.exe";
 
-                //QMessageBox::warning(this, "SLICING ERROR", "iu'nno~");
-                QMessageBox msgBox(this);
-                msgBox.setWindowTitle("SLICING ERROR");
-                msgBox.setText("iu'nno~");
-                msgBox.setStandardButtons(QMessageBox::Ok);
-
-                // Remove default icon spacing
-                msgBox.setIcon(QMessageBox::NoIcon);
-
-                // Create image label
-                QLabel *imageLabel = new QLabel(&msgBox);
-                QPixmap pix(":/images/images/shrugMeme.jpg");
-
-                // Resize image
-                pix = pix.scaled(300, 300, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-                imageLabel->setPixmap(pix);
-                imageLabel->setAlignment(Qt::AlignCenter);
-
-                // Insert image into layout (top, full width)
-                QGridLayout *layout = qobject_cast<QGridLayout*>(msgBox.layout());
-                layout->addWidget(imageLabel, 0, 0, 1, layout->columnCount(), Qt::AlignCenter);
-
-                msgBox.exec();
-            }
-
-            proc->deleteLater();
-        });
-
-    // Hardcoded for now
-    //QString python = appConfig->getPythonPath();
-    //QString script = ".../main.py";
-    QString prusaPath = appConfig->getPrusaSlicerPath();
-
-    //QStringList args;
-    //args << script << "--model" << "3DBenchy" << "--prusa" << prusaPath;
-    // Later: << "--stl" << stlPath
-
-    // Start slicing
-    //proc->start(python, args);
-
-    //slicerRunner->runSlice("currentStlPath", params);
-    QString slicerPath =
-        QCoreApplication::applicationDirPath()
-        + "/slicerbundle/slicer_pipeline.exe";
-
-    qDebug() << "Looking for slicer at:" << slicerPath;
     if (!QFile::exists(slicerPath)) {
-        qWarning() << "Slicer executable not found!";
-
         loadingDialog->hide();
-
-        QMessageBox::critical(
-            this,
-            "Slicer Missing",
-            "The slicer executable could not be found.\n\n"
-            "Expected location:\n" + slicerPath
-            );
-
+        QMessageBox::critical(this, "Slicer Missing",
+                              "The slicer executable could not be found at:\n" + slicerPath);
         return;
     }
 
-    QStringList args;
-    args << "--stl" << stlPath
-         << "--model" << modelName
-         << "--prusa" << prusaPath;
+    QString prusaPath = appConfig->getPrusaSlicerPath();
 
-    proc->start(slicerPath, args);
+    QStringList slicerArgs;
+    slicerArgs << "--stl" << stlPath
+               << "--model" << modelName
+               << "--prusa" << prusaPath;
+
+    proc->start(slicerPath, slicerArgs);
 }
 
 void MainWindow::onRotateXClicked()
