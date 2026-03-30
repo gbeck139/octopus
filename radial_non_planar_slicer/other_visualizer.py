@@ -1,43 +1,38 @@
-import sys
-import os
-import re
-import argparse
 import numpy as np
 import pyvista as pv
 from pyvistaqt import QtInteractor
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import QTimer
+import re
+import os
+import argparse
+import sys
+import select
 
-# Fix OpenGL issues in PyInstaller builds
-os.environ["QT_OPENGL"] = "software"
 
 class GCodeVisualizer:
     def __init__(self, filename, nozzle_offset=43):
         self.filename = filename
         self.nozzle_offset = nozzle_offset
-
         self.points = []
         self.is_extrusion = []
         self.poly = None
         self.plotter = None
         self.mesh_actor = None
 
+        # State
         self.current_move_index = 0
         self.show_travel = False
         self.density_mode = False
-
-        # required for commands
-        self._cmd_buffer = ""
 
         self.load_gcode()
 
     def load_gcode(self):
         if not os.path.exists(self.filename):
-            print(f"File not found: {self.filename}", file=sys.stderr)
+            print(f"File not found: {self.filename}")
             return
 
-        print(f"Reading {self.filename}...", file=sys.stderr)
-
-        current_pos = {'X':0, 'Z':20, 'C':0, 'B':-15.0, 'E':0}
+        current_pos = {'X': 0, 'Z': 20, 'C': 0, 'B': -15.0, 'E': 0}
         points_list = []
         is_ext = []
 
@@ -49,6 +44,7 @@ class GCodeVisualizer:
                 line = line.strip()
                 if not line or line.startswith(';'):
                     continue
+
                 if not (line.startswith('G0') or line.startswith('G1')):
                     continue
 
@@ -77,39 +73,42 @@ class GCodeVisualizer:
         self.is_extrusion = np.array(is_ext)
         self.current_move_index = len(self.is_extrusion)
 
-        print(f"Loaded {len(self.points)} points, {len(self.is_extrusion)} lines.", file=sys.stderr)
-
     def machine_to_cartesian(self, params):
-        x_gcode = params['X']
-        z_gcode = params['Z']
-        c_gcode = params['C']
-        b_gcode = params['B']
+        x = params['X']
+        z = params['Z']
+        c = params['C']
+        b = params['B']
 
-        rotation_rad = np.deg2rad(-b_gcode)
-        r_model = x_gcode - np.sin(rotation_rad) * self.nozzle_offset
-        z_model = z_gcode - (np.cos(rotation_rad)-1)*self.nozzle_offset
+        rotation_rad = np.deg2rad(-b)
 
-        c_rad = np.deg2rad(c_gcode)
-        x = r_model*np.cos(c_rad)
-        y = r_model*np.sin(c_rad)
-        z = z_model
+        r_model = x - np.sin(rotation_rad) * self.nozzle_offset
+        z_model = z - (np.cos(rotation_rad) - 1) * self.nozzle_offset
 
-        return [x, y, z]
+        c_rad = np.deg2rad(c)
+
+        return [
+            r_model * np.cos(c_rad),
+            r_model * np.sin(c_rad),
+            z_model
+        ]
 
     def create_scene(self):
         if len(self.points) < 2:
             return
 
-        lines = np.empty((len(self.is_extrusion), 3), dtype=int)
-        lines[:,0] = 2
-        lines[:,1] = np.arange(len(self.is_extrusion))
-        lines[:,2] = np.arange(1, len(self.is_extrusion)+1)
+        num_lines = len(self.is_extrusion)
+
+        lines = np.empty((num_lines, 3), dtype=int)
+        lines[:, 0] = 2
+        lines[:, 1] = np.arange(num_lines)
+        lines[:, 2] = np.arange(1, num_lines + 1)
 
         self.poly = pv.PolyData()
         self.poly.points = self.points
         self.poly.lines = lines.flatten()
+
         self.poly.cell_data['MoveType'] = self.is_extrusion.astype(float)
-        self.poly.cell_data['Index'] = np.arange(len(self.is_extrusion))
+        self.poly.cell_data['Index'] = np.arange(num_lines)
 
     def update_mesh(self):
         if self.poly is None:
@@ -136,7 +135,7 @@ class GCodeVisualizer:
 
         opacity = 0.1 if self.density_mode else 1.0
         line_width = 1 if self.density_mode else 3
-        render_tubes = False if self.density_mode else True
+        render_tubes = not self.density_mode
 
         if self.mesh_actor:
             self.plotter.remove_actor(self.mesh_actor)
@@ -144,8 +143,8 @@ class GCodeVisualizer:
         self.mesh_actor = self.plotter.add_mesh(
             subset,
             scalars='MoveType',
-            cmap=['red','lime'],
-            clim=[0,1],
+            cmap=['red', 'lime'],
+            clim=[0, 1],
             line_width=line_width,
             render_lines_as_tubes=render_tubes,
             opacity=opacity,
@@ -153,55 +152,70 @@ class GCodeVisualizer:
             reset_camera=False
         )
 
-        self.plotter.render()
+    # -------- COMMAND HANDLERS --------
+    def slider_callback(self, value):
+        self.current_move_index = int(value)
+        self.update_mesh()
 
-    def handle_command(self, line):
-        line = line.strip()
-        print("COMMAND RECEIVED:", line, file=sys.stderr)
+    def toggle_travel(self, flag):
+        self.show_travel = flag
+        self.update_mesh()
 
-        if line.startswith("MOVE"):
-            self.current_move_index = int(line.split()[1])
-            self.update_mesh()
-        elif line.startswith("TOGGLE_TRAVEL"):
-            self.show_travel = bool(int(line.split()[1]))
-            self.update_mesh()
-        elif line.startswith("TOGGLE_DENSITY"):
-            self.density_mode = bool(int(line.split()[1]))
-            self.update_mesh()
+    def toggle_density(self, flag):
+        self.density_mode = flag
+        self.update_mesh()
 
-    # ✅ Simplified and working for buttons
-    def poll_stdin(self):
-        import msvcrt
-        import sys
-
-        while msvcrt.kbhit():
-            line = sys.stdin.readline()
-            if line:
-                self.handle_command(line)
-
+    # -------- VISUALIZE --------
     def visualize(self):
+        self.create_scene()
         if self.poly is None:
-            self.create_scene()
+            return
 
         app = QtWidgets.QApplication(sys.argv)
-        window = QtWidgets.QMainWindow()
 
+        window = QtWidgets.QMainWindow()
         self.plotter = QtInteractor(window)
         window.setCentralWidget(self.plotter)
 
-        window.resize(800, 600)
+        # Embed setup
+        from PyQt5.QtCore import Qt
+        window.setWindowFlag(Qt.Window, False)
+        window.setWindowFlag(Qt.FramelessWindowHint, True)
         window.show()
+        window.hide()
 
+        self.plotter.add_text(os.path.basename(self.filename))
         self.update_mesh()
 
-        # ONLY stdout output for embedding
-        print(int(window.winId()), flush=True)
+        # Print WId for Qt embedding
+        print(int(window.winId()))
+        sys.stdout.flush()
 
-        sys.stdin = open(0, 'r', buffering=1)
+        # -------- NON-BLOCKING COMMAND LOOP --------
+        def process_commands():
+            while sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
+                line = sys.stdin.readline().strip()
+                if not line:
+                    return
 
-        timer = QtCore.QTimer()
-        timer.timeout.connect(self.poll_stdin)
-        timer.start(50)
+                parts = line.split()
+                if not parts:
+                    return
+
+                cmd = parts[0]
+
+                if cmd == "SLIDER":
+                    self.slider_callback(int(parts[1]))
+
+                elif cmd == "TRAVEL":
+                    self.toggle_travel(bool(int(parts[1])))
+
+                elif cmd == "DENSITY":
+                    self.toggle_density(bool(int(parts[1])))
+
+        timer = QTimer()
+        timer.timeout.connect(process_commands)
+        timer.start(30)
 
         app.exec_()
 
