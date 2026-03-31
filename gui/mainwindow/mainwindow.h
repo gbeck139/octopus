@@ -31,6 +31,8 @@ private:
     SlicerRunner *slicerRunner;
     SlicerLoadingDialog *loadingDialog;
 
+    QProcess *visualProcess = nullptr;
+
     // TODO: need to put this in slicerrrunner
     QString lastGeneratedGcodePath;
 

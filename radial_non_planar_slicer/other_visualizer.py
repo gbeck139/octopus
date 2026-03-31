@@ -7,7 +7,6 @@ import re
 import os
 import argparse
 import sys
-import select
 
 
 class GCodeVisualizer:
@@ -165,6 +164,37 @@ class GCodeVisualizer:
         self.density_mode = flag
         self.update_mesh()
 
+    # -------- COMMAND LOOP (WINDOWS SAFE) --------
+    def process_commands(self):
+        try:
+            while True:
+                line = sys.stdin.readline()
+
+                if not line:
+                    return
+
+                line = line.strip()
+                if not line:
+                    return
+
+                parts = line.split()
+                if not parts:
+                    return
+
+                cmd = parts[0]
+
+                if cmd == "SLIDER":
+                    self.slider_callback(int(parts[1]))
+
+                elif cmd == "TRAVEL":
+                    self.toggle_travel(bool(int(parts[1])))
+
+                elif cmd == "DENSITY":
+                    self.toggle_density(bool(int(parts[1])))
+
+        except Exception:
+            pass  # prevents crashes from pipe timing issues
+
     # -------- VISUALIZE --------
     def visualize(self):
         self.create_scene()
@@ -188,33 +218,13 @@ class GCodeVisualizer:
         self.update_mesh()
 
         # Print WId for Qt embedding
-        print(int(window.winId()))
-        sys.stdout.flush()
+        if sys.stdout:
+            print(int(window.winId()))
+            sys.stdout.flush()
 
-        # -------- NON-BLOCKING COMMAND LOOP --------
-        def process_commands():
-            while sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
-                line = sys.stdin.readline().strip()
-                if not line:
-                    return
-
-                parts = line.split()
-                if not parts:
-                    return
-
-                cmd = parts[0]
-
-                if cmd == "SLIDER":
-                    self.slider_callback(int(parts[1]))
-
-                elif cmd == "TRAVEL":
-                    self.toggle_travel(bool(int(parts[1])))
-
-                elif cmd == "DENSITY":
-                    self.toggle_density(bool(int(parts[1])))
-
+        # Timer for command polling
         timer = QTimer()
-        timer.timeout.connect(process_commands)
+        timer.timeout.connect(self.process_commands)
         timer.start(30)
 
         app.exec_()

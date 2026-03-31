@@ -288,6 +288,7 @@ void MainWindow::onSettingsMenuEditPrinterClicked()
 
 void MainWindow::onSliceClicked()
 {
+    // Check model is loaded
     if (!model3D || !model3D->isLoaded()) {
         QMessageBox::warning(this, "No Model", "Please load a 3D model before slicing.");
         return;
@@ -298,19 +299,10 @@ void MainWindow::onSliceClicked()
 
     qDebug() << "[MAIN] Triggering slice";
 
+    // Show loading dialog
     loadingDialog->setWindowModality(Qt::ApplicationModal);
     loadingDialog->setWindowFlags(loadingDialog->windowFlags() & ~Qt::WindowCloseButtonHint);
     loadingDialog->show();
-
-    QString slicerPath = QCoreApplication::applicationDirPath()
-                         + "/slicerbundle/slicer_pipeline.exe";
-
-    if (!QFile::exists(slicerPath)) {
-        loadingDialog->hide();
-        QMessageBox::critical(this, "Slicer Missing",
-                              "The slicer executable could not be found at:\n" + slicerPath);
-        return;
-    }
 
     // ---- Run slicer process ----
     QProcess *proc = new QProcess(this);
@@ -324,14 +316,13 @@ void MainWindow::onSliceClicked()
         qWarning().noquote() << proc->readAllStandardError();
     });
 
-    connect(proc, &QProcess::errorOccurred, this, [this](QProcess::ProcessError) {
+    connect(proc, &QProcess::errorOccurred, this, [this](QProcess::ProcessError error) {
         loadingDialog->hide();
         QMessageBox::critical(this, "Process Error", "Failed to start the slicing process.");
     });
 
     connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             this, [=](int exitCode, QProcess::ExitStatus status) {
-
                 loadingDialog->hide();
 
                 if (status != QProcess::NormalExit || exitCode != 0) {
@@ -341,59 +332,74 @@ void MainWindow::onSliceClicked()
                     return;
                 }
 
+                qDebug() << "[MAIN] Slicing finished successfully";
+
                 ui->exportButton->setEnabled(true);
 
+                // Path to generated G-code
                 lastGeneratedGcodePath = QCoreApplication::applicationDirPath()
                                          + "/slicerbundle/output_gcode/" + modelName + "_reformed.gcode";
 
-                // ---- Launch embedded Python visualizer ----
                 QProcess *visualProcess = new QProcess(this);
-                visualProcess->setProcessChannelMode(QProcess::SeparateChannels);
-                visualProcess->setInputChannelMode(QProcess::ManagedInputChannel);
+                visualProcess->setProcessChannelMode(QProcess::MergedChannels);
 
                 QString visualPath = QCoreApplication::applicationDirPath()
-                                     + "/slicerbundle/newest_visualizer_5.exe";
-
-                if (!QFile::exists(visualPath)) {
-                    qDebug() << "Visualizer executable not found at:" << visualPath;
-                    proc->deleteLater();
-                    return;
-                }
+                                     + "/slicerbundle/visualizer_v3.exe";
 
                 QStringList args;
                 args << "--gcode" << lastGeneratedGcodePath;
 
+                // Set up visualizer + controls
                 visualProcess->start(visualPath, args);
+
                 if (!visualProcess->waitForStarted(3000)) {
                     qDebug() << "Failed to start visualizer process.";
-                    proc->deleteLater();
                     return;
                 }
 
-                auto container_created = std::make_shared<bool>(false);
+                if (this->visualProcess) {
+                    this->visualProcess->kill();
+                    this->visualProcess->deleteLater();
+                    this->visualProcess = nullptr;
+                }
 
-                connect(visualProcess, &QProcess::readyReadStandardOutput, this, [=]() mutable {
-                    if (*container_created) return;
+                // ✅ STORE POINTER (important)
+                this->visualProcess = visualProcess;
 
-                    QByteArray data = visualProcess->readAllStandardOutput();
-                    QString output = QString::fromUtf8(data).trimmed();
-                    if (output.isEmpty()) return;
+                // ✅ CONNECT UI → PYTHON
+                connect(ui->slider, &QSlider::valueChanged, this, [=](int value) {
+                    if (this->visualProcess && this->visualProcess->state() == QProcess::Running) {
+                        this->visualProcess->write(QString("SLIDER %1\n").arg(value).toUtf8());
+                    }
+                });
+
+                connect(ui->travelCheckbox, &QCheckBox::toggled, this, [=](bool checked) {
+                    if (this->visualProcess && this->visualProcess->state() == QProcess::Running) {
+                        this->visualProcess->write(QString("TRAVEL %1\n").arg(checked ? 1 : 0).toUtf8());
+                    }
+                });
+
+                connect(ui->densityCheckbox, &QCheckBox::toggled, this, [=](bool checked) {
+                    if (this->visualProcess && this->visualProcess->state() == QProcess::Running) {
+                        this->visualProcess->write(QString("DENSITY %1\n").arg(checked ? 1 : 0).toUtf8());
+                    }
+                });
+
+                // ---- GET WINID ----
+                connect(visualProcess, &QProcess::readyReadStandardOutput, this, [=]() {
+                    QString line = visualProcess->readLine().trimmed();
+                    if (line.isEmpty()) return;
 
                     bool ok = false;
-                    WId wid = output.toULongLong(&ok);
-                    if (!ok) {
-                        qDebug() << "Invalid WId output:" << output;
-                        return;
-                    }
+                    WId wid = line.toULongLong(&ok);
+                    if (!ok) return;
 
-                    qDebug() << "VALID WID:" << wid;
-                    qDebug() << "Creating QWindow from WId...";
                     QWindow *foreignWindow = QWindow::fromWinId(wid);
                     QWidget *container = QWidget::createWindowContainer(foreignWindow, this);
                     container->setMinimumSize(800, 600);
                     container->setFocusPolicy(Qt::StrongFocus);
-                    container->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
+                    // Clear old
                     QLayoutItem *child;
                     while ((child = ui->previewTabLayout->takeAt(0)) != nullptr) {
                         delete child->widget();
@@ -401,56 +407,43 @@ void MainWindow::onSliceClicked()
                     }
 
                     ui->previewTabLayout->addWidget(container);
+                    ui->tabWidget->setCurrentWidget(ui->previewTab);
 
-                    // ---- UI CONTROLS ----
-                    QSlider *historySlider = new QSlider(Qt::Horizontal, this);
-                    historySlider->setMinimum(0);
-                    historySlider->setMaximum(100);
-                    historySlider->setValue(100);
-                    ui->previewTabLayout->addWidget(historySlider);
-
-                    QCheckBox *travelCheck = new QCheckBox("Travel", this);
-                    ui->previewTabLayout->addWidget(travelCheck);
-
-                    QCheckBox *densityCheck = new QCheckBox("Density", this);
-                    ui->previewTabLayout->addWidget(densityCheck);
-
-                    connect(historySlider, &QSlider::valueChanged, this, [=](int value){
-                        QString cmd = QString("MOVE %1\n").arg(value);
-                        qDebug() << "Sending:" << cmd;
-                        visualProcess->write(cmd.toUtf8());
-                    });
-
-                    connect(travelCheck, &QCheckBox::toggled, this, [=](bool checked){
-                        QString cmd = QString("TOGGLE_TRAVEL %1\n").arg(checked ? 1 : 0);
-                        qDebug() << "Sending:" << cmd;
-                        visualProcess->write(cmd.toUtf8());
-                    });
-
-                    connect(densityCheck, &QCheckBox::toggled, this, [=](bool checked){
-                        QString cmd = QString("TOGGLE_DENSITY %1\n").arg(checked ? 1 : 0);
-                        qDebug() << "Sending:" << cmd;
-                        visualProcess->write(cmd.toUtf8());
-                    });
-
-                    ui->tabWidget->setCurrentIndex(ui->tabWidget->indexOf(ui->previewTab));
-                    *container_created = true;
+                    disconnect(visualProcess, &QProcess::readyReadStandardOutput, nullptr, nullptr);
                 });
 
+                // Cleanup container if Python exits
                 connect(visualProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-                        this, [=](int code, QProcess::ExitStatus status) {
-                            qDebug() << "Visualizer exited with code:" << code << "status:" << status;
+                        this, [=](int, QProcess::ExitStatus) {
+                            QLayoutItem *child;
+                            while ((child = ui->previewTabLayout->takeAt(0)) != nullptr) {
+                                delete child->widget();
+                                delete child;
+                            }
+                            qDebug() << "Visualizer process finished, container removed.";
                             visualProcess->deleteLater();
                         });
 
                 proc->deleteLater();
             });
 
-    // ---- Start slicer ----
+    // ---- Start slicer process ----
+    QString slicerPath = QCoreApplication::applicationDirPath()
+                         + "/slicerbundle/slicer_pipeline.exe";
+
+    if (!QFile::exists(slicerPath)) {
+        loadingDialog->hide();
+        QMessageBox::critical(this, "Slicer Missing",
+                              "The slicer executable could not be found at:\n" + slicerPath);
+        return;
+    }
+
+    QString prusaPath = appConfig->getPrusaSlicerPath();
+
     QStringList slicerArgs;
     slicerArgs << "--stl" << stlPath
                << "--model" << modelName
-               << "--prusa" << appConfig->getPrusaSlicerPath();
+               << "--prusa" << prusaPath;
 
     proc->start(slicerPath, slicerArgs);
 }
