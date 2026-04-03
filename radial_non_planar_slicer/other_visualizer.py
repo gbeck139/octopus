@@ -2,7 +2,7 @@ import numpy as np
 import pyvista as pv
 from pyvistaqt import QtInteractor
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer, Qt
 import re
 import os
 import argparse
@@ -43,7 +43,6 @@ class GCodeVisualizer:
                 line = line.strip()
                 if not line or line.startswith(';'):
                     continue
-
                 if not (line.startswith('G0') or line.startswith('G1')):
                     continue
 
@@ -56,16 +55,14 @@ class GCodeVisualizer:
 
                 for tag, val_str in matches:
                     val = float(val_str)
-                    if tag == 'E':
-                        if val > 0:
-                            is_extru_move = True
+                    if tag == 'E' and val > 0:
+                        is_extru_move = True
                     else:
                         current_pos[tag] = val
                         changed = True
 
                 if changed:
-                    end_cartesian = self.machine_to_cartesian(current_pos)
-                    points_list.append(end_cartesian)
+                    points_list.append(self.machine_to_cartesian(current_pos))
                     is_ext.append(is_extru_move)
 
         self.points = np.array(points_list)
@@ -79,24 +76,17 @@ class GCodeVisualizer:
         b = params['B']
 
         rotation_rad = np.deg2rad(-b)
-
         r_model = x - np.sin(rotation_rad) * self.nozzle_offset
         z_model = z - (np.cos(rotation_rad) - 1) * self.nozzle_offset
-
         c_rad = np.deg2rad(c)
 
-        return [
-            r_model * np.cos(c_rad),
-            r_model * np.sin(c_rad),
-            z_model
-        ]
+        return [r_model * np.cos(c_rad), r_model * np.sin(c_rad), z_model]
 
     def create_scene(self):
         if len(self.points) < 2:
             return
 
         num_lines = len(self.is_extrusion)
-
         lines = np.empty((num_lines, 3), dtype=int)
         lines[:, 0] = 2
         lines[:, 1] = np.arange(num_lines)
@@ -105,26 +95,19 @@ class GCodeVisualizer:
         self.poly = pv.PolyData()
         self.poly.points = self.points
         self.poly.lines = lines.flatten()
-
         self.poly.cell_data['MoveType'] = self.is_extrusion.astype(float)
         self.poly.cell_data['Index'] = np.arange(num_lines)
 
     def update_mesh(self):
-        if self.poly is None:
+        if self.poly is None or self.plotter is None:
             return
 
-        subset = self.poly.threshold(
-            value=[0, self.current_move_index],
-            scalars='Index',
-            preference='cell'
-        )
+        subset = self.poly.threshold(value=[0, self.current_move_index],
+                                     scalars='Index', preference='cell')
 
         if not self.show_travel:
-            subset = subset.threshold(
-                value=[0.9, 1.1],
-                scalars='MoveType',
-                preference='cell'
-            )
+            subset = subset.threshold(value=[0.9, 1.1],
+                                      scalars='MoveType', preference='cell')
 
         if subset.n_cells == 0:
             if self.mesh_actor:
@@ -140,18 +123,12 @@ class GCodeVisualizer:
             self.plotter.remove_actor(self.mesh_actor)
 
         self.mesh_actor = self.plotter.add_mesh(
-            subset,
-            scalars='MoveType',
-            cmap=['red', 'lime'],
-            clim=[0, 1],
-            line_width=line_width,
-            render_lines_as_tubes=render_tubes,
-            opacity=opacity,
-            show_scalar_bar=False,
-            reset_camera=False
+            subset, scalars='MoveType', cmap=['red', 'lime'], clim=[0, 1],
+            line_width=line_width, render_lines_as_tubes=render_tubes,
+            opacity=opacity, show_scalar_bar=False, reset_camera=False
         )
 
-    # -------- COMMAND HANDLERS --------
+    # --- COMMANDS FROM C++ ---
     def slider_callback(self, value):
         self.current_move_index = int(value)
         self.update_mesh()
@@ -164,38 +141,26 @@ class GCodeVisualizer:
         self.density_mode = flag
         self.update_mesh()
 
-    # -------- COMMAND LOOP (WINDOWS SAFE) --------
+    # --- PROCESS COMMAND LOOP ---
     def process_commands(self):
         try:
-            while True:
-                line = sys.stdin.readline()
-
-                if not line:
-                    return
-
-                line = line.strip()
-                if not line:
-                    return
-
-                parts = line.split()
-                if not parts:
-                    return
-
-                cmd = parts[0]
-
-                if cmd == "SLIDER":
-                    self.slider_callback(int(parts[1]))
-
-                elif cmd == "TRAVEL":
-                    self.toggle_travel(bool(int(parts[1])))
-
-                elif cmd == "DENSITY":
-                    self.toggle_density(bool(int(parts[1])))
-
+            line = sys.stdin.readline()
+            if not line:
+                return
+            parts = line.strip().split()
+            if not parts:
+                return
+            cmd = parts[0].upper()
+            if cmd == "SLIDER":
+                self.slider_callback(int(parts[1]))
+            elif cmd == "TRAVEL":
+                self.toggle_travel(bool(int(parts[1])))
+            elif cmd == "DENSITY":
+                self.toggle_density(bool(int(parts[1])))
         except Exception:
-            pass  # prevents crashes from pipe timing issues
+            pass  # pipe timing issues
 
-    # -------- VISUALIZE --------
+    # --- VISUALIZATION ---
     def visualize(self):
         self.create_scene()
         if self.poly is None:
@@ -207,27 +172,27 @@ class GCodeVisualizer:
         self.plotter = QtInteractor(window)
         window.setCentralWidget(self.plotter)
 
-        # Embed setup
-        from PyQt5.QtCore import Qt
+        # Make window frameless for embedding
         window.setWindowFlag(Qt.Window, False)
         window.setWindowFlag(Qt.FramelessWindowHint, True)
         window.show()
-        window.hide()
+        window.winId()  # Force native creation
+        print(int(window.winId()))
+        sys.stdout.flush()
+        window.setGeometry(-10000, -10000, 800, 600)
+        window.show()
+        #window.hide()  # Hide until embedded
 
         self.plotter.add_text(os.path.basename(self.filename))
         self.update_mesh()
 
-        # Print WId for Qt embedding
-        if sys.stdout:
-            print(int(window.winId()))
-            sys.stdout.flush()
-
-        # Timer for command polling
+        # Timer to poll commands
         timer = QTimer()
         timer.timeout.connect(self.process_commands)
         timer.start(30)
 
-        app.exec_()
+        # Run **Qt event loop without blocking** for embedding
+        app.processEvents()
 
 
 def main():

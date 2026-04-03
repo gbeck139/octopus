@@ -184,8 +184,15 @@ class GCodeVisualizer:
         window.setWindowFlag(Qt.FramelessWindowHint, True)
         window.setWindowFlag(Qt.WindowCloseButtonHint, False)  # Disable close button
         window.resize(800, 600)                                # Resize window
-        window.show()                                          # Necessary to create winId
-        window.hide()                                          # Hide the native Python window
+        window.show()
+        app.processEvents()
+
+        # 🔥 FORCE NATIVE HANDLE CREATION
+        window.winId()
+
+        app.processEvents()
+
+        window.hide()
 
         # --- ADD MESH ---
         self.plotter.add_text(f"Visualizing: {os.path.basename(self.filename)}", position='upper_left')
