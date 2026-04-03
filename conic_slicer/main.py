@@ -122,8 +122,8 @@ def main():
     parser.add_argument("--stl", required=True, help="Path to input STL file")
     parser.add_argument("--model", required=True, help="Model name for output files")
     parser.add_argument("--prusa", required=True, help="Path to PrusaSlicer executable")
-    parser.add_argument("--z-split", required=True, type=float,
-                        help="Z height at which to split the mesh")
+    parser.add_argument("--z-split", type=float, default=1.0,
+                        help="Z height at which to split the mesh (default: 1.0mm)")
     parser.add_argument("--cone-angle", required=True, type=float,
                         help="Cone half-angle in degrees (controls steepness)")
     args = parser.parse_args()
