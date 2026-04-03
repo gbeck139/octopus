@@ -6,6 +6,7 @@
 #include <QVector>
 #include <QString>
 #include <QFile>
+#include <QTemporaryFile>
 
 ///
 /// \brief The Triangle class contains three verticies
@@ -41,6 +42,9 @@ public:
 
     // Operations
     // void cleanModel //clean/fix geometry
+
+    void rotateToFace(const QString &face);
+    bool saveTempSTL();
 
 signals:
     void modelChanged(); //when model's geometry changes

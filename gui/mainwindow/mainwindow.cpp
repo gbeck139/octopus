@@ -106,9 +106,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     qDebug() << "[GUI] Current PrusaSlicer Path: " + appConfig->getPrusaSlicerPath();
 
-    connect(ui->rotateXButton, &QPushButton::clicked, this, &MainWindow::onRotateXClicked);
-    connect(ui->rotateYButton, &QPushButton::clicked, this, &MainWindow::onRotateYClicked);
-    connect(ui->rotateZButton, &QPushButton::clicked, this, &MainWindow::onRotateZClicked);
+    //connect(ui->rotateXButton, &QPushButton::clicked, this, &MainWindow::onRotateXClicked);
+    //connect(ui->rotateYButton, &QPushButton::clicked, this, &MainWindow::onRotateYClicked);
+    //connect(ui->rotateZButton, &QPushButton::clicked, this, &MainWindow::onRotateZClicked);
+
+    connect(ui->rotationComboBox, &QComboBox::currentTextChanged, this, &MainWindow::onRotationChanged);
 }
 
 MainWindow::~MainWindow()
@@ -120,11 +122,15 @@ void MainWindow::onImportClicked()
 {
     QString filePath = QFileDialog::getOpenFileName(this, "Import STL", "", "STL FILES (*.stl)");
     if (!filePath.isEmpty()) {
-        model3D->loadModel(filePath);
+        //model3D->loadModel(filePath);
         if (model3D->loadModel(filePath)) {
             ui->exportButton->setEnabled(false);
+
+            if (ui->tabWidget->currentIndex() == 0) {
+                ui->prepareTabWidget->displaySTLInViewer(filePath);
+            }
+            qDebug() << "STL file loaded successfully in GUI";
         }
-        qDebug() << "STL file loaded successfully in GUI";
     } else {
         qDebug() << "STL not loaded into GUI";
         QMessageBox::warning(this, "Import failed", "Could not import 3D model file.");
@@ -435,7 +441,7 @@ void MainWindow::onSliceClicked()
     //slicerRunner->runSlice("currentStlPath", params);
     QString slicerPath =
         QCoreApplication::applicationDirPath()
-        + "/slicerbundle/slicer_pipeline.exe";
+        + "/slicerbundle/updated_slicer.exe";
 
     qDebug() << "Looking for slicer at:" << slicerPath;
     if (!QFile::exists(slicerPath)) {
@@ -456,7 +462,10 @@ void MainWindow::onSliceClicked()
     QStringList args;
     args << "--stl" << stlPath
          << "--model" << modelName
-         << "--prusa" << prusaPath;
+         << "--prusa" << prusaPath
+         << "--rotX" << QString::number(currentRotX)
+         << "--rotY" << QString::number(currentRotY)
+         << "--rotZ" << QString::number(currentRotZ);
 
     proc->start(slicerPath, args);
 }
@@ -473,6 +482,21 @@ void MainWindow::onRotateYClicked()
 
 void MainWindow::onRotateZClicked()
 {
+
+}
+
+void MainWindow::onRotationChanged(const QString &face)
+{
+    if (!model3D || !model3D->isLoaded()) return;
+
+    if (face == "Front") { currentRotX = 0; currentRotY = 0; currentRotZ = 0; }
+    else if (face == "Back") { currentRotX = 0; currentRotY = 180; currentRotZ = 0; }
+    else if (face == "Top") { currentRotX = -90; currentRotY = 0; currentRotZ = 0; }
+    else if (face == "Bottom") { currentRotX = 90; currentRotY = 0; currentRotZ = 0; }
+    else if (face == "Left") { currentRotX = 0; currentRotY = -90; currentRotZ = 0; }
+    else if (face == "Right") { currentRotX = 0; currentRotY = 90; currentRotZ = 0; }
+
+    ui->prepareTabWidget->rotateModel(currentRotX, currentRotY, currentRotZ);
 
 }
 

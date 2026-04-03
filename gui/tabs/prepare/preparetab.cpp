@@ -31,3 +31,15 @@ void PrepareTab::onPrinterChanged(const QString &printerId)
     // - update currently selected printer
 }
 
+void PrepareTab::displaySTLInViewer(const QString &filePath)
+{
+    if (!filePath.isEmpty() && ui->visual3DWidget) {
+        ui->visual3DWidget->addSTLModel(filePath);
+        qDebug() << "[PrepareTab] STL sent to ViewerWidget:" << filePath;
+    }
+}
+
+void PrepareTab::rotateModel(int x, int y, int z)
+{
+    ui->visual3DWidget->rotateModel(x, y, z);
+}

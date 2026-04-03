@@ -15,6 +15,8 @@ class PrepareTab : public QWidget
 public:
     explicit PrepareTab(QWidget *parent = nullptr);
     ~PrepareTab();
+    void displaySTLInViewer(const QString &filePath);
+    void rotateModel(int x, int y, int z);
 
     SettingsMenuWidget* getSettingsMenu() const;
 

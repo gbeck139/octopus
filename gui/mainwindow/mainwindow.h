@@ -31,6 +31,11 @@ private:
     SlicerRunner *slicerRunner;
     SlicerLoadingDialog *loadingDialog;
 
+    // these should probably be in model3d
+    int currentRotX = 0;
+    int currentRotY = 0;
+    int currentRotZ = 0;
+
     // TODO: need to put this in slicerrrunner
     QString lastGeneratedGcodePath;
 
@@ -54,6 +59,7 @@ private slots:
     void onRotateXClicked();
     void onRotateYClicked();
     void onRotateZClicked();
+    void onRotationChanged(const QString &face);
 
 };
 #endif // MAINWINDOW_H
