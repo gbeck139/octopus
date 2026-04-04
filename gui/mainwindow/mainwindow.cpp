@@ -489,13 +489,24 @@ void MainWindow::onRotationChanged(const QString &face)
 {
     if (!model3D || !model3D->isLoaded()) return;
 
-    if (face == "Front") { currentRotX = 0; currentRotY = 0; currentRotZ = 0; }
-    else if (face == "Back") { currentRotX = 0; currentRotY = 180; currentRotZ = 0; }
-    else if (face == "Top") { currentRotX = -90; currentRotY = 0; currentRotZ = 0; }
-    else if (face == "Bottom") { currentRotX = 90; currentRotY = 0; currentRotZ = 0; }
-    else if (face == "Left") { currentRotX = 0; currentRotY = -90; currentRotZ = 0; }
-    else if (face == "Right") { currentRotX = 0; currentRotY = 90; currentRotZ = 0; }
-
+    if (face == "Top") {
+        currentRotX = 0; currentRotY = 0; currentRotZ = 0;
+    }
+    else if (face == "Bottom") {
+        currentRotX = 180; currentRotY = 0; currentRotZ = 0;
+    }
+    else if (face == "Front") {
+        currentRotX = -90; currentRotY = 0; currentRotZ = 0;
+    }
+    else if (face == "Back") {
+        currentRotX = 90; currentRotY = 0; currentRotZ = 0;
+    }
+    else if (face == "Left") {
+        currentRotX = 0; currentRotY = 0; currentRotZ = 90;
+    }
+    else if (face == "Right") {
+        currentRotX = 0; currentRotY = 0; currentRotZ = -90;
+    }
     ui->prepareTabWidget->rotateModel(currentRotX, currentRotY, currentRotZ);
 
 }
