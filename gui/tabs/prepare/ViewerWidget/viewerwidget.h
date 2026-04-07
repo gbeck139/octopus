@@ -27,14 +27,22 @@ private:
     void createBuildPlate();
     void fitSTLToBuildVolume(Qt3DCore::QEntity *entity);
 
+    void recenterModel();
+
     // Build volume dimensions
     float buildVolumeX = 20.0f;
     float buildVolumeY = 20.0f;
     float buildVolumeZ = 20.0f;
 
+    // --- Bounding box (VERY IMPORTANT) ---
+    QVector3D modelMin;
+    QVector3D modelMax;
+    QVector3D modelCenter;
+
     // Optional: corner offset for axes
     QVector3D axesOffset = QVector3D(0, 0, 0); // default at origin, can move
 
+    // --- Model data ---
     Qt3DCore::QEntity* modelEntity = nullptr;
     Qt3DCore::QTransform* modelTransform = nullptr;
 };

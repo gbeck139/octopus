@@ -44,8 +44,46 @@ ViewerWidget::ViewerWidget(QWidget *parent)
     // -------------------- Camera --------------------
     auto *camera = view->camera();
     camera->lens()->setPerspectiveProjection(45.0f, 16.f/9.f, 0.1f, 1000.f);
-    camera->setPosition(QVector3D(buildVolumeX * 1.5f, buildVolumeY * 1.2f, buildVolumeZ * 2.0f));
+    camera->setPosition(QVector3D(buildVolumeX * 0.0f, buildVolumeY * 1.2f, buildVolumeZ * 2.0f));
     camera->setViewCenter(QVector3D(0, buildVolumeY/2, 0));
+
+    // -------------------- Camera Light (Slicer-style) --------------------
+    auto *lightEntity = new Qt3DCore::QEntity(rootEntity);
+
+    auto *light = new Qt3DRender::QDirectionalLight();
+    light->setColor(QColor(255, 255, 255));
+    light->setIntensity(0.8f);
+
+    lightEntity->addComponent(light);
+
+    // 🔥 Update light EVERY time camera moves
+    auto updateLight = [=]() {
+        QVector3D dir = (camera->viewCenter() - camera->position()).normalized();
+        light->setWorldDirection(dir);
+    };
+
+    // initial direction
+    updateLight();
+
+    // update on camera movement
+    QObject::connect(camera, &Qt3DRender::QCamera::positionChanged,
+                     [=](const QVector3D &) { updateLight(); });
+
+    QObject::connect(camera, &Qt3DRender::QCamera::viewCenterChanged,
+                     [=](const QVector3D &) { updateLight(); });
+
+    // -------------------- Soft Light --------------------
+
+    auto *fillLightEntity = new Qt3DCore::QEntity(rootEntity);
+
+    auto *fillLight = new Qt3DRender::QDirectionalLight();
+    fillLight->setColor(QColor(200, 200, 200));
+    fillLight->setIntensity(0.2f);
+
+    // angled light (not camera-following)
+    fillLight->setWorldDirection(QVector3D(-0.5f, -0.5f, -1.0f).normalized());
+
+    fillLightEntity->addComponent(fillLight);
 
     // -------------------- Renderer --------------------
     auto *renderer = new Qt3DExtras::QForwardRenderer();
@@ -55,7 +93,11 @@ ViewerWidget::ViewerWidget(QWidget *parent)
 
     // -------------------- Camera Controls --------------------
     auto *camController = new Qt3DExtras::QOrbitCameraController(rootEntity);
+    camController->setLinearSpeed(80.0f);   // Left-drag translation
+    camController->setLookSpeed(200.0f);     // Scroll zoom in/out
     camController->setCamera(camera);
+
+
 
     // -------------------- Scene --------------------
     createBuildVolume();  // transparent box
@@ -91,6 +133,7 @@ void ViewerWidget::createBuildVolume()
 
         auto *material = new Qt3DExtras::QPhongMaterial();
         material->setDiffuse(color);
+        material->setSpecular(QColor(0, 0, 0));
 
         QVector3D mid = (start + end) / 2.0f;
         QVector3D dir = (end - start).normalized();
@@ -147,7 +190,11 @@ void ViewerWidget::createBuildPlate()
     mesh->setHeight(buildVolumeZ + 2.0f);  // a little bigger than the box
 
     auto *material = new Qt3DExtras::QPhongMaterial();
-    material->setDiffuse(QColor(80, 80, 80)); // dark gray
+    //material->setDiffuse(QColor(80, 80, 80)); // dark gray
+    material->setDiffuse(QColor(48, 48, 48));   // plate color
+    material->setSpecular(QColor(0, 0, 0));     // no shiny reflection
+    material->setAmbient(QColor(48, 48, 48));   // optional: make overall lighting uniform
+    material->setShininess(0.0f);               // zero shininess
 
     auto *transform = new Qt3DCore::QTransform();
     transform->setRotation(QQuaternion::fromEulerAngles(0, 0, 0)); // horizontal plane
@@ -191,6 +238,7 @@ void ViewerWidget::createAxes()
 
     auto *xMaterial = new Qt3DExtras::QPhongMaterial();
     xMaterial->setAmbient(QColor(255, 0, 0));
+    xMaterial->setSpecular(QColor(0, 0, 0));
 
     auto *xTransform = new Qt3DCore::QTransform();
     xTransform->setRotation(QQuaternion::fromEulerAngles(0, 0, 90));
@@ -208,6 +256,7 @@ void ViewerWidget::createAxes()
 
     auto *yMaterial = new Qt3DExtras::QPhongMaterial();
     yMaterial->setAmbient(QColor(0, 255, 0));
+    yMaterial->setSpecular(QColor(0, 0, 0));
 
     auto *yTransform = new Qt3DCore::QTransform();
     yTransform->setTranslation(corner + QVector3D(0, axisLength/2, 0));
@@ -224,6 +273,7 @@ void ViewerWidget::createAxes()
 
     auto *zMaterial = new Qt3DExtras::QPhongMaterial();
     zMaterial->setAmbient(QColor(0, 0, 255));
+    zMaterial->setSpecular(QColor(0, 0, 0));
 
     auto *zTransform = new Qt3DCore::QTransform();
     zTransform->setRotation(QQuaternion::fromEulerAngles(90, 0, 0));
@@ -271,7 +321,11 @@ void ViewerWidget::addSTLModel(const QString &stlPath)
     mesh->setSource(QUrl::fromLocalFile(stlPath));
 
     auto *material = new Qt3DExtras::QPhongMaterial();
-    material->setDiffuse(QColor(180, 180, 180));
+    //material->setDiffuse(QColor(180, 180, 180));
+    //material->setAmbient(QColor(80, 80, 80));
+    material->setDiffuse(QColor(30, 43, 112));
+    material->setSpecular(QColor(0, 0, 0));     // no shiny reflection
+    material->setAmbient(QColor(21, 33, 92));
 
     auto *transform = new Qt3DCore::QTransform();
     modelTransform = transform; // keep for rotations
@@ -290,8 +344,15 @@ void ViewerWidget::rotateModel(int x, int y, int z)
 {
     if (!modelTransform) return;
 
-    modelTransform->setRotation(QQuaternion::fromEulerAngles(x, y, z));
+    QQuaternion q = QQuaternion::fromEulerAngles(x, y, z);
 
+    // Apply rotation
+    modelTransform->setRotation(q);
+
+    // Recenter AFTER rotation
+    recenterModel();
+
+    qDebug() << "[Viewer] Rotated + reused centering";
 }
 
 void ViewerWidget::fitSTLToBuildVolume(Qt3DCore::QEntity *entity)
@@ -302,20 +363,9 @@ void ViewerWidget::fitSTLToBuildVolume(Qt3DCore::QEntity *entity)
     auto *mesh = entity->componentsOfType<Qt3DRender::QMesh>().first();
     if (!mesh) return;
 
-    // QMesh itself doesn't provide bounds, so we'll use approximate approach:
-    // Use default scale factor, e.g., 1.0 for now, later you can compute from STL metadata
-    // For simplicity, we'll center it at the build volume center
-
     auto *transform = new Qt3DCore::QTransform();
 
-    // Compute scale factors for X, Y, Z (just uniform scale for now)
-    // This ensures the STL fits inside the build volume
     float scaleFactor = qMin(buildVolumeX, qMin(buildVolumeY, buildVolumeZ)) / 80.0f;
-
-    //transform->setScale3D(QVector3D(scaleFactor, scaleFactor, scaleFactor));
-
-    // Center the model in the build volume
-    //transform->setTranslation(QVector3D(0, buildVolumeY / 2.0f, 0));
 
     // Uniform scale
     transform->setScale3D(QVector3D(scaleFactor, scaleFactor, scaleFactor));
@@ -325,7 +375,6 @@ void ViewerWidget::fitSTLToBuildVolume(Qt3DCore::QEntity *entity)
     transform->setRotation(uprightRotation);
 
     // Center in build volume
-    //QVector3D centerOffset(0, buildVolumeY / 2.0f, 0);
     QVector3D centerOffset(0, 0, 0);
 
     transform->setTranslation(centerOffset);
@@ -336,4 +385,12 @@ void ViewerWidget::fitSTLToBuildVolume(Qt3DCore::QEntity *entity)
     modelTransform = transform;
 
     qDebug() << "[ViewerWidget] STL fitted to build volume with scale:" << scaleFactor;
+}
+
+void ViewerWidget::recenterModel()
+{
+    if (!modelTransform) return;
+
+    // For now, simple + reliable centering (what you're already doing)
+    modelTransform->setTranslation(QVector3D(0, 0, 0));
 }
