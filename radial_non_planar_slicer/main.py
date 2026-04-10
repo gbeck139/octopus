@@ -109,10 +109,12 @@ def run_slicer_pipeline(stl_path_input: str, MODEL_NAME: str, slicer_path: str, 
 
 def main():
     # CLI
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--stl", required=True)
-    parser.add_argument("--model", required=True)
-    parser.add_argument("--prusa", required=True)
+    parser = argparse.ArgumentParser(
+        description="Radial Non-Planar Slicer for 4-axis printer"
+    )
+    parser.add_argument("--stl", required=True, help="Path to input STL file")
+    parser.add_argument("--model", required=True, help="Model name (used for output filenames)")
+    parser.add_argument("--prusa", required=True, help="Path to PrusaSlicer executable")
     parser.add_argument("--rotX", type=float, default=0)
     parser.add_argument("--rotY", type=float, default=0)
     parser.add_argument("--rotZ", type=float, default=0)

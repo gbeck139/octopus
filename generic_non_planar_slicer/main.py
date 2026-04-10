@@ -30,12 +30,14 @@ OUTPUT_GCODE_DIR = os.path.join(base_dir, "output_gcode")
 PICKLE_DIR = os.path.join(base_dir, "pickle_files")
 GIF_DIR = os.path.join(base_dir, "gifs")
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--model", default="propeller")
-parser.add_argument("--stl")
-parser.add_argument("--slicer")
-parser.add_argument("--slicer-config")
-parser.add_argument("--visualize", action="store_true")
+parser = argparse.ArgumentParser(
+    description="Generic Non-Planar Slicer using tetrahedral mesh deformation"
+)
+parser.add_argument("--stl", required=True, help="Path to input STL file")
+parser.add_argument("--model", required=True, help="Model name (used for output filenames)")
+parser.add_argument("--prusa", help="Path to PrusaSlicer executable")
+parser.add_argument("--prusa-config", help="Path to PrusaSlicer config INI file")
+parser.add_argument("--visualize", action="store_true", help="Enable visualization")
 args = parser.parse_args()
 
 model_name = args.model
@@ -1016,10 +1018,10 @@ with open(deformed_pickle_path, 'wb') as f:
 deformed_gcode_path = os.path.join(INPUT_GCODE_DIR, f"{model_name}_deformed_tet.gcode")
 
 print(f"\n[STEP 1 COMPLETE] Deformed mesh saved to: {deformed_stl_path}")
-if args.slicer:
-    slicer_command = [args.slicer]
-    if args.slicer_config:
-        slicer_command.extend(["--load", args.slicer_config])
+if args.prusa:
+    slicer_command = [args.prusa]
+    if args.prusa_config:
+        slicer_command.extend(["--load", args.prusa_config])
     slicer_command.extend([
         "--ensure-on-bed",
         "--export-gcode",
