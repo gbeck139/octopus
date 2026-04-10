@@ -7,6 +7,8 @@ PrepareTab::PrepareTab(QWidget *parent)
 {
     ui->setupUi(this);
 
+    ui->visual3DWidget->setModel(model3D);
+
     //ui->visual3DWidget->loadSTL("C:/Users/canca/Downloads/pumpkin.stl");
     ui->visual3DWidget->setModelVisible(true);
 }
@@ -31,3 +33,20 @@ void PrepareTab::onPrinterChanged(const QString &printerId)
     // - update currently selected printer
 }
 
+void PrepareTab::displaySTLInViewer(const QString &filePath)
+{
+    if (!filePath.isEmpty() && ui->visual3DWidget) {
+        ui->visual3DWidget->addSTLModel(filePath);
+        qDebug() << "[PrepareTab] STL sent to ViewerWidget:" << filePath;
+    }
+}
+
+void PrepareTab::rotateModel(int x, int y, int z)
+{
+    ui->visual3DWidget->rotateModel(x, y, z);
+}
+
+void PrepareTab::setModel(Model3D* model)
+{
+    model3D = model;
+}
