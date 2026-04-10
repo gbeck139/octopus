@@ -23,7 +23,8 @@ OUTPUT_GCODE_DIR = os.path.join(base_dir, "output_gcode")
 PRUSA_CONFIG_DIR = os.path.join(base_dir, "prusa_slicer")
 
 
-def run_slicer_pipeline(stl_path_input, model_name, slicer_path, z_split, cone_angle):
+def run_slicer_pipeline(stl_path_input, model_name, slicer_path, z_split, cone_angle,
+                        wave_type="none", wave_amplitude=1.0, wave_length=5.0):
     """
     Full conic slicing pipeline:
     1. Load STL mesh
@@ -48,9 +49,11 @@ def run_slicer_pipeline(stl_path_input, model_name, slicer_path, z_split, cone_a
     print(f"Lower mesh: {lower_mesh.n_points} points, {lower_mesh.n_cells} faces")
     print(f"Upper mesh: {upper_mesh.n_points} points, {upper_mesh.n_cells} faces")
 
-    print(f"\nDeforming upper mesh with cone angle {cone_angle}°...\n", flush=True)
+    wave_desc = f" + {wave_type} wave (A={wave_amplitude}mm, λ={wave_length}mm)" if wave_type != "none" else ""
+    print(f"\nDeforming upper mesh with cone angle {cone_angle}°{wave_desc}...\n", flush=True)
 
-    upper_deformed, transform_params = deform.deform_upper_mesh(upper_mesh, cone_angle)
+    upper_deformed, transform_params = deform.deform_upper_mesh(
+        upper_mesh, cone_angle, wave_type, wave_amplitude, wave_length, model_name)
     # Store z_split in transform params for the merge step
     transform_params["z_split"] = float(z_split)
     deform.save_meshes(lower_mesh, upper_deformed, transform_params, model_name)
@@ -126,9 +129,16 @@ def main():
                         help="Z height at which to split the mesh (default: 1.0mm)")
     parser.add_argument("--cone-angle", required=True, type=float,
                         help="Cone half-angle in degrees (controls steepness)")
+    parser.add_argument("--wave-type", choices=["none", "sine", "sawtooth", "sine_curvature", "sine_azimuthal", "sine_normal"], default="none",
+                        help="Wave modulation pattern (default: none)")
+    parser.add_argument("--wave-amplitude", type=float, default=1.0,
+                        help="Wave amplitude in mm (default: 1.0)")
+    parser.add_argument("--wave-length", type=float, default=5.0,
+                        help="Wave wavelength in mm, or number of lobes for sine_azimuthal mode (default: 5.0)")
     args = parser.parse_args()
 
-    run_slicer_pipeline(args.stl, args.model, args.prusa, args.z_split, args.cone_angle)
+    run_slicer_pipeline(args.stl, args.model, args.prusa, args.z_split, args.cone_angle,
+                        args.wave_type, args.wave_amplitude, args.wave_length)
 
 
 if __name__ == "__main__":

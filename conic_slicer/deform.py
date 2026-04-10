@@ -65,7 +65,7 @@ def split_mesh(mesh, z_split):
     return lower, upper, mesh_center_xy
 
 
-def deform_upper_mesh(upper_mesh, cone_angle_deg):
+def deform_upper_mesh(upper_mesh, cone_angle_deg, wave_type="none", wave_amplitude=1.0, wave_length=5.0, model_name=""):
     """
     Apply conic deformation to the upper mesh portion.
 
@@ -90,9 +90,33 @@ def deform_upper_mesh(upper_mesh, cone_angle_deg):
         mesh = mesh.triangulate()
 
     # Subdivide if mesh is too coarse
-    TARGET_POINT_COUNT = 500000
+    TARGET_POINT_COUNT = 4000000
     while mesh.n_points < TARGET_POINT_COUNT:
         mesh = mesh.subdivide(1, subfilter='linear')
+
+    # Compute curvature on the subdivided mesh BEFORE any deformation
+    # (we want curvature of the original shape, not the deformed shape)
+    curvature_weight = None
+    if wave_type == "sine_curvature":
+        curvature = np.abs(mesh.curvature(curv_type='mean'))
+        cap = np.percentile(curvature, 95)
+        cap = max(cap, 1e-8)  # avoid division by zero on perfectly flat meshes
+        curvature_weight = np.clip(curvature / cap, 0, 1)
+
+    # Compute surface-normal weights BEFORE deformation so normals reflect
+    # the original geometry.  Flat walls facing radially get weight ~ 0
+    # (wave suppressed), curved/horizontal surfaces get weight ~ 1.
+    normal_weight = None
+    if wave_type == "sine_normal":
+        mesh.compute_normals(point_normals=True, cell_normals=False, inplace=True)
+        normals = mesh.point_data['Normals']
+        xy = mesh.points[:, :2].copy()
+        r_vals = np.linalg.norm(xy, axis=1, keepdims=True)
+        r_vals = np.maximum(r_vals, 1e-6)  # avoid division by zero
+        radial_dir = xy / r_vals
+        normal_radial = np.abs(normals[:, 0] * radial_dir[:, 0] + normals[:, 1] * radial_dir[:, 1])
+        normal_weight = 1.0 - normal_radial
+        normal_weight = np.clip(normal_weight, 0, 1)
 
     cone_angle_rad = np.deg2rad(cone_angle_deg)
 
@@ -107,6 +131,25 @@ def deform_upper_mesh(upper_mesh, cone_angle_deg):
     # Apply conic deformation: lift z by tan(angle) * r
     translate_upwards = np.zeros((len(mesh.points), 3))
     translate_upwards[:, 2] = np.tan(cone_angle_rad) * distances_to_center
+
+    # Wave modulation (optional)
+    if wave_type == "sine":
+        translate_upwards[:, 2] += wave_amplitude * np.sin(2 * np.pi * distances_to_center / wave_length)
+    elif wave_type == "sawtooth":
+        translate_upwards[:, 2] += wave_amplitude * (2 * (distances_to_center % wave_length) / wave_length - 1)
+    elif wave_type == "sine_curvature":
+        translate_upwards[:, 2] += wave_amplitude * curvature_weight * np.sin(2 * np.pi * distances_to_center / wave_length)
+        # Store as point_data so it survives clip/fill_holes, save .npy after those ops
+        mesh["_wave_weights"] = curvature_weight
+    elif wave_type == "sine_azimuthal":
+        n_lobes = wave_length
+        theta = np.arctan2(mesh.points[:, 1], mesh.points[:, 0])
+        translate_upwards[:, 2] += wave_amplitude * np.sin(n_lobes * theta)
+    elif wave_type == "sine_normal":
+        translate_upwards[:, 2] += wave_amplitude * normal_weight * np.sin(2 * np.pi * distances_to_center / wave_length)
+        # Store as point_data so it survives clip/fill_holes, save .npy after those ops
+        mesh["_wave_weights"] = normal_weight
+
     mesh.points += translate_upwards
 
     # Clip the cone tip to create a flat base that PrusaSlicer can extrude on.
@@ -123,6 +166,14 @@ def deform_upper_mesh(upper_mesh, cone_angle_deg):
     if not mesh.is_all_triangles:
         mesh = mesh.triangulate()
 
+    # Save wave weights after clip/fill so vertex count matches the saved STL
+    if "_wave_weights" in mesh.point_data:
+        os.makedirs(OUTPUT_MODELS_DIR, exist_ok=True)
+        weight_name = "curvature" if wave_type == "sine_curvature" else "normal"
+        np.save(os.path.join(OUTPUT_MODELS_DIR, f"{model_name}_{weight_name}_weights.npy"),
+                mesh.point_data["_wave_weights"])
+        del mesh.point_data["_wave_weights"]
+
     # Set bottom to z=0 for PrusaSlicer. Do NOT re-center XY — both halves
     # must share the same XY origin (set by split_mesh) so they align.
     xmin, xmax, ymin, ymax, zmin, zmax = mesh.bounds
@@ -133,7 +184,13 @@ def deform_upper_mesh(upper_mesh, cone_angle_deg):
         "cone_angle_deg": float(cone_angle_deg),
         "tip_clip_height": float(TIP_CLIP_HEIGHT),
         "z_offset": float(z_offset),
+        "wave_type": wave_type,
+        "wave_amplitude": float(wave_amplitude),
+        "wave_length": float(wave_length),
     }
+
+    if wave_type == "sine_curvature":
+        transform_params["wave_adaptive"] = "curvature"
 
     return mesh, transform_params
 

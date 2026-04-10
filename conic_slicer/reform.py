@@ -1,6 +1,8 @@
 import numpy as np
 import json
 from pygcode import Line
+from scipy.spatial import cKDTree
+import pyvista as pv
 import os
 import sys
 
@@ -130,6 +132,23 @@ def load_gcode_and_undeform(model_name, transform_params=None):
     center_offset = np.array([center_x, center_y, 0])
     positions -= center_offset
 
+    # Read wave params
+    wave_type = transform_params.get("wave_type", "none")
+    wave_amplitude = transform_params.get("wave_amplitude", 0.0)
+    wave_length = transform_params.get("wave_length", 1.0)
+
+    # For wave correction: find the mesh-surface r for each G-code point.
+    # G-code toolpath positions are offset from the mesh surface (nozzle width),
+    # which causes a wave phase error. Using the nearest mesh vertex's r eliminates this.
+    if wave_type != "none":
+        mesh_path = os.path.join(OUTPUT_MODELS_DIR, f"{model_name}_upper_deformed.stl")
+        deformed_mesh = pv.read(mesh_path)
+        mesh_points = deformed_mesh.points - np.array([center_x, center_y, 0.0])
+        tree = cKDTree(mesh_points)
+        _, nearest_idx = tree.query(positions)  # lookup in z_saved space (before z_offset)
+        mesh_r = np.linalg.norm(mesh_points[nearest_idx, :2], axis=1)
+        print(f"Wave r-correction: loaded {len(mesh_points)} mesh vertices for KDTree lookup")
+
     # Add back the Z offset that was subtracted in deform to set z_min=0.
     # This restores positions to the deformed coordinate space.
     positions[:, 2] += z_offset
@@ -139,13 +158,47 @@ def load_gcode_and_undeform(model_name, transform_params=None):
     # Reverse Z-lift: z = z_deformed - tan(angle) * r
     translate_upwards = np.zeros((len(positions), 3))
     translate_upwards[:, 2] = np.tan(cone_angle_rad) * distances_to_center
+
+    # Reverse wave modulation using mesh-surface r (not G-code r)
+    if wave_type == "sine":
+        translate_upwards[:, 2] += wave_amplitude * np.sin(2 * np.pi * mesh_r / wave_length)
+    elif wave_type == "sawtooth":
+        translate_upwards[:, 2] += wave_amplitude * (2 * (mesh_r % wave_length) / wave_length - 1)
+    elif wave_type == "sine_azimuthal":
+        n_lobes = wave_length
+        mesh_theta = np.arctan2(mesh_points[nearest_idx, 1], mesh_points[nearest_idx, 0])
+        translate_upwards[:, 2] += wave_amplitude * np.sin(n_lobes * mesh_theta)
+    elif wave_type == "sine_curvature":
+        weights_path = os.path.join(OUTPUT_MODELS_DIR, f"{model_name}_curvature_weights.npy")
+        curvature_weights = np.load(weights_path)
+        point_curv_weights = curvature_weights[nearest_idx]
+        translate_upwards[:, 2] += wave_amplitude * point_curv_weights * np.sin(2 * np.pi * mesh_r / wave_length)
+    elif wave_type == "sine_normal":
+        weights_path = os.path.join(OUTPUT_MODELS_DIR, f"{model_name}_normal_weights.npy")
+        normal_weights = np.load(weights_path)
+        point_weights = normal_weights[nearest_idx]
+        translate_upwards[:, 2] += wave_amplitude * point_weights * np.sin(2 * np.pi * mesh_r / wave_length)
+
     new_positions = positions - translate_upwards
 
     # Reverse Z-scaling
     new_positions[:, 2] *= cos_angle
 
-    # The rotation at each point is the cone angle (uniform for conic slicer)
-    rotations = np.full(len(new_positions), cone_angle_rad)
+    # Compute per-point surface angle from derivative of deformation
+    dz_dr = np.tan(cone_angle_rad) * np.ones(len(new_positions))
+
+    if wave_type == "sine":
+        dz_dr += wave_amplitude * (2 * np.pi / wave_length) * np.cos(2 * np.pi * mesh_r / wave_length)
+    elif wave_type == "sawtooth":
+        dz_dr += wave_amplitude * 2.0 / wave_length
+    elif wave_type == "sine_curvature":
+        dz_dr += wave_amplitude * point_curv_weights * (2 * np.pi / wave_length) * np.cos(2 * np.pi * mesh_r / wave_length)
+    elif wave_type == "sine_azimuthal":
+        pass  # azimuthal wave doesn't change the radial slope
+    elif wave_type == "sine_normal":
+        dz_dr += wave_amplitude * point_weights * (2 * np.pi / wave_length) * np.cos(2 * np.pi * mesh_r / wave_length)
+
+    rotations = np.arctan(dz_dr)
 
     # Safety filtering
     MIN_SAFE_Z = -50.0
