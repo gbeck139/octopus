@@ -32,8 +32,8 @@ Deformation parameters (`angle_base`, `angle_factor`, `transition_z`, `blend_hei
 - `main.py` - CLI entry point and pipeline orchestration
 - `deform.py` - Radial deformation with transition blending
 - `reform.py` - G-code back-transformation
-- `better_visualizer.py` - Output visualization
 - `visualize_gcode.py` - G-code path visualization
+- See also: `tools/better_visualizer.py` for interactive G-code visualization
 
 ## Setup
 
