@@ -48,4 +48,10 @@ jobs:
 
       - name: Run native slicer tests
         working-directory: native_slicer
-        run: python -m pytest tests/ -v
+        run: |
+          python -c "
+          import sys; sys.path.insert(0, '.')
+          from cxzb_slicer.kinematics import CXZBKinematics
+          print('Direct import OK:', CXZBKinematics)
+          "
+          python -m pytest tests/ -v --import-mode=importlib
