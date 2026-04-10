@@ -1,0 +1,51 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  smoke-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install pytest numpy scipy pyvista pygcode matplotlib networkx cyclopts euclid3 trimesh robust_laplacian scikit-image
+
+      - name: Create slicer venvs (symlink to system Python for smoke tests)
+        run: |
+          for dir in conic_slicer radial_non_planar_slicer hybrid_slicer generic_non_planar_slicer native_slicer; do
+            mkdir -p "$dir/venv/bin"
+            ln -sf "$(which python3)" "$dir/venv/bin/python3"
+          done
+
+      - name: Run smoke tests
+        run: pytest tests/ -m smoke -v
+
+  native-slicer-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pytest numpy scipy pyvista matplotlib trimesh networkx robust_laplacian scikit-image
+
+      - name: Run native slicer tests
+        working-directory: native_slicer
+        run: pytest tests/ -v
