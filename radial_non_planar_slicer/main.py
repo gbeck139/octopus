@@ -32,13 +32,12 @@ PRUSA_CONFIG_DIR = os.path.join(base_dir, "prusa_slicer")
 
 #MODEL_NAME = '3DBenchy'
 
-def run_slicer_pipeline(stl_path_input: str, MODEL_NAME: str, slicer_path: str):
+def run_slicer_pipeline(stl_path_input: str, MODEL_NAME: str, slicer_path: str, rotX, rotY, rotZ):
 
     os.makedirs(INPUT_MODELS_DIR, exist_ok=True)
 
     local_stl_path = os.path.join(INPUT_MODELS_DIR, f"{MODEL_NAME}.stl")
     shutil.copyfile(stl_path_input, local_stl_path)
-
 
     # Save the original cwd
     #original_cwd = os.getcwd()
@@ -50,6 +49,12 @@ def run_slicer_pipeline(stl_path_input: str, MODEL_NAME: str, slicer_path: str):
 
     # Deform
     mesh = deform.load_mesh(MODEL_NAME)
+
+    # Apply rotation BEFORE any processing
+    mesh.rotate_x(rotX, inplace=True)
+    mesh.rotate_y(rotY, inplace=True)
+    mesh.rotate_z(rotZ, inplace=True)
+
     deformed_mesh, transform_params = deform.deform_mesh(mesh, scale=1)
     deform.save_deformed_mesh(deformed_mesh, transform_params, MODEL_NAME)
     #deform.plot_deformed_mesh(deformed_mesh)
@@ -108,9 +113,19 @@ def main():
     parser.add_argument("--stl", required=True)
     parser.add_argument("--model", required=True)
     parser.add_argument("--prusa", required=True)
+    parser.add_argument("--rotX", type=float, default=0)
+    parser.add_argument("--rotY", type=float, default=0)
+    parser.add_argument("--rotZ", type=float, default=0)
     args = parser.parse_args()
 
-    run_slicer_pipeline(args.stl, args.model, args.prusa)
+    run_slicer_pipeline(
+        args.stl,
+        args.model,
+        args.prusa,
+        args.rotX,
+        args.rotY,
+        args.rotZ
+    )
 
 
 if __name__ == "__main__":

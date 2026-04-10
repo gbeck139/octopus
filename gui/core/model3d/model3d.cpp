@@ -1,6 +1,8 @@
 #include "model3d.h"
 
 #include <QDebug>
+#include <QDir>
+#include <QMatrix4x4>
 
 Model3D::Model3D(QObject *parent)
     : QObject{parent},
@@ -16,37 +18,38 @@ bool Model3D::loadModel(const QString &filePath)
         return false;
     }
 
-    qDebug() << "Opening File:" << filePath;
-
     clearModel();
 
-    qDebug() << "Finished clearing current model";
+    // Make a temp copy of the STL with the same base name
+    QFileInfo info(filePath);
+    QString tempPath = QDir::temp().filePath(info.completeBaseName() + ".stl");
 
-    // Detect ASCII vs Binary
-    QByteArray start = file.peek(256);
-    bool isAscii = start.startsWith("solid") && start.contains("facet");
-    qDebug() << "Loading STL file:" << "ASCII?" << isAscii << ". BINARY?" << !isAscii;
+    if (QFile::exists(tempPath))
+        QFile::remove(tempPath);
 
-    bool success = false;
-    if (isAscii) {
-        success = loadAsciiSTL(file);
-    } else {
-        success = loadBinarySTL(file);
-    }
-
-    file.close();
-
-    if (!success || meshTriangles.isEmpty()) {
-        qDebug() << "ERROR: Notriangles loaded from STL";
+    if (!QFile::copy(filePath, tempPath)) {
+        qDebug() << "[Model3D] Failed to copy STL to temp:" << tempPath;
         return false;
     }
 
-    sourceFilePath = filePath;
+    qDebug() << "[Model3D] Temp STL created:" << tempPath;
+
+    // Now treat tempPath as the "source"
+    sourceFilePath = tempPath;
+
+    // Detect ASCII vs Binary from the original file, then load
+    QByteArray start = file.peek(256);
+    bool isAscii = start.startsWith("solid") && start.contains("facet");
+    bool success = isAscii ? loadAsciiSTL(file) : loadBinarySTL(file);
+
+    file.close();
+    if (!success || meshTriangles.isEmpty()) {
+        qDebug() << "ERROR: No triangles loaded from STL";
+        return false;
+    }
+
     computeBoundingBox();
-
     emit modelChanged();
-
-    qDebug() << "STL loaded successfully, triangles:" << meshTriangles.size();
 
     return true;
 }
@@ -167,4 +170,47 @@ bool Model3D::loadBinarySTL(QFile &file)
     return true;
 }
 
+void Model3D::rotateToFace(const QString &face)
+{
+    if (meshTriangles.isEmpty()) return;
 
+    QMatrix4x4 mat;
+    if (face == "Front") mat.setToIdentity();
+    else if (face == "Back") mat.rotate(180, 0, 1, 0);
+    else if (face == "Top") mat.rotate(-90, 1, 0, 0);
+    else if (face == "Bottom") mat.rotate(90, 1, 0, 0);
+    else if (face == "Left") mat.rotate(-90, 0, 1, 0);
+    else if (face == "Right") mat.rotate(90, 0, 1, 0);
+
+    for (auto &tri : meshTriangles) {
+        tri.v1 = mat * tri.v1;
+        tri.v2 = mat * tri.v2;
+        tri.v3 = mat * tri.v3;
+    }
+
+    computeBoundingBox();
+    emit modelChanged();
+}
+
+bool Model3D::saveTempSTL()
+{
+    if (meshTriangles.isEmpty() || sourceFilePath.isEmpty()) return false;
+
+    QFile file(sourceFilePath);
+    if (!file.open(QIODevice::WriteOnly)) return false;
+
+    QTextStream out(&file);
+    out << "solid model\n";
+    for (const auto &tri : meshTriangles) {
+        out << "  facet normal 0 0 0\n";
+        out << "    outer loop\n";
+        out << "      vertex " << tri.v1.x() << " " << tri.v1.y() << " " << tri.v1.z() << "\n";
+        out << "      vertex " << tri.v2.x() << " " << tri.v2.y() << " " << tri.v2.z() << "\n";
+        out << "      vertex " << tri.v3.x() << " " << tri.v3.y() << " " << tri.v3.z() << "\n";
+        out << "    endloop\n";
+        out << "  endfacet\n";
+    }
+    out << "endsolid model\n";
+    file.close();
+    return true;
+}
