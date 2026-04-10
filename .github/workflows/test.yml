@@ -50,8 +50,14 @@ jobs:
         working-directory: native_slicer
         run: |
           python -c "
-          import sys; sys.path.insert(0, '.')
-          from cxzb_slicer.kinematics import CXZBKinematics
-          print('Direct import OK:', CXZBKinematics)
+          import sys, os; sys.path.insert(0, os.getcwd())
+          print('cwd:', os.getcwd())
+          print('sys.path:', sys.path[:5])
+          print('kinematics __init__.py exists:', os.path.exists('cxzb_slicer/kinematics/__init__.py'))
+          print('ls kinematics:', os.listdir('cxzb_slicer/kinematics'))
+          import cxzb_slicer; print('cxzb_slicer location:', cxzb_slicer.__file__)
+          import cxzb_slicer.kinematics as k; print('kinematics spec:', k.__spec__)
+          print('kinematics file:', getattr(k, '__file__', 'NO FILE'))
+          print('kinematics path:', getattr(k, '__path__', 'NO PATH'))
           "
           python -m pytest tests/ -v --import-mode=importlib
