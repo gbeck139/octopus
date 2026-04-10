@@ -48,4 +48,4 @@ jobs:
 
       - name: Run native slicer tests
         working-directory: native_slicer
-        run: pytest tests/ -v
+        run: PYTHONPATH=. pytest tests/ -v
