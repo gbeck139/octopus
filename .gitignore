@@ -1,4 +1,19 @@
+# Virtual environments
 venv/
+.venv/
+env/
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.egg-info/
+*.egg
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Slicer I/O directories (keep .gitkeep placeholders)
 **/output_models/*
 !**/output_models/.gitkeep
 **/input_models/*
@@ -7,14 +22,32 @@ venv/
 !**/output_gcode/.gitkeep
 **/input_gcode/*
 !**/input_gcode/.gitkeep
-gifs/
-__pycache__/
+
+# Generated/temp files (prefixed with _)
 **/_*
-# Ignore Python exe and bundle folders
-/slicerbundle/
-*.exe
-*.pyc
-__pycache__/
-dist/
+
+# Build artifacts
 build/
+dist/
 *.spec
+*.exe
+/slicerbundle/
+
+# Pickle / serialized data
+*.pkl
+pickle_files/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+System Volume Information/
+
+# Visualization
+gifs/
