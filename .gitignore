@@ -26,8 +26,9 @@ htmlcov/
 # G-code files (generated artifacts)
 *.gcode
 
-# Generated/temp files (prefixed with _)
+# Generated/temp files (prefixed with _), but not __init__.py
 **/_*
+!**/__init__.py
 
 # Build artifacts
 build/
