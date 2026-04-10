@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include "settingsmenuwidget.h"
+#include "model3d.h"
 
 namespace Ui {
 class PrepareTab;
@@ -15,6 +16,7 @@ class PrepareTab : public QWidget
 public:
     explicit PrepareTab(QWidget *parent = nullptr);
     ~PrepareTab();
+    void setModel(Model3D* model);   // 👈 ADD THIS
     void displaySTLInViewer(const QString &filePath);
     void rotateModel(int x, int y, int z);
 
@@ -25,6 +27,7 @@ public slots:
 
 private:
     Ui::PrepareTab *ui;
+    Model3D* model3D = nullptr;
 };
 
 #endif // PREPARETAB_H

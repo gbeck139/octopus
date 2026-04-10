@@ -30,6 +30,8 @@ MainWindow::MainWindow(QWidget *parent)
     slicerRunner = new SlicerRunner(this);
     loadingDialog = new SlicerLoadingDialog(this);
 
+    ui->prepareTabWidget->setModel(model3D);
+
     // Set Printer Profiles
     if (!appConfig->isFirstRun()) {
         profileManager->setActivePrinter(appConfig->getActivePrinterId());

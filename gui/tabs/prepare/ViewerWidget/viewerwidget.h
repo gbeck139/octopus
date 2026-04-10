@@ -4,12 +4,15 @@
 #include <Qt3DCore/QEntity>
 #include <Qt3DCore/QTransform>
 #include <Qt3DRender/QMesh>
+#include "model3d.h"
 
 class ViewerWidget : public QWidget
 {
     Q_OBJECT
 public:
     explicit ViewerWidget(QWidget *parent = nullptr);
+
+    void setModel(Model3D* model);
 
     void setModelVisible(bool visible);
     void setRotation(int x, int y, int z);
@@ -18,6 +21,8 @@ public:
     void rotateModel(int x, int y, int z);
 
 private:
+    Model3D* model3D = nullptr;
+
     Qt3DCore::QEntity *rootEntity;
 
     Qt3DCore::QEntity *buildVolumeEntity;
@@ -26,10 +31,10 @@ private:
     void createAxes();
     void createBuildVolume();
     void createBuildPlate();
-    void fitSTLToBuildVolume(Qt3DCore::QEntity *entity);
-    void computeBoundingBox(Qt3DRender::QMesh* mesh);
+    // void fitSTLToBuildVolume(Qt3DCore::QEntity *entity);
+    // void computeBoundingBox(Qt3DRender::QMesh* mesh);
 
-    void recenterModel();
+    // void recenterModel();
 
     // Build volume dimensions
     float buildVolumeX = 20.0f;
@@ -37,8 +42,8 @@ private:
     float buildVolumeZ = 20.0f;
 
     // --- Bounding box (VERY IMPORTANT) ---
-    QVector3D originalMin;
-    QVector3D originalMax;
+    // QVector3D originalMin;
+    // QVector3D originalMax;
     QVector3D modelMin;
     QVector3D modelMax;
     QVector3D modelCenter;
