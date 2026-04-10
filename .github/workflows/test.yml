@@ -47,5 +47,4 @@ jobs:
         run: pip install pytest numpy scipy pyvista matplotlib trimesh networkx robust_laplacian scikit-image
 
       - name: Run native slicer tests
-        working-directory: native_slicer
-        run: PYTHONPATH=. pytest tests/ -v --rootdir=.
+        run: cd native_slicer && python -m pytest tests/ -v --override-ini="testpaths=tests"
