@@ -35,6 +35,31 @@ Each slicer directory follows a standard layout:
 - `prusa_slicer/` -- PrusaSlicer configuration INI files
 - `requirements.txt` -- Pinned Python dependencies
 
+## Slicer CLI
+
+All slicers share a standard CLI: `python main.py --stl <file> --model <name>`. Slicers that use PrusaSlicer also require `--prusa <path>`.
+
+```bash
+# Radial slicer
+python main.py --stl model.stl --model mypart --prusa /path/to/PrusaSlicer
+
+# Hybrid slicer (with optional tuning)
+python main.py --stl model.stl --model mypart --prusa /path/to/PrusaSlicer \
+  --max-overhang 25 --rotation-multiplier 1.5
+
+# Conic slicer (cone-angle required)
+python main.py --stl model.stl --model mypart --prusa /path/to/PrusaSlicer \
+  --cone-angle 30 --z-split 1.0 --wave-type sine
+
+# Generic slicer (--prusa optional, prompts for manual slicing if omitted)
+python main.py --stl model.stl --model mypart --prusa /path/to/PrusaSlicer
+
+# Native slicer (no PrusaSlicer needed, does its own implicit slicing)
+python main.py --stl model.stl --model mypart --layer-height 0.2
+```
+
+Run `python main.py --help` in any slicer directory for full option details.
+
 ## Build Commands
 
 ### GUI (C++ / Qt6)
@@ -56,7 +81,7 @@ cd <slicer_dir>
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-python main.py [args]
+python main.py --help
 ```
 
 ## Running Tests
@@ -79,7 +104,7 @@ pytest tests/test_foo.py    # single test file
 
 ### CI
 
-GitHub Actions runs both smoke tests and native slicer tests on push to `main`/`dev` and on PRs. See `.github/workflows/test.yml`.
+GitHub Actions runs both smoke tests and native slicer tests on push to `main`/`dev`/`test` and on PRs. See `.github/workflows/test.yml`.
 
 ## Key Python Dependencies
 
@@ -88,7 +113,8 @@ numpy, scipy, pyvista (mesh/visualization), networkx (graph algorithms), pygcode
 ## Git Workflow
 
 - `main` -- Stable, tested releases
-- `dev` -- Integration branch
+- `test` -- Integration testing before merging to main
+- `dev` -- Active development
 - `slicer/<name>` -- Slicer-specific feature work
 - `feature/<desc>` -- New features
 - `fix/<desc>` -- Bug fixes
