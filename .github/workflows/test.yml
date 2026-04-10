@@ -20,7 +20,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pytest numpy scipy pyvista pygcode matplotlib networkx cyclopts euclid3 trimesh robust_laplacian scikit-image
+          pip install pytest numpy scipy pyvista pygcode matplotlib networkx cyclopts euclid3 trimesh robust_laplacian scikit-image tetgen open3d
 
       - name: Create slicer venvs (symlink to system Python for smoke tests)
         run: |
