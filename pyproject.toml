@@ -1,0 +1,5 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "smoke: quick import and CLI tests that verify slicers load without errors",
+]
