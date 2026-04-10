@@ -23,6 +23,9 @@ htmlcov/
 **/input_gcode/*
 !**/input_gcode/.gitkeep
 
+# G-code files (generated artifacts)
+*.gcode
+
 # Generated/temp files (prefixed with _)
 **/_*
 
