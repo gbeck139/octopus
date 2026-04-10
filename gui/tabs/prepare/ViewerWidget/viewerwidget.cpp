@@ -7,7 +7,6 @@
 #include <Qt3DExtras/QCylinderMesh>
 #include <Qt3DExtras/QPhongMaterial>
 #include <Qt3DCore/QEntity>
-#include <Qt3DRender/QMesh>
 #include <Qt3DCore/QTransform>
 #include <QQuaternion>
 #include <QVBoxLayout>
@@ -24,6 +23,8 @@
 #include <QUrl>
 #include <QTemporaryFile>
 #include <QUuid>
+#include <cfloat>
+#include <QTimer>
 
 ViewerWidget::ViewerWidget(QWidget *parent)
     : QWidget(parent)
@@ -309,88 +310,199 @@ void ViewerWidget::addSTLModel(const QString &stlPath)
     if (stlPath.isEmpty())
         return;
 
-    // Remove previous model if exists
-    if (modelEntity) {
-        delete modelEntity;
-        modelEntity = nullptr;
+    if (modelRoot) {
+        delete modelRoot;
+        modelRoot = nullptr;
     }
 
-    modelEntity = new Qt3DCore::QEntity(rootEntity);
+    // ROOT (controls final placement)
+    modelRoot = new Qt3DCore::QEntity(rootEntity);
+    modelRootTransform = new Qt3DCore::QTransform();
+    modelRoot->addComponent(modelRootTransform);
+
+    // CENTER ENTITY (pivot fix)
+    modelCenterEntity = new Qt3DCore::QEntity(modelRoot);
+    modelCenterTransform = new Qt3DCore::QTransform();
+    modelCenterEntity->addComponent(modelCenterTransform);
+
+    // MESH ENTITY
+    meshEntity = new Qt3DCore::QEntity(modelCenterEntity);
 
     auto *mesh = new Qt3DRender::QMesh();
     mesh->setSource(QUrl::fromLocalFile(stlPath));
 
     auto *material = new Qt3DExtras::QPhongMaterial();
-    //material->setDiffuse(QColor(180, 180, 180));
-    //material->setAmbient(QColor(80, 80, 80));
     material->setDiffuse(QColor(30, 43, 112));
-    material->setSpecular(QColor(0, 0, 0));     // no shiny reflection
     material->setAmbient(QColor(21, 33, 92));
+    material->setSpecular(QColor(0, 0, 0));
 
-    auto *transform = new Qt3DCore::QTransform();
-    modelTransform = transform; // keep for rotations
+    meshTransform = new Qt3DCore::QTransform();
 
-    modelEntity->addComponent(mesh);
-    modelEntity->addComponent(material);
-    modelEntity->addComponent(transform);
+    meshEntity->addComponent(mesh);
+    meshEntity->addComponent(material);
+    meshEntity->addComponent(meshTransform);
 
-    // Automatically scale & center inside build volume
-    fitSTLToBuildVolume(modelEntity);
+    computeBoundingBox(mesh);
 
-    qDebug() << "[ViewerWidget] STL model loaded and fitted:" << stlPath;
+    // scale
+    float scaleFactor = qMin(buildVolumeX, qMin(buildVolumeY, buildVolumeZ)) / 80.0f;
+    meshTransform->setScale3D(QVector3D(scaleFactor, scaleFactor, scaleFactor));
+
+    // upright
+    meshTransform->setRotation(QQuaternion::fromEulerAngles(-90, 0, 0));
+
+    qDebug() << "MODEL LOADED";
 }
 
 void ViewerWidget::rotateModel(int x, int y, int z)
 {
-    if (!modelTransform) return;
+    if (!meshTransform) return;
 
     QQuaternion q = QQuaternion::fromEulerAngles(x, y, z);
+    QQuaternion upright = QQuaternion::fromEulerAngles(-90, 0, 0);
 
-    // Apply rotation
-    modelTransform->setRotation(q);
+    meshTransform->setRotation(upright * q); // ✅ FIXED ORDER
 
-    // Recenter AFTER rotation
     recenterModel();
-
-    qDebug() << "[Viewer] Rotated + reused centering";
 }
 
-void ViewerWidget::fitSTLToBuildVolume(Qt3DCore::QEntity *entity)
-{
-    if (!entity) return;
+// void ViewerWidget::fitSTLToBuildVolume(Qt3DCore::QEntity *entity)
+// {
+//     if (!entity) return;
 
-    // First, get bounding info from the STL mesh
-    auto *mesh = entity->componentsOfType<Qt3DRender::QMesh>().first();
-    if (!mesh) return;
+//     // First, get bounding info from the STL mesh
+//     auto *mesh = entity->componentsOfType<Qt3DRender::QMesh>().first();
+//     if (!mesh) return;
 
-    auto *transform = new Qt3DCore::QTransform();
+//     auto *transform = new Qt3DCore::QTransform();
 
-    float scaleFactor = qMin(buildVolumeX, qMin(buildVolumeY, buildVolumeZ)) / 80.0f;
+//     float scaleFactor = qMin(buildVolumeX, qMin(buildVolumeY, buildVolumeZ)) / 80.0f;
 
-    // Uniform scale
-    transform->setScale3D(QVector3D(scaleFactor, scaleFactor, scaleFactor));
+//     // Uniform scale
+//     transform->setScale3D(QVector3D(scaleFactor, scaleFactor, scaleFactor));
 
-    // Rotate STL upright (assuming STL Y-up, viewer Z-up)
-    QQuaternion uprightRotation = QQuaternion::fromEulerAngles(-90, 0, 0); // rotate -90° X
-    transform->setRotation(uprightRotation);
+//     // Rotate STL upright (assuming STL Y-up, viewer Z-up)
+//     QQuaternion uprightRotation = QQuaternion::fromEulerAngles(-90, 0, 0); // rotate -90° X
+//     transform->setRotation(uprightRotation);
 
-    // Center in build volume
-    QVector3D centerOffset(0, 0, 0);
+//     // Center in build volume
+//     QVector3D centerOffset(0, 0, 0);
 
-    transform->setTranslation(centerOffset);
+//     transform->setTranslation(centerOffset);
 
-    entity->addComponent(transform);
+//     entity->addComponent(transform);
 
-    // Keep a reference if you want to rotate or move it later
-    modelTransform = transform;
+//     // Keep a reference if you want to rotate or move it later
+//     modelTransform = transform;
 
-    qDebug() << "[ViewerWidget] STL fitted to build volume with scale:" << scaleFactor;
-}
+//     qDebug() << "[ViewerWidget] STL fitted to build volume with scale:" << scaleFactor;
+// }
 
 void ViewerWidget::recenterModel()
 {
-    if (!modelTransform) return;
+    qDebug() << "[recenterModel] CALLED";
 
-    // For now, simple + reliable centering (what you're already doing)
-    modelTransform->setTranslation(QVector3D(0, 0, 0));
+    if (!meshTransform || !modelRootTransform) {
+        qDebug() << "missing transforms";
+        return;
+    }
+
+    if (originalMin == originalMax) {
+        qDebug() << "bbox not ready";
+        return;
+    }
+
+    QQuaternion rot = meshTransform->rotation();
+    float s = meshTransform->scale3D().x(); // uniform scale
+
+    float minY = FLT_MAX;
+
+    for (int i = 0; i < 8; i++) {
+        QVector3D c(
+            (i & 1) ? originalMax.x() : originalMin.x(),
+            (i & 2) ? originalMax.y() : originalMin.y(),
+            (i & 4) ? originalMax.z() : originalMin.z()
+            );
+
+        float worldY = s * rot.rotatedVector(c).y();
+        minY = qMin(minY, worldY);
+    }
+
+    float rootY = modelCenter.y() - minY;
+
+    qDebug() << "[recenterModel] rot:" << rot.toEulerAngles()
+             << "minY:" << minY
+             << "modelCenter.y:" << modelCenter.y()
+             << "rootY:" << rootY;
+
+    modelRootTransform->setTranslation(QVector3D(0, rootY, 0));
+}
+
+void ViewerWidget::computeBoundingBox(Qt3DRender::QMesh* mesh)
+{
+    if (!mesh) return;
+
+    QObject::connect(mesh, &Qt3DRender::QMesh::statusChanged,
+                     this, [=](Qt3DRender::QMesh::Status status)
+                     {
+                         if (status != Qt3DRender::QMesh::Ready)
+                             return;
+
+                         qDebug() << "[Mesh Ready]";
+
+                         auto geom = mesh->geometry();
+                         if (!geom) {
+                             qDebug() << "geometry null";
+                             return;
+                         }
+
+                         auto attr = geom->boundingVolumePositionAttribute();
+                         if (!attr) {
+                             qDebug() << "attr null";
+                             return;
+                         }
+
+                         auto buffer = attr->buffer();
+                         QByteArray data = buffer->data();
+
+                         const float* positions = reinterpret_cast<const float*>(data.constData());
+                         int count = attr->count();
+                         int stride = attr->byteStride() / sizeof(float);
+                         if (stride == 0) stride = 3;
+
+                         modelMin = QVector3D(FLT_MAX, FLT_MAX, FLT_MAX);
+                         modelMax = QVector3D(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+
+                         for (int i = 0; i < count; ++i)
+                         {
+                             QVector3D v(
+                                 positions[i * stride + 0],
+                                 positions[i * stride + 1],
+                                 positions[i * stride + 2]
+                                 );
+
+                             modelMin.setX(qMin(modelMin.x(), v.x()));
+                             modelMin.setY(qMin(modelMin.y(), v.y()));
+                             modelMin.setZ(qMin(modelMin.z(), v.z()));
+
+                             modelMax.setX(qMax(modelMax.x(), v.x()));
+                             modelMax.setY(qMax(modelMax.y(), v.y()));
+                             modelMax.setZ(qMax(modelMax.z(), v.z()));
+                         }
+
+                         modelCenter = (modelMin + modelMax) / 2.0f;
+                         originalMin = modelMin;
+                         originalMax = modelMax;
+
+                         qDebug() << "[BBox]"
+                                  << "Min:" << modelMin
+                                  << "Max:" << modelMax
+                                  << "Center:" << modelCenter;
+
+                         modelCenterTransform->setTranslation(-modelCenter);
+
+                         recenterModel();
+
+                         qDebug() << "[computeBoundingBox DONE]";
+                     });
 }

@@ -3,6 +3,7 @@
 #include <QWidget>
 #include <Qt3DCore/QEntity>
 #include <Qt3DCore/QTransform>
+#include <Qt3DRender/QMesh>
 
 class ViewerWidget : public QWidget
 {
@@ -26,6 +27,7 @@ private:
     void createBuildVolume();
     void createBuildPlate();
     void fitSTLToBuildVolume(Qt3DCore::QEntity *entity);
+    void computeBoundingBox(Qt3DRender::QMesh* mesh);
 
     void recenterModel();
 
@@ -35,6 +37,8 @@ private:
     float buildVolumeZ = 20.0f;
 
     // --- Bounding box (VERY IMPORTANT) ---
+    QVector3D originalMin;
+    QVector3D originalMax;
     QVector3D modelMin;
     QVector3D modelMax;
     QVector3D modelCenter;
@@ -43,6 +47,15 @@ private:
     QVector3D axesOffset = QVector3D(0, 0, 0); // default at origin, can move
 
     // --- Model data ---
-    Qt3DCore::QEntity* modelEntity = nullptr;
-    Qt3DCore::QTransform* modelTransform = nullptr;
+    // Qt3DCore::QEntity* modelEntity = nullptr;
+    // Qt3DCore::QTransform* modelTransform = nullptr;
+
+    Qt3DCore::QEntity* modelRoot = nullptr;
+    Qt3DCore::QTransform* modelRootTransform = nullptr;
+
+    Qt3DCore::QEntity* modelCenterEntity = nullptr;
+    Qt3DCore::QTransform* modelCenterTransform = nullptr;
+
+    Qt3DCore::QEntity* meshEntity = nullptr;
+    Qt3DCore::QTransform* meshTransform = nullptr;
 };
