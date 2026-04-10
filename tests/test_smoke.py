@@ -62,8 +62,16 @@ def test_hybrid_slicer_help():
 @pytest.mark.smoke
 def test_generic_slicer_help():
     output = _run_help("generic_non_planar_slicer")
-    assert "--model" in output
+    assert "--stl" in output
+    assert "--prusa" in output
     assert "--visualize" in output
+
+
+@pytest.mark.smoke
+def test_native_slicer_help():
+    output = _run_help("native_slicer")
+    assert "--stl" in output
+    assert "--model" in output
 
 
 @pytest.mark.smoke
