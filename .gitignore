@@ -55,3 +55,6 @@ System Volume Information/
 
 # Visualization
 gifs/
+
+# Claude's "vision" cache (stats + rendered screenshots of slicer output)
+tools/vision_cache/
