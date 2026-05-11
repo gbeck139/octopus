@@ -443,7 +443,7 @@ void MainWindow::onSliceClicked()
     //slicerRunner->runSlice("currentStlPath", params);
     QString slicerPath =
         QCoreApplication::applicationDirPath()
-        + "/slicerbundle/updated_slicer.exe";
+        + "/slicerbundle/config_slicer_pipeline.exe";
 
     qDebug() << "Looking for slicer at:" << slicerPath;
     if (!QFile::exists(slicerPath)) {
@@ -461,13 +461,19 @@ void MainWindow::onSliceClicked()
         return;
     }
 
+    QString configPath = QCoreApplication::applicationDirPath() + "/slicerbundle/example_config.json";
+
     QStringList args;
     args << "--stl" << stlPath
          << "--model" << modelName
          << "--prusa" << prusaPath
-         << "--rotX" << QString::number(currentRotX)
-         << "--rotY" << QString::number(currentRotY)
-         << "--rotZ" << QString::number(currentRotZ);
+         << "--config" << configPath;
+
+    qDebug() << "*******SLICER STARTING*******";
+
+    qDebug() << "Slicer path:" << slicerPath;
+    qDebug() << "Config path:" << configPath;
+    qDebug() << "Args:" << args;
 
     proc->start(slicerPath, args);
 }
