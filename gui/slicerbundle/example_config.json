@@ -6,8 +6,8 @@
     },
 
     "deformation": {
-        "angle_base": 0,
-        "angle_factor": 0
+        "angle_base": 15,
+        "angle_factor": 30
     },
 
     "print": {

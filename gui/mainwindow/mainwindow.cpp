@@ -379,7 +379,7 @@ void MainWindow::onSliceClicked()
                 // Show Better visualizer (test)
                 QProcess *visualProcess = new QProcess(this);
 
-                QString program2 = "slicerbundle/better_visualizer_test.exe";
+                QString program2 = "slicerbundle/best_visualizer.exe";
                 QStringList arguments2;
                 arguments2 << "--gcode" << lastGeneratedGcodePath;
 
