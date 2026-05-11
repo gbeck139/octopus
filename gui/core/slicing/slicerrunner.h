@@ -13,6 +13,7 @@ public:
     explicit SlicerRunner(QObject *parent = nullptr);
 
     void runSlice(const SliceParameters& params);
+    QProcess* getProcess() const { return process; }
 
 signals:
     void sliceStarted();

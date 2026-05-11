@@ -8,6 +8,7 @@
 
 #include <QDebug>
 #include <QLabel>
+#include <QCloseEvent>
 
 //TODO: move this to model3d model
 struct ModelRotation {
@@ -121,19 +122,30 @@ MainWindow::MainWindow(QWidget *parent)
                 QStringList args;
                 args << "--gcode" << path;
 
-                QProcess *visualProcess = new QProcess(this);
+                visualizerProcess = new QProcess(this);
 
-                connect(visualProcess, &QProcess::started, this, [](){
+                connect(visualizerProcess, &QProcess::started, this, [](){
                     qDebug() << "[VISUALIZER] started";
                 });
 
-                connect(visualProcess, &QProcess::errorOccurred, this, [](auto err){
+                connect(visualizerProcess, &QProcess::errorOccurred, this, [](auto err){
                     qDebug() << "[VISUALIZER ERROR]" << err;
                 });
 
-                visualProcess->start(visualizer, args);
+                connect(visualizerProcess,
+                        &QProcess::finished,
+                        this,
+                        [this]()
+                        {
+                            qDebug() << "[VISUALIZER] finished";
 
-                if (!visualProcess->waitForStarted(3000))
+                            visualizerProcess->deleteLater();
+                            visualizerProcess = nullptr;
+                        });
+
+                visualizerProcess->start(visualizer, args);
+
+                if (!visualizerProcess->waitForStarted(3000))
                 {
                     qDebug() << "[VISUALIZER] FAILED TO START";
                 }
@@ -249,6 +261,80 @@ void MainWindow::onQuitClicked()
     } else {
         QApplication::quit();
     }
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    qDebug() << "[MAIN] Closing app - terminating external processes";
+
+    // -----------------------------
+    // Confirm quit if model loaded
+    // -----------------------------
+
+    if (model3D && model3D->isLoaded())
+    {
+        auto result = QMessageBox::question(
+            this,
+            "Quit",
+            "Are you sure you want to quit?"
+            );
+
+        if (result != QMessageBox::Yes)
+        {
+            event->ignore();
+            return;
+        }
+    }
+
+    // -----------------------------
+    // Kill slicer process
+    // -----------------------------
+
+    if (slicerRunner)
+    {
+        QProcess* p = slicerRunner->getProcess();
+
+        if (p && p->state() != QProcess::NotRunning)
+        {
+            qDebug() << "Terminating slicer process...";
+
+            p->terminate();
+
+            if (!p->waitForFinished(2000))
+            {
+                qDebug() << "Force killing slicer...";
+                p->kill();
+            }
+        }
+    }
+
+    // -----------------------------
+    // Kill visualizer process
+    // -----------------------------
+
+    if (visualizerProcess)
+    {
+        if (visualizerProcess->state() != QProcess::NotRunning)
+        {
+            qDebug() << "Terminating visualizer process...";
+
+            visualizerProcess->terminate();
+
+            if (!visualizerProcess->waitForFinished(1000))
+            {
+                qDebug() << "Force killing visualizer...";
+
+                visualizerProcess->kill();
+
+                visualizerProcess->waitForFinished(3000);
+            }
+        }
+
+        visualizerProcess->deleteLater();
+        visualizerProcess = nullptr;
+    }
+
+    event->accept();
 }
 
 void MainWindow::onUndoClicked()

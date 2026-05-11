@@ -29,6 +29,7 @@ private:
     Model3D *model3D;
     ProfileManager *profileManager;
     SlicerRunner *slicerRunner;
+    QProcess* visualizerProcess = nullptr;
     SlicerLoadingDialog *loadingDialog;
 
     // these should probably be in model3d
@@ -60,6 +61,7 @@ private slots:
     void onRotateYClicked();
     void onRotateZClicked();
     void onRotationChanged(const QString &face);
+    void closeEvent(QCloseEvent *event) override;
 
 };
 #endif // MAINWINDOW_H
