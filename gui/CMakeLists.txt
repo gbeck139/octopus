@@ -67,6 +67,7 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets)
         widgets/setupWizard/pages/pythonpage/pythonpage.h widgets/setupWizard/pages/pythonpage/pythonpage.cpp widgets/setupWizard/pages/pythonpage/pythonpage.ui
         tabs/prepare/ViewerWidget/viewerwidget.h tabs/prepare/ViewerWidget/viewerwidget.cpp
         tabs/prepare/QuickViewer/quickviewer.h tabs/prepare/QuickViewer/quickviewer.cpp
+        core/slicing/sliceparameters.cpp
 
     )
     target_include_directories(gui PRIVATE
