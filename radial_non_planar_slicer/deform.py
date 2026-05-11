@@ -29,7 +29,8 @@ def load_mesh(MODEL_NAME):
     return mesh
 
 
-def deform_mesh(mesh, scale=1.0, angle_base=15, angle_factor=30):
+#def deform_mesh(mesh, scale=1.0, angle_base=15, angle_factor=30):
+def deform_mesh(mesh, config):
     """
     Deform the mesh for radial non-planar slicing.
     
@@ -40,13 +41,22 @@ def deform_mesh(mesh, scale=1.0, angle_base=15, angle_factor=30):
     :return: Deformed mesh, transform_params dict.
     """ 
 
+    # Extract Config Values
+    deform_cfg = config["deformation"]
+    model_cfg = config["model"]
+
+    scale = model_cfg["scale"]
+    angle_base = deform_cfg["angle_base"]
+    angle_factor = deform_cfg["angle_factor"]
+    TARGET_POINT_COUNT = deform_cfg["target_point_count"]
+
     # Ensure mesh is triangulated
     if not mesh.is_all_triangles:
         mesh = mesh.triangulate()
 
     # Subdivide if the mesh is too coarse (e.g. a simple box)
     # This prevents flat surfaces from staying flat when they should curve
-    TARGET_POINT_COUNT = 1000000
+    #TARGET_POINT_COUNT = 1000000
     while mesh.n_points < TARGET_POINT_COUNT:
         mesh = mesh.subdivide(1, subfilter='linear')
 

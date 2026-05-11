@@ -19,7 +19,7 @@ OUTPUT_GCODE_DIR = os.path.join(base_dir, "output_gcode")
 PRUSA_CONFIG_DIR = os.path.join(base_dir, "prusa_slicer")
 
 
-def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
+def load_gcode_and_undeform(MODEL_NAME, transform_params=None, config=None):
     
     if transform_params is None:
         try:
@@ -147,8 +147,13 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
     
     # Hardcoded center for Creality K1 Max (300x300mm bed)
     # We use this instead of bounding box to avoid issues with purge lines/skirts
-    center_x = 150.0
-    center_y = 150.0
+    #center_x = 150.0
+    #center_y = 150.0
+    printer_cfg = config["printer"]
+
+    center_x = printer_cfg["bed_center_x"]
+    center_y = printer_cfg["bed_center_y"]
+
     center_offset = np.array([center_x, center_y, 0])
     positions -= center_offset
     
@@ -166,11 +171,18 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None):
     # --- SAFETY FILTERING ---
     # Filter out points that are geometrically impossible or dangerous (e.g. infinite wrapping of origin)
     # This keeps visualizations clean and print safe.
-    NOZZLE_OFFSET = 43 # mm
+    #NOZZLE_OFFSET = 43 # mm
+    NOZZLE_OFFSET = printer_cfg["nozzle_offset"]
+
     # Relaxed safety limits to allow for 4-axis dip
-    MIN_SAFE_Z = -50.0 
-    MAX_SAFE_Z = 200.0
-    MAX_SAFE_R = 1000.0
+    #MIN_SAFE_Z = -50.0 
+    #MAX_SAFE_Z = 200.0
+    #MAX_SAFE_R = 1000.0
+
+    safety_cfg = config["safety"]
+    MIN_SAFE_Z = safety_cfg["min_safe_z"]
+    MAX_SAFE_Z = safety_cfg["max_safe_z"]
+    MAX_SAFE_R = safety_cfg["max_safe_r"]
 
     valid_mask = []
     

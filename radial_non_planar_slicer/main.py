@@ -14,6 +14,9 @@ import os
 import sys
 import shutil
 
+from config.config_loader import load_config
+from config.prusa_config_generator import generate_prusa_config
+
 sys.stdout.reconfigure(line_buffering=True)
 sys.stderr.reconfigure(line_buffering=True)
 
@@ -32,7 +35,8 @@ PRUSA_CONFIG_DIR = os.path.join(base_dir, "prusa_slicer")
 
 #MODEL_NAME = '3DBenchy'
 
-def run_slicer_pipeline(stl_path_input: str, MODEL_NAME: str, slicer_path: str, rotX, rotY, rotZ):
+#def run_slicer_pipeline(stl_path_input: str, MODEL_NAME: str, slicer_path: str, rotX, rotY, rotZ):
+def run_slicer_pipeline(stl_path_input: str, MODEL_NAME: str, slicer_path: str, config):
 
     os.makedirs(INPUT_MODELS_DIR, exist_ok=True)
 
@@ -51,11 +55,12 @@ def run_slicer_pipeline(stl_path_input: str, MODEL_NAME: str, slicer_path: str, 
     mesh = deform.load_mesh(MODEL_NAME)
 
     # Apply rotation BEFORE any processing
-    mesh.rotate_x(rotX, inplace=True)
-    mesh.rotate_y(rotY, inplace=True)
-    mesh.rotate_z(rotZ, inplace=True)
+    mesh.rotate_x(config["model"]["rotX"], inplace=True)
+    mesh.rotate_y(config["model"]["rotY"], inplace=True)
+    mesh.rotate_z(config["model"]["rotZ"], inplace=True)
 
-    deformed_mesh, transform_params = deform.deform_mesh(mesh, scale=1)
+    #deformed_mesh, transform_params = deform.deform_mesh(mesh, scale=1)
+    deformed_mesh, transform_params = deform.deform_mesh(mesh, config)
     deform.save_deformed_mesh(deformed_mesh, transform_params, MODEL_NAME)
     #deform.plot_deformed_mesh(deformed_mesh)
 
@@ -73,8 +78,22 @@ def run_slicer_pipeline(stl_path_input: str, MODEL_NAME: str, slicer_path: str, 
 
     stl_path = os.path.join(OUTPUT_MODELS_DIR, f"{MODEL_NAME}_deformed.stl")
     output_gcode = os.path.join(INPUT_GCODE_DIR, f"{MODEL_NAME}_deformed.gcode")
-    ini_path = os.path.join(PRUSA_CONFIG_DIR, "my_printer_config.ini")
+    #ini_path = os.path.join(PRUSA_CONFIG_DIR, "my_printer_config.ini")
 
+    base_ini_path = os.path.join(PRUSA_CONFIG_DIR, "base_config.ini")
+
+    generated_ini_path = os.path.join(
+        PRUSA_CONFIG_DIR,
+        f"{MODEL_NAME}_generated.ini"
+    )
+
+    generate_prusa_config(
+        config,
+        base_ini_path,
+        generated_ini_path
+    )
+
+    #
     os.makedirs(INPUT_GCODE_DIR, exist_ok=True)
 
 
@@ -86,7 +105,7 @@ def run_slicer_pipeline(stl_path_input: str, MODEL_NAME: str, slicer_path: str, 
     # Run slicing
     subprocess.run([
         slicer_path,
-        "--load", ini_path,          # merges your printer/material/settings INI with PrusaSlicer's default settings
+        "--load", generated_ini_path,          # merges your printer/material/settings INI with PrusaSlicer's default settings
         "--ensure-on-bed",
         "--export-gcode",            # tells it to slice and export
         stl_path,
@@ -100,9 +119,12 @@ def run_slicer_pipeline(stl_path_input: str, MODEL_NAME: str, slicer_path: str, 
 
     # Reform
     print("\nReforming model...\n", flush=True)
-    reform.load_gcode_and_undeform(MODEL_NAME, transform_params)
+    #reform.load_gcode_and_undeform(MODEL_NAME, transform_params)
+    reform.load_gcode_and_undeform(MODEL_NAME, transform_params, config)
 
     os.makedirs(OUTPUT_GCODE_DIR, exist_ok=True)
+
+    print("\nReform Complete\n", flush=True)
 
     # Restore the original cwd afterwards (optional but safe)
     #os.chdir(original_cwd)
@@ -115,18 +137,20 @@ def main():
     parser.add_argument("--stl", required=True, help="Path to input STL file")
     parser.add_argument("--model", required=True, help="Model name (used for output filenames)")
     parser.add_argument("--prusa", required=True, help="Path to PrusaSlicer executable")
-    parser.add_argument("--rotX", type=float, default=0)
-    parser.add_argument("--rotY", type=float, default=0)
-    parser.add_argument("--rotZ", type=float, default=0)
+    parser.add_argument("--config", required=True, help="Path to JSON slicer configuration")
+    #parser.add_argument("--rotX", type=float, default=0)
+    #parser.add_argument("--rotY", type=float, default=0)
+    #parser.add_argument("--rotZ", type=float, default=0)
+    
     args = parser.parse_args()
+
+    config = load_config(args.config)
 
     run_slicer_pipeline(
         args.stl,
         args.model,
         args.prusa,
-        args.rotX,
-        args.rotY,
-        args.rotZ
+        config
     )
 
 
