@@ -1,45 +1,90 @@
 #include "slicerrunner.h"
-#include <QJsonDocument>
-#include <QTemporaryFile>
-#include <QDebug>
+
+#include <QCoreApplication>
+#include <QFile>
+#include <QFileInfo>
 
 SlicerRunner::SlicerRunner(QObject *parent)
-    : QObject{parent}
+    : QObject(parent)
 {
-    connect(&process, &QProcess::finished,
-            this, &SlicerRunner::onProcessFinished);
 }
 
-void SlicerRunner::runSlice(const QString& stlPath, const SliceParameters& params)
+void SlicerRunner::runSlice(const SliceParameters& params)
 {
-    //TODO:
+    QStringList errors;
+    if (!params.validate(errors))
+    {
+        emit sliceFailed(errors.join("\n"));
+        return;
+    }
 
-    qDebug() << "[SLICER RUNNER] Starting slice for:" << stlPath;
+    emit sliceStarted();
 
+    QString base =
+        QCoreApplication::applicationDirPath();
 
+    QString exe =
+        base + "/slicerbundle/config_slicer_pipeline.exe";
 
-    // QTemporaryFile jsonFile;
-    // jsonFile.open();
+    if (!QFile::exists(exe))
+    {
+        emit sliceFailed("Missing slicer exe:\n" + exe);
+        return;
+    }
 
-    // QJsonDocument doc(params.toJson());
-    // jsonFile.write(doc.toJson());
-    // jsonFile.close();
+    QString configPath =
+        base + "/slicerbundle/example_config.json";
 
-    //first: CALL background planar slicer!!!!!!!!!!!!
+    if (!params.saveToFile(configPath))
+    {
+        emit sliceFailed("Failed writing config JSON.");
+        return;
+    }
 
-    // qDebug() << "[SLICER RUNNER] Launching Python with params JSON";
+    outputPath =
+        base + "/slicerbundle/output_gcode/"
+        + params.modelName
+        + "_reformed.gcode";
 
-    // process.start("python", QStringList() << "slicer.py" << stlPath << jsonFile.fileName());
+    process = new QProcess(this);
 
-    //
+    connect(process, &QProcess::readyReadStandardOutput,
+            this, &SlicerRunner::readStdOut);
+
+    connect(process, &QProcess::readyReadStandardError,
+            this, &SlicerRunner::readStdErr);
+
+    connect(process,
+            QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            this,
+            &SlicerRunner::onFinished);
+
+    QStringList args;
+    args << "--stl" << params.stlPath
+         << "--model" << params.modelName
+         << "--prusa" << params.prusaSlicerPath
+         << "--config" << configPath;
+
+    process->start(exe, args);
 }
 
-void SlicerRunner::onProcessFinished(int exitCode)
+void SlicerRunner::readStdOut()
 {
-    qDebug() << "[SLICER RUNNER] Process finished, code:" << exitCode;
+    emit slicerLog(process->readAllStandardOutput());
+}
 
-    if (exitCode == 0)
-        emit sliceFinished("output.gcode");
+void SlicerRunner::readStdErr()
+{
+    emit slicerLog(process->readAllStandardError());
+}
+
+void SlicerRunner::onFinished(int exitCode, QProcess::ExitStatus status)
+{
+    if (status == QProcess::NormalExit && exitCode == 0)
+        emit sliceFinished(outputPath);
     else
-        emit sliceFailed(process.readAllStandardError());
+        emit sliceFailed(process->readAllStandardError());
+
+    process->deleteLater();
+    process = nullptr;
 }

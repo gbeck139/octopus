@@ -8,20 +8,26 @@
 class SlicerRunner : public QObject
 {
     Q_OBJECT
+
 public:
     explicit SlicerRunner(QObject *parent = nullptr);
 
-    void runSlice(const QString& stlPath, const SliceParameters& params);
+    void runSlice(const SliceParameters& params);
 
 signals:
-    void sliceFinished(QString gcodePath); /////////////
-    void sliceFailed(QString error); //////////////
+    void sliceStarted();
+    void sliceFinished(QString gcodePath);
+    void sliceFailed(QString error);
+    void slicerLog(QString log);
 
 private slots:
-    void onProcessFinished(int exitCode);
+    void onFinished(int exitCode, QProcess::ExitStatus status);
+    void readStdOut();
+    void readStdErr();
 
 private:
-    QProcess process;
+    QProcess* process = nullptr;
+    QString outputPath;
 };
 
-#endif // SLICERRUNNER_H
+#endif
