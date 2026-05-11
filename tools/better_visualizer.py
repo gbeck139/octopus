@@ -5,6 +5,8 @@ import re
 import numpy as np
 import pyvista as pv
 
+import signal
+import sys
 
 class GCodeVisualizer:
     def __init__(self, filename, nozzle_offset=43, color_mode="movetype"):
@@ -392,7 +394,14 @@ class GCodeVisualizer:
         self.plotter.add_key_event("Down", lambda: self._speed_down())
         self.plotter.add_key_event("r", lambda: self._reset_animation())
 
+        signal.signal(signal.SIGTERM, lambda *args: sys.exit(0))
+        signal.signal(signal.SIGINT, lambda *args: sys.exit(0))
+
         self.plotter.show()
+
+        print("Visualizer window closed")
+
+        os._exit(0)
 
 
 def main():

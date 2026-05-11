@@ -117,7 +117,7 @@ MainWindow::MainWindow(QWidget *parent)
 
                 QString visualizer =
                     QCoreApplication::applicationDirPath()
-                    + "/slicerbundle/best_visualizer.exe";
+                    + "/slicerbundle/best_visualizer_1.exe";
 
                 QStringList args;
                 args << "--gcode" << path;
@@ -311,6 +311,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
     // -----------------------------
     // Kill visualizer process
     // -----------------------------
+
+    // TODO: PyVista/VTK visualizer process does not fully terminate on GUI close, need to fix!
 
     if (visualizerProcess)
     {
