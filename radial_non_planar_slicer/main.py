@@ -141,10 +141,14 @@ def main():
     #parser.add_argument("--rotX", type=float, default=0)
     #parser.add_argument("--rotY", type=float, default=0)
     #parser.add_argument("--rotZ", type=float, default=0)
+
+    #Example CLI call:
+    #python main.py --stl "C:\Users\StayP\Downloads\lowPolyDice.stl"  --model lowPolyDice --prusa "C:\Program Files\Prusa3D\PrusaSlicer\prusa-slicer-console.exe" --config example_config.json
     
     args = parser.parse_args()
 
     config = load_config(args.config)
+    print(config)
 
     run_slicer_pipeline(
         args.stl,
