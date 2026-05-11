@@ -312,13 +312,13 @@ void MainWindow::onSliceClicked()
     //     return;
     // }
 
-    //SliceParameters params;
-    // params.layerHeight = process->getLayerHeight();
-    // params.wallLoops = process->getWallLoops();
-    // params.infillDensity = process->getInfillDensity();
-    // params.supportsEnabled = process->supportsEnabled();
-    // params.nozzleTemp = material->getNozzleTemp();
-    // params.bedTemp = material->getBedTemp();
+    // SliceParameters params;
+    // params.rotX = currentRotX;
+    // params.rotY = currentRotY;
+    // params.rotZ = currentRotZ;
+    // params.stlPath = stlPath;
+    // params.prusaSlicerPath = prusaPath;
+    // params.layerHeight = ui->settingsMenuWidget->getLayerHeight();
 
     QString modelName =
         QFileInfo(model3D->getSourceFilePath()).completeBaseName();
@@ -461,7 +461,24 @@ void MainWindow::onSliceClicked()
         return;
     }
 
+    // Not sure where to put this, but need to validate before launching the slicer:
+    // QStringList errors;
+
+    // if (!params.validate(errors))
+    // {
+    //     QMessageBox::warning(
+    //         this,
+    //         "Invalid Parameters",
+    //         errors.join("\n")
+    //         );
+
+    //     return;
+    // }
+
     QString configPath = QCoreApplication::applicationDirPath() + "/slicerbundle/example_config.json";
+
+    // Also not sure where to put this, but it's for saving the JSON config for args but I think it goes here
+    // params.saveToFile(configPath);
 
     QStringList args;
     args << "--stl" << stlPath
@@ -474,6 +491,9 @@ void MainWindow::onSliceClicked()
     qDebug() << "Slicer path:" << slicerPath;
     qDebug() << "Config path:" << configPath;
     qDebug() << "Args:" << args;
+
+
+
 
     proc->start(slicerPath, args);
 }
