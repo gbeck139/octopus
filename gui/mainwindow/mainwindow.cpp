@@ -103,13 +103,40 @@ MainWindow::MainWindow(QWidget *parent)
                 loadingDialog->show();
             });
 
-    connect(slicerRunner, &SlicerRunner::sliceFinished, this,
-            [this](const QString& path)
+    connect(slicerRunner, &SlicerRunner::sliceFinished,
+            this, [this](const QString& path)
             {
+                qDebug() << "[MAIN] Slice finished, launching visualizer:" << path;
+
                 loadingDialog->hide();
 
-                lastGeneratedGcodePath = path;
                 ui->exportButton->setEnabled(true);
+
+                lastGeneratedGcodePath = path;
+
+                QString visualizer =
+                    QCoreApplication::applicationDirPath()
+                    + "/slicerbundle/best_visualizer.exe";
+
+                QStringList args;
+                args << "--gcode" << path;
+
+                QProcess *visualProcess = new QProcess(this);
+
+                connect(visualProcess, &QProcess::started, this, [](){
+                    qDebug() << "[VISUALIZER] started";
+                });
+
+                connect(visualProcess, &QProcess::errorOccurred, this, [](auto err){
+                    qDebug() << "[VISUALIZER ERROR]" << err;
+                });
+
+                visualProcess->start(visualizer, args);
+
+                if (!visualProcess->waitForStarted(3000))
+                {
+                    qDebug() << "[VISUALIZER] FAILED TO START";
+                }
             });
 
     connect(slicerRunner, &SlicerRunner::sliceFailed, this,
