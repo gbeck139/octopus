@@ -109,7 +109,7 @@ MainWindow::MainWindow(QWidget *parent)
             {
                 qDebug() << "[MAIN] Slice finished, launching visualizer:" << path;
 
-                loadingDialog->hide();
+                //loadingDialog->hide();
 
                 ui->exportButton->setEnabled(true);
 
@@ -124,13 +124,31 @@ MainWindow::MainWindow(QWidget *parent)
 
                 visualizerProcess = new QProcess(this);
 
-                connect(visualizerProcess, &QProcess::started, this, [](){
-                    qDebug() << "[VISUALIZER] started";
-                });
+                connect(visualizerProcess,
+                        &QProcess::started,
+                        this,
+                        [this]()
+                        {
+                            qDebug() << "[VISUALIZER] started";
 
-                connect(visualizerProcess, &QProcess::errorOccurred, this, [](auto err){
-                    qDebug() << "[VISUALIZER ERROR]" << err;
-                });
+                            loadingDialog->hide();
+                        });
+
+                connect(visualizerProcess,
+                        &QProcess::errorOccurred,
+                        this,
+                        [this](QProcess::ProcessError err)
+                        {
+                            qDebug() << "[VISUALIZER ERROR]" << err;
+
+                            loadingDialog->hide();
+
+                            QMessageBox::warning(
+                                this,
+                                "Visualizer Error",
+                                "Failed to launch visualizer."
+                                );
+                        });
 
                 connect(visualizerProcess,
                         &QProcess::finished,
@@ -426,16 +444,31 @@ void MainWindow::onSliceClicked()
 {
     if (!model3D || !model3D->isLoaded())
     {
-        QMessageBox::warning(this, "No Model",
-                             "Load a model first.");
+        QMessageBox::warning(
+            this,
+            "No Model",
+            "Load a model first."
+            );
+
         return;
     }
 
-    SliceParameters params;
+    SettingsMenuWidget* settings =
+        ui->prepareTabWidget->getSettingsMenu();
 
-    params.stlPath = model3D->getSourceFilePath();
+    SliceParameters params =
+        settings->getSliceParameters();
+
+    // =========================
+    // NON-UI PARAMS
+    // =========================
+
+    params.stlPath =
+        model3D->getSourceFilePath();
+
     params.modelName =
-        QFileInfo(params.stlPath).completeBaseName();
+        QFileInfo(params.stlPath)
+            .completeBaseName();
 
     params.prusaSlicerPath =
         appConfig->getPrusaSlicerPath();
@@ -447,15 +480,6 @@ void MainWindow::onSliceClicked()
     params.rotX = currentRotX;
     params.rotY = currentRotY;
     params.rotZ = currentRotZ;
-
-    // TEMP TEST VALUES
-    params.angleBase = 15;
-    params.angleFactor = 30;
-
-    params.layerHeight = 0.2;
-    params.nozzleTemperature = 210;
-    params.bedTemperature = 60;
-    params.infillDensity = 20;
 
     slicerRunner->runSlice(params);
 }

@@ -143,3 +143,95 @@ void SettingsMenuWidget::onEditPrinterClicked()
 {
     emit settingsMenuEditPrinterClicked();
 }
+
+SliceParameters SettingsMenuWidget::getSliceParameters() const
+{
+    SliceParameters params;
+
+    // =========================
+    // PRINT
+    // =========================
+
+    params.layerHeight =
+        ui->layerHeightSpinBox->value();
+
+    params.nozzleTemperature =
+        ui->nozzleTempSpinBox->value();
+
+    params.bedTemperature =
+        ui->bedTempSpinBox->value();
+
+    params.infillDensity =
+        ui->infillSpinBox->value();
+
+    params.wallLoops =
+        ui->wallLoopSpinBox->value();
+
+    params.supportsEnabled =
+        ui->supportsCheckBox->isChecked();
+
+    // =========================
+    // RESEARCH
+    // =========================
+
+    params.angleBase =
+        ui->angleBaseSpinBox->value();
+
+    params.angleFactor =
+        ui->angleFactorSpinBox->value();
+
+    // =========================
+    // MODE
+    // =========================
+
+    if (ui->slicingModeCombo->currentIndex() == 0)
+    {
+        params.slicingMode =
+            SliceParameters::SlicingMode::Planar;
+    }
+    else
+    {
+        params.slicingMode =
+            SliceParameters::SlicingMode::RadialNonPlanar;
+    }
+
+    return params;
+}
+
+void SettingsMenuWidget::setSliceParameters(
+    const SliceParameters& params)
+{
+    ui->layerHeightSpinBox
+        ->setValue(params.layerHeight);
+
+    ui->nozzleTempSpinBox
+        ->setValue(params.nozzleTemperature);
+
+    ui->bedTempSpinBox
+        ->setValue(params.bedTemperature);
+
+    ui->infillSpinBox
+        ->setValue(params.infillDensity);
+
+    ui->wallLoopSpinBox
+        ->setValue(params.wallLoops);
+
+    ui->supportsCheckBox
+        ->setChecked(params.supportsEnabled);
+
+    ui->angleBaseSpinBox
+        ->setValue(params.angleBase);
+
+    ui->angleFactorSpinBox
+        ->setValue(params.angleFactor);
+
+    if (params.slicingMode ==
+        SliceParameters::SlicingMode::Planar)
+    {
+        ui->slicingModeCombo->setCurrentIndex(0);
+    }
+    else
+    {
+        ui->slicingModeCombo->setCurrentIndex(1);
+    }
+}

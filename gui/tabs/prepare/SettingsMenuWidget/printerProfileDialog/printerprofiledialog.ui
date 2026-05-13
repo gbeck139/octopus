@@ -77,7 +77,7 @@
      <item row="4" column="0">
       <widget class="QLabel" name="cRotationLimitLabel">
        <property name="text">
-        <string>c Rotation Limit:</string>
+        <string>Head Rotation Limit:</string>
        </property>
       </widget>
      </item>
@@ -87,12 +87,26 @@
      <item row="5" column="0">
       <widget class="QLabel" name="bRotationLimitLabel">
        <property name="text">
-        <string>b Rotation Limit:</string>
+        <string>Bed Rotation Limit:</string>
        </property>
       </widget>
      </item>
      <item row="5" column="1">
       <widget class="QDoubleSpinBox" name="bRotationLimitDoubleSpinBox"/>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>---Nozzle---</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
      </item>
      <item row="7" column="0">
       <widget class="QLabel" name="nozzleThicknessLabel">
@@ -124,15 +138,15 @@
      <item row="9" column="1">
       <widget class="QDoubleSpinBox" name="rotationHeightDoubleSpinBox"/>
      </item>
-     <item row="6" column="0">
-      <widget class="QLabel" name="label_2">
+     <item row="10" column="0">
+      <widget class="QLabel" name="label_4">
        <property name="text">
-        <string>---Nozzle---</string>
+        <string>---Extruders---</string>
        </property>
       </widget>
      </item>
-     <item row="6" column="1">
-      <widget class="QLabel" name="label_3">
+     <item row="10" column="1">
+      <widget class="QLabel" name="label_5">
        <property name="text">
         <string/>
        </property>
@@ -148,15 +162,25 @@
      <item row="11" column="1">
       <widget class="QSpinBox" name="ofExtrudersSpinBox"/>
      </item>
-     <item row="10" column="0">
-      <widget class="QLabel" name="label_4">
+     <item row="12" column="0">
+      <widget class="QLabel" name="label_6">
        <property name="text">
-        <string>---Extruders---</string>
+        <string>---Conical---</string>
        </property>
       </widget>
      </item>
-     <item row="10" column="1">
-      <widget class="QLabel" name="label_5">
+     <item row="13" column="0">
+      <widget class="QLabel" name="label_7">
+       <property name="text">
+        <string>Cone angle</string>
+       </property>
+      </widget>
+     </item>
+     <item row="13" column="1">
+      <widget class="QDoubleSpinBox" name="doubleSpinBox"/>
+     </item>
+     <item row="12" column="1">
+      <widget class="QLabel" name="label_8">
        <property name="text">
         <string/>
        </property>

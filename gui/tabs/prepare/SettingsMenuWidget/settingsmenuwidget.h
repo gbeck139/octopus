@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include "printerviewdata.h"
+#include "sliceparameters.h"
 
 namespace Ui {
 class SettingsMenuWidget;
@@ -15,6 +16,9 @@ class SettingsMenuWidget : public QWidget
 public:
     explicit SettingsMenuWidget(QWidget *parent = nullptr);
     ~SettingsMenuWidget();
+
+    SliceParameters getSliceParameters() const;
+    void setSliceParameters(const SliceParameters& params);
 
 signals:
     void printerSelected(const QString& printerId);
