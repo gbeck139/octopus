@@ -70,6 +70,9 @@ def deform_mesh(mesh, config):
     distances_to_center = np.linalg.norm(mesh.points[:, :2], axis=1)
     max_radius = np.max(distances_to_center)
 
+    #find center point then get radiuses from center point
+    #gets max radius (the longest radius from the center point then getting the angle to create the warp)
+
     # define rotation as a function of radius
     # TODO make this user definable
     ROTATION = lambda radius: np.deg2rad(angle_base + angle_factor * (radius / max_radius)) # Use for propeller and tree
@@ -86,6 +89,7 @@ def deform_mesh(mesh, config):
     mesh.points[:, 2] /= cos_rotations
 
     # create delta vector for each point
+    #translating points
     translate_upwards = np.hstack([np.zeros((len(mesh.points), 2)), np.tan(rotations.reshape(-1, 1)) * distances_to_center.reshape(-1, 1)])
     # apply deformation
     mesh.points = mesh.points + translate_upwards

@@ -48,6 +48,7 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None, config=None):
     #with open(f'input_gcode/{MODEL_NAME}_deformed.gcode', 'r') as fh:
     gcode_input_path = os.path.join(INPUT_GCODE_DIR, f"{MODEL_NAME}_deformed.gcode")
     with open(gcode_input_path, 'r') as fh:
+        #parses xyz values then a
         for line_text in fh.readlines():            
             
             # Skip comment lines and non-standard commands
@@ -178,7 +179,7 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None, config=None):
     #MIN_SAFE_Z = -50.0 
     #MAX_SAFE_Z = 200.0
     #MAX_SAFE_R = 1000.0
-
+    #shadow box 
     safety_cfg = config["safety"]
     MIN_SAFE_Z = safety_cfg["min_safe_z"]
     MAX_SAFE_Z = safety_cfg["max_safe_z"]
@@ -187,7 +188,7 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None, config=None):
     valid_mask = []
     
     z_comp_min = 1000
-    
+    #here
     for i, pos in enumerate(new_positions):
         # Replicate the kinematic calculation to check safety
         r = np.linalg.norm(pos[:2])
@@ -222,6 +223,7 @@ def load_gcode_and_undeform(MODEL_NAME, transform_params=None, config=None):
     
     print(f"Safety Filter: Removed {len(valid_mask) - sum(valid_mask)} unsafe points.")
 
+    #start changing stuff
     # NOTE: reminder to use for our printer
     # cap travel move height to be just above the part and to not travel over the origin
     max_z = 0
